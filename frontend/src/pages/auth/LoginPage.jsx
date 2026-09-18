@@ -116,15 +116,8 @@ const LoginPage = () => {
           {...register('password')}
         />
 
-        {/* Remember & Forgot */}
-        <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-            />
-            <span className="text-sm text-neutral-600">Remember me</span>
-          </label>
+        {/* Forgot password */}
+        <div className="flex items-center justify-end">
           <Link
             to="/forgot-password"
             className="text-sm text-primary-600 hover:text-primary-700 font-medium"

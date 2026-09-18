@@ -24,8 +24,9 @@ import useAuthStore from '../../stores/authStore';
 const roleOptions = [
   { value: '', label: 'All Roles' },
   { value: 'student', label: 'Student' },
-  { value: 'admin', label: 'Admin' },
-  { value: 'super_admin', label: 'Super Admin' },
+  { value: 'officer', label: 'Officer' },
+  { value: 'dept_head', label: 'Department head' },
+  { value: 'institution_admin', label: 'Administrator' },
 ];
 
 const newAdminSchema = z.object({
@@ -37,7 +38,7 @@ const newAdminSchema = z.object({
     .regex(/[A-Z]/, 'Must contain uppercase letter')
     .regex(/[a-z]/, 'Must contain lowercase letter')
     .regex(/[0-9]/, 'Must contain number'),
-  role: z.enum(['admin', 'super_admin']),
+  role: z.enum(['officer', 'dept_head', 'institution_admin']),
   department: z.string().optional(),
   phone: z.string().optional(),
 });
@@ -111,12 +112,16 @@ const AdminUsers = () => {
     const badges = {
       student: 'badge-secondary',
       admin: 'badge-primary',
-      super_admin: 'badge-success',
+      institution_admin: 'badge-success',
+      dept_head: 'badge-info',
+      officer: 'badge-neutral',
     };
     const labels = {
       student: 'Student',
-      admin: 'Admin',
-      super_admin: 'Super Admin',
+      
+      institution_admin: 'Administrator',
+      dept_head: 'Department head',
+      officer: 'Officer',
     };
     return <span className={badges[role] || 'badge-secondary'}>{labels[role] || role}</span>;
   };
@@ -316,7 +321,7 @@ const AddAdminModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
       full_name: '',
       email: '',
       password: '',
-      role: 'admin',
+      role: 'officer',
       department: '',
       phone: '',
     },
@@ -356,8 +361,9 @@ const AddAdminModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
           <Select
             label="Role"
             options={[
-              { value: 'admin', label: 'Admin' },
-              { value: 'super_admin', label: 'Super Admin' },
+              { value: 'officer', label: 'Officer' },
+              { value: 'dept_head', label: 'Department head' },
+  { value: 'institution_admin', label: 'Administrator' },
             ]}
             value={watchRole}
             onChange={(value) => setValue('role', value)}

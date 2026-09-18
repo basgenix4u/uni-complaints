@@ -70,13 +70,13 @@ const AdminAnalytics = () => {
     queryFn: () => dashboardService.getMonthlyChart(),
   });
 
-  const overview = overviewData?.data?.overview || {};
-  const statusCounts = overviewData?.data?.status_counts || {};
-  const statusChart = statusChartData?.data?.chart_data || [];
-  const categoryChart = categoryChartData?.data?.chart_data || [];
-  const priorityChart = priorityChartData?.data?.chart_data || [];
-  const trendChart = trendChartData?.data?.chart_data || [];
-  const monthlyChart = monthlyChartData?.data?.chart_data || [];
+  const overview = overviewData?.overview || {};
+  const statusCounts = overviewData?.status_counts || {};
+  const statusChart = statusChartData?.chart_data || [];
+  const categoryChart = categoryChartData?.chart_data || [];
+  const priorityChart = priorityChartData?.chart_data || [];
+  const trendChart = trendChartData?.chart_data || [];
+  const monthlyChart = monthlyChartData?.chart_data || [];
 
   const statCards = [
     {
@@ -293,7 +293,7 @@ const AdminAnalytics = () => {
       {/* Monthly Chart */}
       <Card>
         <Card.Header>
-          <Card.Title>Monthly Complaints ({monthlyChartData?.data?.year})</Card.Title>
+          <Card.Title>Monthly Complaints ({monthlyChartData?.year})</Card.Title>
         </Card.Header>
         <Card.Content>
           <div className="h-72">

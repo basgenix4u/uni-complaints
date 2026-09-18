@@ -20,8 +20,7 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         
         try {
-          const response = await authService.login(credentials);
-          const { user, access_token, refresh_token } = response.data;
+          const { user, access_token, refresh_token } = await authService.login(credentials);
           
           localStorage.setItem('access_token', access_token);
           localStorage.setItem('refresh_token', refresh_token);
@@ -47,8 +46,7 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         
         try {
-          const response = await authService.register(data);
-          const { user, access_token, refresh_token } = response.data;
+          const { user, access_token, refresh_token } = await authService.register(data);
           
           localStorage.setItem('access_token', access_token);
           localStorage.setItem('refresh_token', refresh_token);
@@ -85,8 +83,7 @@ const useAuthStore = create(
 
       refreshUser: async () => {
         try {
-          const response = await authService.getMe();
-          const { user } = response.data;
+          const { user } = await authService.me();
           set({ user });
           return { success: true, user };
         } catch (_err) {
@@ -99,8 +96,7 @@ const useAuthStore = create(
         set({ isLoading: true, error: null });
         
         try {
-          const response = await authService.updateProfile(data);
-          const { user } = response.data;
+          const { user } = await authService.updateProfile(data);
           set({ user, isLoading: false });
           return { success: true, user };
         } catch (err) {
@@ -124,15 +120,24 @@ const useAuthStore = create(
         }
       },
 
-      isAdmin: () => {
+      // Roles, most privileged last. Kept in one place so a check cannot
+      // drift from the hierarchy the server enforces.
+      isStaff: () => {
         const { user } = get();
-        return user?.role === 'admin' || user?.role === 'super_admin';
+        return ['officer', 'dept_head', 'institution_admin', 'platform_admin'].includes(user?.role);
       },
 
-      isSuperAdmin: () => {
+      isAdmin: () => {
         const { user } = get();
-        return user?.role === 'super_admin';
+        return ['officer', 'dept_head', 'institution_admin', 'platform_admin'].includes(user?.role);
       },
+
+      isInstitutionAdmin: () => {
+        const { user } = get();
+        return ['institution_admin', 'platform_admin'].includes(user?.role);
+      },
+
+      isPlatformAdmin: () => get().user?.role === 'platform_admin',
 
       initializeAuth: async () => {
         const accessToken = localStorage.getItem('access_token');
@@ -141,9 +146,8 @@ const useAuthStore = create(
           set({ accessToken, isLoading: true });
           
           try {
-            const response = await authService.getMe();
-            const { user } = response.data;
-            
+            const { user } = await authService.me();
+
             set({
               user,
               isAuthenticated: true,

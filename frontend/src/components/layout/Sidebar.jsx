@@ -10,6 +10,8 @@ import {
   Cog6ToothIcon,
   ChartBarIcon,
   UsersIcon,
+  BuildingOffice2Icon,
+  BuildingLibraryIcon,
   ClipboardDocumentListIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
@@ -29,16 +31,31 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
     { name: 'Profile', href: '/student/profile', icon: UserIcon },
   ];
 
+  // Entries are filtered by role rather than hidden by CSS, so a link is
+  // never shown to someone the server would refuse.
   const adminNavItems = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: HomeIcon },
-    { name: 'All Complaints', href: '/admin/complaints', icon: ClipboardDocumentListIcon },
+    { name: 'Complaints', href: '/admin/complaints', icon: ClipboardDocumentListIcon },
+    { name: 'Notifications', href: '/admin/notifications', icon: BellIcon },
     { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
-    { name: 'Users', href: '/admin/users', icon: UsersIcon, superAdminOnly: true },
-    { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon },
+    { name: 'People', href: '/admin/users', icon: UsersIcon, roles: ['institution_admin', 'platform_admin'] },
+    { name: 'Institution', href: '/admin/institution', icon: BuildingOffice2Icon, roles: ['institution_admin', 'platform_admin'] },
+    { name: 'Institutions', href: '/platform/institutions', icon: BuildingLibraryIcon, roles: ['platform_admin'] },
+    { name: 'My profile', href: '/admin/settings', icon: Cog6ToothIcon },
   ];
 
-  const navItems = isAdmin() ? adminNavItems : studentNavItems;
-  const userRole = user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin' : 'Student';
+  const ROLE_LABELS = {
+    student: 'Student',
+    officer: 'Officer',
+    dept_head: 'Department head',
+    institution_admin: 'Administrator',
+    platform_admin: 'Platform owner',
+  };
+
+  const navItems = (isAdmin() ? adminNavItems : studentNavItems).filter(
+    (item) => !item.roles || item.roles.includes(user?.role),
+  );
+  const userRole = ROLE_LABELS[user?.role] || 'Student';
 
   const handleLogout = () => {
     logout();
@@ -90,9 +107,7 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
         
         {navItems.map((item) => {
           // Skip super admin only items for regular admins
-          if (item.superAdminOnly && user?.role !== 'super_admin') {
-            return null;
-          }
+
 
           const isActive = location.pathname === item.href || 
                           (item.href !== '/student/dashboard' && 

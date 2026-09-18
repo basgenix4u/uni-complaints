@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Relative by default so the browser calls the origin it was served from
+// and the dev server or reverse proxy forwards to the API. An absolute
+// URL is only needed when the API is on a different host in production.
+export const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

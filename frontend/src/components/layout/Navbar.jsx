@@ -14,6 +14,14 @@ import { cn } from '../../utils/cn';
 import useAuthStore from '../../stores/authStore';
 import Avatar from '../ui/Avatar';
 
+const ROLE_LABELS = {
+  student: 'Student',
+  officer: 'Officer',
+  dept_head: 'Department head',
+  institution_admin: 'Administrator',
+  platform_admin: 'Platform owner',
+};
+
 const Navbar = ({ onMenuClick, title }) => {
   const { user, logout, isAdmin } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -140,7 +148,7 @@ const Navbar = ({ onMenuClick, title }) => {
                   {user?.full_name?.split(' ')[0] || 'User'}
                 </p>
                 <p className="text-xs text-neutral-500 mt-0.5">
-                  {user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'Admin' : 'Student'}
+                  {ROLE_LABELS[user?.role] || 'Student'}
                 </p>
               </div>
             </Menu.Button>

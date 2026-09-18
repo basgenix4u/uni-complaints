@@ -10,6 +10,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from app.extensions import db
 from app.models.base import as_aware, utcnow
 from app.models.complaint import Complaint, PRIORITY_SLA_FACTOR
+from app.services.delivery import queue_sms
 from app.services.notifications import notify, record_event
 
 # West Africa Time. Nigeria does not observe daylight saving, so a fixed
@@ -165,6 +166,20 @@ def run_escalation_sweep(institution_id: str | None = None) -> dict:
                 complaint.id,
                 "escalation",
             )
+
+            # Escalation is the one event worth the cost of a text: data
+            # runs out, but a phone still receives SMS.
+            student = db.session.get(User, complaint.student_id)
+            if student and student.phone:
+                queue_sms(
+                    complaint.institution_id,
+                    student.phone,
+                    f"Resolve: complaint {complaint.ticket_number} passed its deadline and has "
+                    "been escalated to senior staff. No action needed from you.",
+                    user_id=student.id,
+                    complaint_id=complaint.id,
+                )
+
             escalated += 1
 
         elif complaint.assigned_to_id and (due - now) <= timedelta(hours=12):

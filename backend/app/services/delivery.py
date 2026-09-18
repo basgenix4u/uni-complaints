@@ -80,12 +80,9 @@ def _send_email(message: OutboundMessage) -> None:
 
 
 def _send_sms(message: OutboundMessage) -> None:
-    provider = current_app.config.get("SMS_PROVIDER")
-    if not provider:
-        raise RuntimeError("No SMS provider is configured")
-    # Provider integration is deliberately left to deployment: the choice
-    # differs by institution and by contract.
-    raise RuntimeError(f"SMS provider '{provider}' is not implemented")
+    from app.services.sms import send
+
+    send(message.recipient, message.body)
 
 
 def process_queue(limit: int = 100) -> dict:
