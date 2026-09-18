@@ -139,6 +139,20 @@ export const attachmentService = {
   },
   remove: (complaintId, attachmentId) =>
     api.delete(`/complaints/${complaintId}/attachments/${attachmentId}`).then(unwrap),
+
+  /**
+   * Fetches a preview as an object URL.
+   *
+   * The endpoint is authorised, so the image cannot be pointed at with a
+   * plain src attribute and has to be fetched with the token attached.
+   */
+  preview: async (complaintId, attachmentId) => {
+    const response = await api.get(
+      `/complaints/${complaintId}/attachments/${attachmentId}/preview`,
+      { responseType: 'blob' },
+    );
+    return URL.createObjectURL(response.data);
+  },
   /**
    * Fetches the file with the auth header and hands the browser a blob.
    *
@@ -171,6 +185,22 @@ export const dashboardService = {
   monthlyChart: () => api.get('/dashboard/charts/monthly').then(unwrap),
   summary: () => api.get('/dashboard/reports/summary').then(unwrap),
   staffPerformance: () => api.get('/dashboard/reports/staff-performance').then(unwrap),
+
+  /** Downloads a register as a spreadsheet file. */
+  exportCsv: async (kind, params = {}) => {
+    const response = await api.get(`/dashboard/export/${kind}`, {
+      params,
+      responseType: 'blob',
+    });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${kind}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
 };
 
 export const notificationService = {

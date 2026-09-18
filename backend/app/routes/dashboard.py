@@ -7,7 +7,7 @@ these stay usable on an institution with a large complaint history.
 from collections import OrderedDict
 from datetime import timedelta
 
-from flask import Blueprint, g, request
+from flask import Blueprint, Response, g, request
 from sqlalchemy import case, func
 
 from app.extensions import db
@@ -33,19 +33,27 @@ def _status_counts(base):
 def _avg_resolution_hours(base) -> float:
     """Mean hours from creation to resolution.
 
-    SQLite has no interval arithmetic that matches PostgreSQL, so the two
-    timestamps are fetched and the difference is taken in Python. Only
-    resolved rows are involved, which keeps the result set small.
+    Computed in the database where the dialect allows it. PostgreSQL
+    subtracts timestamps directly; SQLite has no interval type, so its
+    julianday function is used instead. Either way the rows stay in the
+    database rather than being pulled into the process, which matters once
+    an institution has a large history.
     """
-    rows = base.filter(Complaint.resolved_at.isnot(None)).with_entities(
-        Complaint.created_at, Complaint.resolved_at
-    ).all()
-    if not rows:
-        return 0.0
-    total = sum(
-        (as_aware(resolved) - as_aware(created)).total_seconds() for created, resolved in rows
+    dialect = db.session.bind.dialect.name if db.session.bind else "sqlite"
+    resolved = base.filter(Complaint.resolved_at.isnot(None))
+
+    if dialect == "postgresql":
+        seconds = func.avg(
+            func.extract("epoch", Complaint.resolved_at - Complaint.created_at)
+        )
+        value = resolved.with_entities(seconds).scalar()
+        return round((value or 0) / 3600, 1)
+
+    days = func.avg(
+        func.julianday(Complaint.resolved_at) - func.julianday(Complaint.created_at)
     )
-    return round(total / len(rows) / 3600, 1)
+    value = resolved.with_entities(days).scalar()
+    return round((value or 0) * 24, 1)
 
 
 @bp.get("/overview")
@@ -281,6 +289,53 @@ def staff_performance():
 
     report.sort(key=lambda row: row["assigned"], reverse=True)
     return ok({"staff": report})
+
+
+def _csv_response(body: str, filename: str) -> Response:
+    return Response(
+        # A leading byte order mark makes Excel open the file as UTF-8
+        # rather than mangling names with accents.
+        "\ufeff" + body,
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@bp.get("/export/complaints")
+@staff_required("dept_head")
+def export_complaints():
+    """Export the complaint register.
+
+    Institutions report to senates and regulators on schedules no
+    dashboard will match, so the underlying rows are made available.
+    """
+    from app.services.export import complaints_to_csv
+
+    query = tenant_query(Complaint)
+
+    for field in ("status", "category", "priority"):
+        value = request.args.get(field)
+        if value:
+            query = query.filter(getattr(Complaint, field) == value)
+
+    rows = query.order_by(Complaint.created_at.desc()).limit(5000).all()
+    stamp = utcnow().strftime("%Y-%m-%d")
+
+    return _csv_response(
+        complaints_to_csv(rows, include_personal=g.current_user.has_role_at_least("dept_head")),
+        f"complaints-{stamp}.csv",
+    )
+
+
+@bp.get("/export/users")
+@staff_required("institution_admin")
+def export_users():
+    from app.services.export import users_to_csv
+
+    rows = tenant_query(User).order_by(User.created_at.desc()).limit(5000).all()
+    stamp = utcnow().strftime("%Y-%m-%d")
+
+    return _csv_response(users_to_csv(rows), f"people-{stamp}.csv")
 
 
 @bp.get("/student-stats")

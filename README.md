@@ -88,13 +88,13 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 89 tests
+cd backend && pytest                    # 105 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
 cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
   RATELIMIT_ENABLED=false python run.py &
-cd frontend && npm run test:e2e         # 34 journeys
+cd frontend && npm run test:e2e         # 38 journeys
 ```
 
 The browser suite signs in once per role through the API and replays the
@@ -126,8 +126,28 @@ Both are idempotent and safe to run concurrently with the web process.
 | Uploads | Allow-list of types, file signatures verified against the declared type, generated filenames, stored outside the served tree |
 | File access | Served only through an authorised endpoint, so a guessed URL reveals nothing |
 | Private notes | Filtered for students in the API, and students cannot set the flag |
+| Spreadsheet exports | Values beginning with an equals sign are prefixed, so a title cannot execute when the file is opened |
+| Image previews | Generated from pixel data only, which drops the location a photograph was taken |
 | Transport | Security headers on every response; personal data is never cached |
 | Secrets | Production refuses to start with development defaults |
+
+---
+
+## Reporting
+
+Department heads can export the complaint register, and administrators the
+people register, as a spreadsheet. Institutions report to senates and
+regulators on schedules no dashboard will match, so the underlying rows are
+made available rather than adding a chart each term.
+
+Image attachments get a downscaled preview so a queue can be worked through
+without downloading anything. A 2400 by 1800 photograph becomes a 480 pixel
+preview around 98 per cent smaller, which matters when the person triaging
+is on mobile data. Previews are generated from pixel data alone, so the
+location recorded by a phone camera is not carried over.
+
+Previews need Pillow. Without it the application runs unchanged and simply
+serves no previews.
 
 ---
 
@@ -177,11 +197,12 @@ backend/
     models/       institution, user, complaint, attachment, message
     routes/       auth, complaints, attachments, dashboard,
                   notifications, admin, platform
-    services/     tickets, sla, storage, delivery, notifications
+    services/     tickets, sla, storage, delivery, notifications,
+                  sms, export, thumbnails
     security.py   role checks and tenant scoping
-  tests/          89 tests
+  tests/          105 tests
 frontend/
-  e2e/            34 browser journeys
+  e2e/            38 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin

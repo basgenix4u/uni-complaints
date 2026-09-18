@@ -217,6 +217,28 @@ test.describe('authorisation in the interface', () => {
   });
 });
 
+test.describe('registers', () => {
+  test('an administrator can export the complaint register', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/complaints');
+    await ready(page);
+
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: /export/i }).click();
+
+    const file = await download;
+    expect(file.suggestedFilename()).toMatch(/complaints-\d{4}-\d{2}-\d{2}\.csv/);
+  });
+
+  test('a student is not offered an export', async ({ page }) => {
+    await signIn(page, STUDENT);
+    await page.goto('/student/complaints');
+    await ready(page);
+
+    await expect(page.getByRole('button', { name: /export/i })).toBeHidden();
+  });
+});
+
 test.describe('accessibility', () => {
   test('every form control has a label', async ({ page }) => {
     await page.goto('/login');

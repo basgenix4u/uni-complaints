@@ -7,7 +7,7 @@ from app.models.attachment import MAX_FILES_PER_COMPLAINT, Attachment
 from app.models.complaint import Complaint
 from app.routes.auth import fail, ok
 from app.security import auth_required, can_view_complaint, tenant_query
-from app.services import storage
+from app.services import storage, thumbnails
 from app.services.notifications import record_event
 
 bp = Blueprint("attachments", __name__, url_prefix="/api/complaints")
@@ -41,6 +41,15 @@ def upload(complaint_id):
     except storage.StorageError as error:
         return fail(str(error), 422, {"file": str(error)})
 
+    # A preview is a convenience; failing to build one must not fail the
+    # upload, since the original is already stored.
+    preview = None
+    if thumbnails.can_preview(file_storage.mimetype.lower()):
+        try:
+            preview = thumbnails.generate(storage.path_for(stored_name), stored_name)
+        except storage.StorageError:
+            preview = None
+
     # Only staff may mark an attachment private.
     is_internal = bool(request.form.get("is_internal")) and user.is_staff
 
@@ -52,6 +61,7 @@ def upload(complaint_id):
         stored_name=stored_name,
         mime_type=file_storage.mimetype.lower(),
         size_bytes=size,
+        thumbnail_name=preview,
         is_internal=is_internal,
     )
     db.session.add(attachment)
@@ -103,6 +113,40 @@ def download(complaint_id, attachment_id):
     )
 
 
+@bp.get("/<complaint_id>/attachments/<attachment_id>/preview")
+@auth_required()
+def preview(complaint_id, attachment_id):
+    """Serve the downscaled preview.
+
+    Carries the same checks as the original: a preview of a private
+    attachment is still private.
+    """
+    user = g.current_user
+    complaint = tenant_query(Complaint).filter_by(id=complaint_id).first()
+
+    if not complaint or not can_view_complaint(user, complaint):
+        return fail("We could not find that file.", 404)
+
+    attachment = Attachment.query.filter_by(
+        id=attachment_id, complaint_id=complaint.id
+    ).first()
+
+    if not attachment or not attachment.thumbnail_name:
+        return fail("We could not find that file.", 404)
+    if attachment.is_internal and not user.is_staff:
+        return fail("We could not find that file.", 404)
+
+    try:
+        path = storage.path_for(attachment.thumbnail_name)
+    except storage.StorageError:
+        return fail("We could not find that file.", 404)
+
+    if not path.exists():
+        return fail("That file is no longer available.", 410)
+
+    return send_file(path, mimetype="image/webp", max_age=0)
+
+
 @bp.delete("/<complaint_id>/attachments/<attachment_id>")
 @auth_required()
 def remove(complaint_id, attachment_id):
@@ -123,6 +167,8 @@ def remove(complaint_id, attachment_id):
         return fail("You can only remove files you attached.", 403)
 
     storage.delete(attachment.stored_name)
+    if attachment.thumbnail_name:
+        storage.delete(attachment.thumbnail_name)
     record_event(complaint, user.id, "attachment_removed", from_value=attachment.original_name)
     db.session.delete(attachment)
     db.session.commit()

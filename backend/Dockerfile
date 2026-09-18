@@ -10,7 +10,7 @@ WORKDIR /app
 # the runtime image small.
 COPY requirements.txt requirements-prod.txt ./
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc libpq-dev curl \
+    && apt-get install -y --no-install-recommends gcc libpq-dev curl libjpeg62-turbo libwebp7 \
     && pip install --no-cache-dir -r requirements-prod.txt \
     && apt-get purge -y gcc \
     && apt-get autoremove -y \

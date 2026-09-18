@@ -4,11 +4,12 @@ import {
   DocumentIcon,
   LockClosedIcon,
   PaperClipIcon,
-  PhotoIcon,
   TrashIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 import Button from '../ui/Button';
+import AttachmentPreview from './AttachmentPreview';
 import { attachmentService, errorMessage } from '../../services/api';
 
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -30,6 +31,7 @@ export default function AttachmentList({
   const inputRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [lightbox, setLightbox] = useState(null);
 
   const upload = async (file, isInternal = false) => {
     if (!file) return;
@@ -86,14 +88,25 @@ export default function AttachmentList({
       )}
 
       <ul className="space-y-2">
-        {attachments.map((file) => {
-          const Icon = file.is_image ? PhotoIcon : DocumentIcon;
-          return (
+        {attachments.map((file) => (
             <li
               key={file.id}
               className="flex items-center gap-3 rounded-md border border-line bg-surface px-3.5 py-2.5"
             >
-              <Icon className="h-5 w-5 flex-none text-ink-500" aria-hidden="true" />
+              {file.is_image ? (
+                <AttachmentPreview
+                  complaintId={complaintId}
+                  attachment={file}
+                  onOpen={(source) => setLightbox({ source, name: file.original_name })}
+                />
+              ) : (
+                <span
+                  className="flex h-12 w-12 flex-none items-center justify-center rounded-md bg-canvas"
+                  aria-hidden="true"
+                >
+                  <DocumentIcon className="h-5 w-5 text-ink-500" />
+                </span>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-ink-900">{file.original_name}</p>
                 <p className="text-caption text-ink-500">
@@ -134,9 +147,34 @@ export default function AttachmentList({
                 </button>
               )}
             </li>
-          );
-        })}
+          ))}
       </ul>
+
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={lightbox.name}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightbox(null)}
+          onKeyDown={(event) => event.key === 'Escape' && setLightbox(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            aria-label="Close"
+            autoFocus
+          >
+            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+          </button>
+          <img
+            src={lightbox.source}
+            alt={lightbox.name}
+            className="max-h-full max-w-full rounded-lg object-contain"
+          />
+        </div>
+      )}
 
       {error && (
         <p role="alert" aria-live="polite" className="text-caption font-medium text-[#B91C1C]">
