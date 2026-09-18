@@ -44,6 +44,10 @@ class Attachment(TimestampMixin, db.Model):
     # Attached to an internal note, so students must not see it.
     is_internal = db.Column(db.Boolean, default=False, nullable=False)
 
+    # Downscaled preview, written beside the original where the format
+    # allows it. Absent for documents and where Pillow is not installed.
+    thumbnail_name = db.Column(db.String(120))
+
     uploader = db.relationship("User")
 
     def to_dict(self) -> dict:
@@ -53,6 +57,7 @@ class Attachment(TimestampMixin, db.Model):
             "mime_type": self.mime_type,
             "size_bytes": self.size_bytes,
             "is_image": self.mime_type.startswith("image/"),
+            "has_preview": bool(self.thumbnail_name),
             "is_internal": self.is_internal,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "uploaded_by": self.uploader.full_name if self.uploader else None,

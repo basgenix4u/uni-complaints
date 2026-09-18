@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { InboxIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, InboxIcon } from '@heroicons/react/24/outline';
 
 import Button from '../../components/ui/Button';
 import { Input, Select } from '../../components/ui/Field';
 import StatusBadge from '../../components/ui/StatusBadge';
 import PriorityBadge from '../../components/ui/PriorityBadge';
 import { SkeletonList } from '../../components/ui/Skeleton';
-import { complaintService } from '../../services/api';
+import { complaintService, dashboardService, errorMessage } from '../../services/api';
+import useAuthStore from '../../stores/authStore';
 import { PRIORITY, STATUS, categoryLabel } from '../../utils/status';
 import { formatDeadline, formatRelative } from '../../utils/format';
 
@@ -21,6 +22,9 @@ const VIEWS = [
 ];
 
 export default function AdminComplaints() {
+  const { user } = useAuthStore();
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
   const [view, setView] = useState('all');
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState('');
@@ -46,8 +50,41 @@ export default function AdminComplaints() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">Complaints</h1>
-      <p className="mt-1 text-ink-600">Triage, assign and respond.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+            Complaints
+          </h1>
+          <p className="mt-1 text-ink-600">Triage, assign and respond.</p>
+        </div>
+
+        {['dept_head', 'institution_admin', 'platform_admin'].includes(user?.role) && (
+          <Button
+            variant="secondary"
+            loading={exporting}
+            onClick={async () => {
+              setExporting(true);
+              setExportError('');
+              try {
+                await dashboardService.exportCsv('complaints', { status, priority });
+              } catch (error) {
+                setExportError(errorMessage(error, 'We could not build that export.'));
+              } finally {
+                setExporting(false);
+              }
+            }}
+          >
+            <ArrowDownTrayIcon className="h-5 w-5" aria-hidden="true" />
+            Export
+          </Button>
+        )}
+      </div>
+
+      {exportError && (
+        <p role="alert" className="mt-3 text-sm font-medium text-[#B91C1C]">
+          {exportError}
+        </p>
+      )}
 
       <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Saved views">
         {VIEWS.map((entry) => (
