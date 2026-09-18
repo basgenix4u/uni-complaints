@@ -25,6 +25,8 @@ const AdminComplaintDetails = lazy(() => import('./pages/admin/AdminComplaintDet
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const InstitutionSettings = lazy(() => import('./pages/admin/InstitutionSettings'));
+const PlatformInstitutions = lazy(() => import('./pages/platform/PlatformInstitutions'));
 
 // Shared
 import { ProtectedRoute } from './components/shared';
@@ -105,7 +107,7 @@ function App() {
             {/* Admin Routes */}
             <Route
               element={
-                <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <ProtectedRoute allowedRoles={['officer', 'dept_head', 'institution_admin', 'platform_admin']}>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
@@ -116,6 +118,29 @@ function App() {
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin/notifications" element={<StudentNotifications />} />
+            </Route>
+
+            {/* Institution administration */}
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['institution_admin', 'platform_admin']}>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/admin/institution" element={<InstitutionSettings />} />
+            </Route>
+
+            {/* Platform owner */}
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={['platform_admin']}>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/platform/institutions" element={<PlatformInstitutions />} />
             </Route>
 
             {/* 404 */}

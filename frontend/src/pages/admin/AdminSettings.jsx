@@ -87,7 +87,10 @@ const AdminSettings = () => {
   const getRoleLabel = (role) => {
     const labels = {
       admin: 'Administrator',
-      super_admin: 'Super Administrator',
+      platform_admin: 'Platform owner',
+      institution_admin: 'Administrator',
+      dept_head: 'Department head',
+      officer: 'Officer',
     };
     return labels[role] || role;
   };

@@ -1,0 +1,384 @@
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BuildingOffice2Icon, ClockIcon, PlusIcon } from '@heroicons/react/24/outline';
+
+import Button from '../../components/ui/Button';
+import { Input, Select, Textarea } from '../../components/ui/Field';
+import Skeleton from '../../components/ui/Skeleton';
+import { adminService, errorMessage, fieldErrors } from '../../services/api';
+
+const TABS = [
+  { key: 'profile', label: 'Institution' },
+  { key: 'service', label: 'Response times' },
+  { key: 'departments', label: 'Departments' },
+];
+
+export default function InstitutionSettings() {
+  const queryClient = useQueryClient();
+  const [tab, setTab] = useState('profile');
+  const [draft, setDraft] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [saved, setSaved] = useState('');
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => adminService.settings(),
+  });
+
+  const { data: departmentData } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => adminService.departments(),
+  });
+
+  const save = useMutation({
+    mutationFn: (payload) => adminService.updateSettings(payload),
+    onSuccess: () => {
+      setErrors({});
+      setSaved('Settings saved.');
+      setTimeout(() => setSaved(''), 3000);
+      setDraft(null);
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+    },
+    onError: (error) => {
+      const fields = fieldErrors(error);
+      setErrors(Object.keys(fields).length ? fields : { form: errorMessage(error) });
+    },
+  });
+
+  // The saved values are the source of truth until a field is edited, so
+  // there is no effect copying server state into local state.
+  const form = draft ?? data?.institution;
+
+  const set = (field, value) => {
+    setDraft({ ...form, [field]: value });
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  };
+
+  if (isLoading || !form) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-4 px-4 py-8">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">Settings</h1>
+      <p className="mt-1 text-ink-600">
+        How {form.name} appears, and how quickly complaints must be answered.
+      </p>
+
+      <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Settings sections">
+        {TABS.map((entry) => (
+          <button
+            key={entry.key}
+            type="button"
+            role="tab"
+            aria-selected={tab === entry.key}
+            onClick={() => setTab(entry.key)}
+            className={`min-h-touch rounded-md border px-4 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 ${
+              tab === entry.key
+                ? 'border-brand-700 bg-brand-50 text-brand-800'
+                : 'border-line bg-surface text-ink-600 hover:border-brand-600'
+            }`}
+          >
+            {entry.label}
+          </button>
+        ))}
+      </div>
+
+      {saved && (
+        <p
+          role="status"
+          className="mt-4 rounded-md px-4 py-3 text-sm font-medium"
+          style={{ backgroundColor: 'var(--status-resolved-bg)', color: 'var(--status-resolved-fg)' }}
+        >
+          {saved}
+        </p>
+      )}
+
+      {errors.form && (
+        <p
+          role="alert"
+          className="mt-4 rounded-md px-4 py-3 text-sm font-medium"
+          style={{ backgroundColor: 'var(--status-declined-bg)', color: 'var(--status-declined-fg)' }}
+        >
+          {errors.form}
+        </p>
+      )}
+
+      {tab === 'profile' && (
+        <section className="mt-5 space-y-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+          <Input
+            label="Name"
+            required
+            value={form.name || ''}
+            onChange={(event) => set('name', event.target.value)}
+            error={errors.name}
+          />
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Input
+              label="Contact email"
+              type="email"
+              value={form.contact_email || ''}
+              onChange={(event) => set('contact_email', event.target.value)}
+              hint="Shown to students who need to reach you directly."
+            />
+            <Input
+              label="Contact phone"
+              value={form.contact_phone || ''}
+              onChange={(event) => set('contact_phone', event.target.value)}
+              placeholder="08012345678"
+            />
+          </div>
+          <Input
+            label="State"
+            value={form.state || ''}
+            onChange={(event) => set('state', event.target.value)}
+          />
+          <Input
+            label="Logo URL"
+            value={form.logo_url || ''}
+            onChange={(event) => set('logo_url', event.target.value)}
+            hint="A square image works best."
+          />
+
+          <fieldset>
+            <legend className="text-sm font-semibold text-ink-700">Anonymous complaints</legend>
+            <label className="mt-2 flex min-h-touch items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={Boolean(form.allow_anonymous)}
+                onChange={(event) => set('allow_anonymous', event.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-line text-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+              />
+              <span className="text-ink-600">
+                Let students file without attaching their name. Useful for reports about staff
+                conduct, where naming yourself is the reason people stay silent.
+              </span>
+            </label>
+          </fieldset>
+
+          <div className="flex justify-end">
+            <Button loading={save.isPending} onClick={() => save.mutate(form)}>
+              Save
+            </Button>
+          </div>
+        </section>
+      )}
+
+      {tab === 'service' && (
+        <section className="mt-5 space-y-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+          <p className="flex gap-2.5 rounded-md border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
+            <ClockIcon className="h-5 w-5 flex-none" aria-hidden="true" />
+            <span>
+              Deadlines count working hours only. A complaint filed on Friday evening is not due
+              over the weekend, and public holidays are skipped.
+            </span>
+          </p>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Input
+              label="Hours to acknowledge"
+              type="number"
+              min="1"
+              max="168"
+              value={form.acknowledge_sla_hours ?? 24}
+              onChange={(event) => set('acknowledge_sla_hours', Number(event.target.value))}
+              hint="How quickly someone must confirm they have seen it."
+            />
+            <Input
+              label="Hours to resolve"
+              type="number"
+              min="1"
+              max="720"
+              value={form.default_sla_hours ?? 72}
+              onChange={(event) => set('default_sla_hours', Number(event.target.value))}
+              hint="Urgent halves twice; low doubles."
+            />
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Select
+              label="Working day starts"
+              value={form.working_hours_start ?? 8}
+              onChange={(event) => set('working_hours_start', Number(event.target.value))}
+            >
+              {Array.from({ length: 13 }, (_, index) => index + 5).map((hour) => (
+                <option key={hour} value={hour}>
+                  {String(hour).padStart(2, '0')}:00
+                </option>
+              ))}
+            </Select>
+            <Select
+              label="Working day ends"
+              value={form.working_hours_end ?? 17}
+              onChange={(event) => set('working_hours_end', Number(event.target.value))}
+              error={errors.form && form.working_hours_start >= form.working_hours_end ? ' ' : undefined}
+            >
+              {Array.from({ length: 13 }, (_, index) => index + 11).map((hour) => (
+                <option key={hour} value={hour}>
+                  {String(hour).padStart(2, '0')}:00
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex justify-end">
+            <Button loading={save.isPending} onClick={() => save.mutate(form)}>
+              Save
+            </Button>
+          </div>
+        </section>
+      )}
+
+      {tab === 'departments' && (
+        <DepartmentSettings departments={departmentData?.departments || []} />
+      )}
+    </div>
+  );
+}
+
+function DepartmentSettings({ departments }) {
+  const queryClient = useQueryClient();
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState({ name: '', description: '', sla_hours: '' });
+  const [error, setError] = useState('');
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['departments'] });
+
+  const create = useMutation({
+    mutationFn: () =>
+      adminService.createDepartment({
+        name: draft.name,
+        description: draft.description || undefined,
+        sla_hours: draft.sla_hours ? Number(draft.sla_hours) : undefined,
+      }),
+    onSuccess: () => {
+      setDraft({ name: '', description: '', sla_hours: '' });
+      setAdding(false);
+      setError('');
+      refresh();
+    },
+    onError: (createError) => setError(errorMessage(createError)),
+  });
+
+  const toggle = useMutation({
+    mutationFn: ({ id, isActive }) => adminService.updateDepartment(id, { is_active: !isActive }),
+    onSuccess: refresh,
+  });
+
+  return (
+    <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold text-ink-900">Departments</h2>
+          <p className="mt-0.5 text-caption text-ink-500">
+            Complaints are routed to these. A department can set its own resolution target.
+          </p>
+        </div>
+        {!adding && (
+          <Button variant="secondary" size="sm" onClick={() => setAdding(true)}>
+            <PlusIcon className="h-4 w-4" aria-hidden="true" />
+            Add
+          </Button>
+        )}
+      </div>
+
+      {adding && (
+        <div className="mt-4 space-y-4 rounded-md border border-line bg-canvas p-4">
+          <Input
+            label="Name"
+            required
+            value={draft.name}
+            onChange={(event) => setDraft({ ...draft, name: event.target.value })}
+            placeholder="Examinations"
+            error={error}
+          />
+          <Textarea
+            label="What it handles"
+            rows={2}
+            value={draft.description}
+            onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+          />
+          <Input
+            label="Resolution target in hours"
+            type="number"
+            min="1"
+            value={draft.sla_hours}
+            onChange={(event) => setDraft({ ...draft, sla_hours: event.target.value })}
+            hint="Leave blank to use the institution default."
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setAdding(false);
+                setError('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              loading={create.isPending}
+              disabled={draft.name.trim().length < 2}
+              onClick={() => create.mutate()}
+            >
+              Add department
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <ul className="mt-4 space-y-2">
+        {departments.map((department) => (
+          <li
+            key={department.id}
+            className="flex flex-wrap items-center gap-3 rounded-md border border-line px-4 py-3"
+          >
+            <BuildingOffice2Icon className="h-5 w-5 flex-none text-ink-500" aria-hidden="true" />
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-ink-900">{department.name}</p>
+              <p className="text-caption text-ink-500">
+                {department.description || 'No description'}
+                {department.sla_hours && ` · ${department.sla_hours}h target`}
+              </p>
+            </div>
+            <span
+              className="rounded-full px-2.5 py-0.5 text-caption font-semibold"
+              style={
+                department.is_active
+                  ? {
+                      backgroundColor: 'var(--status-resolved-bg)',
+                      color: 'var(--status-resolved-fg)',
+                    }
+                  : {
+                      backgroundColor: 'var(--status-closed-bg)',
+                      color: 'var(--status-closed-fg)',
+                    }
+              }
+            >
+              {department.is_active ? 'Active' : 'Inactive'}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toggle.mutate({ id: department.id, isActive: department.is_active })}
+            >
+              {department.is_active ? 'Deactivate' : 'Activate'}
+            </Button>
+          </li>
+        ))}
+        {departments.length === 0 && (
+          <li className="rounded-md border border-dashed border-line px-4 py-8 text-center text-sm text-ink-500">
+            No departments yet. Add one so complaints can be routed.
+          </li>
+        )}
+      </ul>
+    </section>
+  );
+}

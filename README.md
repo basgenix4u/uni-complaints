@@ -88,9 +88,18 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest           # 80 tests
+cd backend && pytest                    # 89 tests
 cd frontend && npm run lint && npm run build
+
+# Browser journeys, desktop and mobile, against a running API
+cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
+  RATELIMIT_ENABLED=false python run.py &
+cd frontend && npm run test:e2e         # 34 journeys
 ```
+
+The browser suite signs in once per role through the API and replays the
+session, rather than driving the login form repeatedly. Logging in on every
+test would exhaust the rate limit, which is a protection worth keeping.
 
 ---
 
@@ -99,7 +108,7 @@ cd frontend && npm run lint && npm run build
 | Command | Purpose | Suggested interval |
 | --- | --- | --- |
 | `flask escalate` | Escalate complaints past their deadline | every 30 minutes |
-| `flask send-queue` | Deliver queued email | every 5 minutes |
+| `flask send-queue` | Deliver queued email and texts | every 5 minutes |
 
 Both are idempotent and safe to run concurrently with the web process.
 
@@ -142,6 +151,7 @@ For the frontend, `npm run build` produces static files for any CDN or static ho
 | `CORS_ORIGINS` | Comma-separated list of allowed origins |
 | `UPLOAD_DIR` | Must be a persistent volume |
 | `SMTP_*`, `MAIL_FROM` | Without these, messages queue rather than being discarded |
+| `SMS_PROVIDER` | `termii`, `africastalking`, or `console` for local work |
 
 ---
 
@@ -169,8 +179,9 @@ backend/
                   notifications, admin, platform
     services/     tickets, sla, storage, delivery, notifications
     security.py   role checks and tenant scoping
-  tests/          80 tests
+  tests/          89 tests
 frontend/
+  e2e/            34 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin

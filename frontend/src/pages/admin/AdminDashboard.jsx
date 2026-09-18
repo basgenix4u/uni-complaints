@@ -58,14 +58,14 @@ const AdminDashboard = () => {
     queryFn: () => dashboardService.getTrendChart(14),
   });
 
-  const overview = overviewData?.data?.overview || {};
-  const statusCounts = overviewData?.data?.status_counts || {};
-  const todayStats = overviewData?.data?.today || {};
-  const recentComplaints = overviewData?.data?.recent_complaints || [];
+  const overview = overviewData?.overview || {};
+  const statusCounts = overviewData?.status_counts || {};
+  const todayStats = overviewData?.today || {};
+  const recentComplaints = overviewData?.recent_complaints || [];
 
-  const statusChart = statusChartData?.data?.chart_data || [];
-  const categoryChart = categoryChartData?.data?.chart_data?.slice(0, 6) || [];
-  const trendChart = trendChartData?.data?.chart_data || [];
+  const statusChart = statusChartData?.chart_data || [];
+  const categoryChart = categoryChartData?.chart_data?.slice(0, 6) || [];
+  const trendChart = trendChartData?.chart_data || [];
 
   const statCards = [
     {

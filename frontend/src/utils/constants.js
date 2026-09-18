@@ -113,8 +113,10 @@ export const CATEGORIES = [
 // User Roles
 export const USER_ROLES = {
   STUDENT: 'student',
-  ADMIN: 'admin',
-  SUPER_ADMIN: 'super_admin',
+  OFFICER: 'officer',
+  DEPT_HEAD: 'dept_head',
+  INSTITUTION_ADMIN: 'institution_admin',
+  PLATFORM_ADMIN: 'platform_admin',
 };
 
 // Pagination

@@ -35,6 +35,9 @@ class Config:
 
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_HEADERS_ENABLED = True
+    # Escape hatch for end to end runs, which sign in repeatedly against a
+    # throwaway database. Never set this on a deployed environment.
+    RATELIMIT_ENABLED = os.getenv("RATELIMIT_ENABLED", "true").lower() != "false"
 
     JSON_SORT_KEYS = False
 
@@ -50,7 +53,12 @@ class Config:
     SMTP_USERNAME = os.getenv("SMTP_USERNAME")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
     MAIL_FROM = os.getenv("MAIL_FROM", "no-reply@resolve.ng")
+    # One of: termii, africastalking, console. Empty disables SMS.
     SMS_PROVIDER = os.getenv("SMS_PROVIDER")
+    SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "Resolve")
+    TERMII_API_KEY = os.getenv("TERMII_API_KEY")
+    AFRICASTALKING_API_KEY = os.getenv("AFRICASTALKING_API_KEY")
+    AFRICASTALKING_USERNAME = os.getenv("AFRICASTALKING_USERNAME")
 
 
 class DevelopmentConfig(Config):
