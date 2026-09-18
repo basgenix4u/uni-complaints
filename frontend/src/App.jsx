@@ -29,7 +29,7 @@ const InstitutionSettings = lazy(() => import('./pages/admin/InstitutionSettings
 const PlatformInstitutions = lazy(() => import('./pages/platform/PlatformInstitutions'));
 
 // Shared
-import { ProtectedRoute } from './components/shared';
+import { CommandPalette, ProtectedRoute } from './components/shared';
 import useAuthStore from './stores/authStore';
 
 // Create Query Client
@@ -76,6 +76,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <CommandPalette />
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/track" element={<TrackPage />} />

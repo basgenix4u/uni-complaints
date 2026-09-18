@@ -94,7 +94,7 @@ cd frontend && npm run lint && npm run build
 # Browser journeys, desktop and mobile, against a running API
 cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
   RATELIMIT_ENABLED=false python run.py &
-cd frontend && npm run test:e2e         # 38 journeys
+cd frontend && npm run test:e2e         # 44 journeys
 ```
 
 The browser suite signs in once per role through the API and replays the
@@ -130,6 +130,19 @@ Both are idempotent and safe to run concurrently with the web process.
 | Image previews | Generated from pixel data only, which drops the location a photograph was taken |
 | Transport | Security headers on every response; personal data is never cached |
 | Secrets | Production refuses to start with development defaults |
+
+---
+
+## Working quickly
+
+Control or Command with K opens a launcher from anywhere. Typing a ticket
+number goes straight to that complaint; typing a page name jumps to it.
+Someone working a queue of several hundred complaints spends more time
+navigating than reading, and this removes the list, the filter and the
+scroll.
+
+Destinations are filtered by role, so a student is never offered a staff
+page they would then be refused.
 
 ---
 
@@ -202,7 +215,7 @@ backend/
     security.py   role checks and tenant scoping
   tests/          105 tests
 frontend/
-  e2e/            38 browser journeys
+  e2e/            44 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin
