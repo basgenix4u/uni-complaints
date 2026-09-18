@@ -1,275 +1,298 @@
-import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftIcon,
-  ClockIcon,
-  UserIcon,
-  PaperAirplaneIcon,
-  DocumentDuplicateIcon,
   CheckIcon,
+  ClipboardIcon,
+  PaperAirplaneIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
-import { Card, Button, Textarea, Spinner, Avatar, PageHeader } from '../../components/ui';
+
+import Button from '../../components/ui/Button';
+import { Textarea } from '../../components/ui/Field';
 import StatusBadge from '../../components/ui/StatusBadge';
 import PriorityBadge from '../../components/ui/PriorityBadge';
-import { studentService } from '../../services/api';
-import { formatDate, formatRelativeTime, getCategoryLabel, getCategoryIcon, copyToClipboard } from '../../utils/helpers';
-import useAuthStore from '../../stores/authStore';
+import ProgressRail from '../../components/ui/ProgressRail';
+import { SkeletonList } from '../../components/ui/Skeleton';
+import AttachmentList from '../../components/complaints/AttachmentList';
+import { complaintService, errorMessage } from '../../services/api';
+import { categoryLabel, getStatus } from '../../utils/status';
+import { formatDateTime, formatDeadline, formatRelative, initials } from '../../utils/format';
 
-const ComplaintDetails = () => {
+export default function ComplaintDetails() {
   const { id } = useParams();
-  const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const [message, setMessage] = useState('');
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState('');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
-
-  // Fetch complaint details
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['complaint', id],
-    queryFn: () => studentService.getComplaintDetails(id),
+    queryFn: () => complaintService.get(id),
   });
 
-  const complaint = data?.data?.complaint;
-  const responses = complaint?.responses || [];
+  const complaint = data?.complaint;
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['complaint', id] });
 
-  // Add response mutation
-  const responseMutation = useMutation({
-    mutationFn: (data) => studentService.addResponse(id, data),
+  const reply = useMutation({
+    mutationFn: () => complaintService.reply(id, { message }),
     onSuccess: () => {
-      toast.success('Response sent successfully');
-      reset();
-      queryClient.invalidateQueries(['complaint', id]);
+      setMessage('');
+      setError('');
+      refresh();
     },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to send response');
-    },
+    onError: (replyError) => setError(errorMessage(replyError, 'We could not send that message.')),
   });
 
-  const onSubmit = (data) => {
-    if (!data.message?.trim()) return;
-    responseMutation.mutate({ message: data.message });
-  };
+  const rate = useMutation({
+    mutationFn: (score) => complaintService.rate(id, score),
+    onSuccess: refresh,
+  });
 
-  const handleCopyTicket = async () => {
-    const success = await copyToClipboard(complaint.ticket_number);
-    if (success) {
-      setCopied(true);
-      toast.success('Ticket number copied!');
-      setTimeout(() => setCopied(false), 2000);
-    }
+  const copyTicket = async () => {
+    await navigator.clipboard.writeText(complaint.ticket_number);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Spinner size="xl" />
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <SkeletonList rows={4} />
       </div>
     );
   }
 
-  if (error || !complaint) {
+  if (!complaint) {
     return (
-      <div className="text-center py-16">
-        <h2 className="text-xl font-semibold text-neutral-900 mb-2">Complaint not found</h2>
-        <p className="text-neutral-500 mb-6">The complaint you're looking for doesn't exist or you don't have access.</p>
-        <Link to="/student/complaints">
-          <Button>Back to Complaints</Button>
+      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+        <h1 className="font-display text-xl font-semibold text-ink-900">
+          We could not find that complaint.
+        </h1>
+        <Link to="/student/complaints" className="mt-4 inline-block font-semibold text-brand-700 hover:underline">
+          Back to my complaints
         </Link>
       </div>
     );
   }
 
-  const isClosedOrRejected = ['closed', 'rejected'].includes(complaint.status);
+  const closed = ['resolved', 'closed', 'declined'].includes(complaint.status);
 
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Back Button */}
+    <div className="mx-auto max-w-3xl px-4 py-8">
       <Link
         to="/student/complaints"
-        className="inline-flex items-center gap-2 text-neutral-600 hover:text-neutral-900 mb-6 group"
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-700"
       >
-        <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-        <span>Back to complaints</span>
+        <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
+        My complaints
       </Link>
 
-      {/* Header Card */}
-      <Card className="mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-          {/* Category Icon */}
-          <div className="w-16 h-16 rounded-2xl bg-primary-100 flex items-center justify-center text-3xl flex-shrink-0">
-            {getCategoryIcon(complaint.category)}
-          </div>
-
-          {/* Main Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
-              <button
-                onClick={handleCopyTicket}
-                className="inline-flex items-center gap-1 text-sm font-mono text-primary-600 bg-primary-50 px-3 py-1 rounded-lg hover:bg-primary-100 transition-colors"
-              >
-                {complaint.ticket_number}
-                {copied ? (
-                  <CheckIcon className="w-4 h-4 text-success-600" />
-                ) : (
-                  <DocumentDuplicateIcon className="w-4 h-4" />
-                )}
-              </button>
-              <StatusBadge status={complaint.status} />
-              <PriorityBadge priority={complaint.priority} />
-            </div>
-
-            <h1 className="text-2xl font-bold text-neutral-900 mb-2">
+      <header className="mt-4 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <button
+              type="button"
+              onClick={copyTicket}
+              className="inline-flex items-center gap-2 font-mono text-sm font-semibold text-ink-600 hover:text-brand-700"
+            >
+              {complaint.ticket_number}
+              {copied ? (
+                <CheckIcon className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ClipboardIcon className="h-4 w-4" aria-hidden="true" />
+              )}
+              <span className="sr-only">Copy ticket number</span>
+            </button>
+            <h1 className="mt-1 font-display text-xl font-semibold tracking-tight text-ink-900">
               {complaint.title}
             </h1>
-
-            <div className="flex flex-wrap items-center gap-4 text-sm text-neutral-500">
-              <span className="flex items-center gap-1">
-                <ClockIcon className="w-4 h-4" />
-                Submitted {formatRelativeTime(complaint.created_at)}
-              </span>
-              <span>•</span>
-              <span>{getCategoryLabel(complaint.category)}</span>
-              {complaint.resolved_at && (
-                <>
-                  <span>•</span>
-                  <span className="text-success-600">
-                    Resolved {formatRelativeTime(complaint.resolved_at)}
-                  </span>
-                </>
-              )}
-            </div>
+            <p className="mt-1 text-sm text-ink-500">
+              {categoryLabel(complaint.category)} · filed {formatRelative(complaint.created_at)}
+            </p>
           </div>
-        </div>
-
-        {/* Description */}
-        <div className="mt-6 pt-6 border-t border-neutral-100">
-          <h3 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-3">
-            Description
-          </h3>
-          <p className="text-neutral-700 whitespace-pre-wrap leading-relaxed">
-            {complaint.description}
-          </p>
-        </div>
-
-        {/* Metadata */}
-        <div className="mt-6 pt-6 border-t border-neutral-100 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <p className="text-xs text-neutral-500 mb-1">Status</p>
-            <StatusBadge status={complaint.status} />
-          </div>
-          <div>
-            <p className="text-xs text-neutral-500 mb-1">Priority</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={complaint.status} overdue={complaint.is_overdue} />
             <PriorityBadge priority={complaint.priority} />
           </div>
-          <div>
-            <p className="text-xs text-neutral-500 mb-1">Created</p>
-            <p className="text-sm font-medium text-neutral-900">
-              {formatDate(complaint.created_at, 'MMM dd, yyyy')}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-neutral-500 mb-1">Assigned To</p>
-            <p className="text-sm font-medium text-neutral-900">
-              {complaint.assigned_admin?.full_name || 'Not assigned'}
-            </p>
-          </div>
         </div>
-      </Card>
 
-      {/* Responses Section */}
-      <Card>
-        <h2 className="text-lg font-semibold text-neutral-900 mb-6">
-          Responses ({responses.length})
+        <div className="mt-5 border-t border-line pt-4">
+          <ProgressRail status={complaint.status} />
+        </div>
+
+        {!closed && (
+          <p className="mt-2 text-sm text-ink-600">
+            <span className="text-ink-500">Response due:</span>{' '}
+            <strong className="font-semibold text-ink-900">
+              {formatDeadline(complaint.resolve_due_at)}
+            </strong>
+            {complaint.assigned_admin && (
+              <>
+                {' · '}
+                <span className="text-ink-500">Owner:</span>{' '}
+                <strong className="font-semibold text-ink-900">
+                  {complaint.assigned_admin.full_name}
+                </strong>
+              </>
+            )}
+          </p>
+        )}
+
+        {complaint.is_escalated && (
+          <p
+            className="mt-3 rounded-md px-4 py-3 text-sm"
+            style={{ backgroundColor: 'var(--status-overdue-bg)', color: 'var(--status-overdue-fg)' }}
+          >
+            This passed its deadline, so it has been raised with senior staff. You do not need to do
+            anything.
+          </p>
+        )}
+      </header>
+
+      {complaint.status === 'resolved' && (
+        <Outcome
+          tone="resolved"
+          heading={`Resolved in ${Math.round(complaint.resolution_hours || 0)} hours`}
+          body={complaint.resolution_note}
+          rating={complaint.satisfaction_rating}
+          onRate={(score) => rate.mutate(score)}
+        />
+      )}
+
+      {complaint.status === 'declined' && (
+        <Outcome
+          tone="declined"
+          heading="Not accepted"
+          body={complaint.decline_reason}
+          footer="If you disagree, reply below and ask for it to be looked at again."
+        />
+      )}
+
+      <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <h2 className="text-sm font-bold text-ink-900">What you reported</h2>
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-700">
+          {complaint.description}
+        </p>
+      </section>
+
+      <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <AttachmentList
+          complaintId={id}
+          attachments={complaint.attachments || []}
+          canUpload={!closed}
+          onChange={refresh}
+        />
+      </section>
+
+      <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <h2 className="mb-4 text-sm font-bold text-ink-900">
+          Messages {complaint.responses?.length > 0 && `(${complaint.responses.length})`}
         </h2>
 
-        {/* Timeline */}
-        <div className="space-y-6">
-          {responses.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-neutral-500">No responses yet. The admin will respond to your complaint soon.</p>
-            </div>
-          ) : (
-            responses.map((response, index) => {
-              const isAdmin = response.author?.role !== 'student';
-              const isCurrentUser = response.author?.id === user?.id;
+        {(!complaint.responses || complaint.responses.length === 0) && (
+          <p className="text-sm text-ink-500">
+            No messages yet. You will be notified as soon as someone replies.
+          </p>
+        )}
 
-              return (
-                <motion.div
-                  key={response.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className={`flex gap-4 ${isCurrentUser ? 'flex-row-reverse' : ''}`}
+        <ol className="space-y-4">
+          {complaint.responses?.map((response) => {
+            const fromStaff = response.author?.role && response.author.role !== 'student';
+            return (
+              <li key={response.id} className={`flex gap-3 ${fromStaff ? '' : 'flex-row-reverse'}`}>
+                <span
+                  className={`flex h-9 w-9 flex-none items-center justify-center rounded-full text-caption font-bold ${
+                    fromStaff ? 'bg-brand-100 text-brand-800' : 'bg-line text-ink-600'
+                  }`}
+                  aria-hidden="true"
                 >
-                  <Avatar
-                    name={response.author?.full_name}
-                    size="md"
-                    className="flex-shrink-0"
-                  />
-                  <div className={`flex-1 max-w-[80%] ${isCurrentUser ? 'text-right' : ''}`}>
-                    <div
-                      className={`inline-block p-4 rounded-2xl ${
-                        isCurrentUser
-                          ? 'bg-primary-500 text-white rounded-tr-none'
-                          : 'bg-neutral-100 text-neutral-900 rounded-tl-none'
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap text-left">{response.message}</p>
-                    </div>
-                    <div className={`mt-2 flex items-center gap-2 text-xs text-neutral-400 ${isCurrentUser ? 'justify-end' : ''}`}>
-                      <span className="font-medium">
-                        {isCurrentUser ? 'You' : response.author?.full_name}
-                      </span>
-                      {isAdmin && !isCurrentUser && (
-                        <span className="px-1.5 py-0.5 bg-primary-100 text-primary-600 rounded text-2xs font-medium">
-                          Admin
-                        </span>
-                      )}
-                      <span>•</span>
-                      <span>{formatRelativeTime(response.created_at)}</span>
-                    </div>
+                  {initials(response.author?.full_name)}
+                </span>
+                <div className={`max-w-[80%] ${fromStaff ? '' : 'text-right'}`}>
+                  <p className="text-caption font-semibold text-ink-600">
+                    {response.author?.full_name || 'Removed account'}
+                    {fromStaff && ' · staff'}
+                  </p>
+                  <div
+                    className={`mt-1 whitespace-pre-wrap rounded-lg px-4 py-3 text-sm leading-relaxed ${
+                      fromStaff ? 'bg-canvas text-ink-900' : 'bg-brand-700 text-white'
+                    }`}
+                  >
+                    {response.message}
                   </div>
-                </motion.div>
-              );
-            })
-          )}
-        </div>
+                  <p className="mt-1 text-caption text-ink-500">
+                    {formatDateTime(response.created_at)}
+                  </p>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
 
-        {/* Reply Form */}
-        {!isClosedOrRejected ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 pt-6 border-t border-neutral-100">
+        {complaint.status !== 'closed' && (
+          <div className="mt-5 border-t border-line pt-5">
             <Textarea
-              placeholder="Type your reply..."
+              label="Add a message"
               rows={3}
-              error={errors.message?.message}
-              {...register('message', { required: 'Please enter a message' })}
+              placeholder="Add anything that might help, or ask for an update."
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              error={error}
             />
-            <div className="flex justify-end mt-4">
+            <div className="mt-3 flex justify-end">
               <Button
-                type="submit"
-                loading={responseMutation.isPending}
-                rightIcon={<PaperAirplaneIcon className="w-4 h-4" />}
+                onClick={() => reply.mutate()}
+                loading={reply.isPending}
+                disabled={message.trim().length < 2}
               >
-                Send Reply
+                <PaperAirplaneIcon className="h-4 w-4" aria-hidden="true" />
+                Send
               </Button>
-            </div>
-          </form>
-        ) : (
-          <div className="mt-8 pt-6 border-t border-neutral-100">
-            <div className="p-4 rounded-xl bg-neutral-100 text-center">
-              <p className="text-neutral-600">
-                This complaint is {complaint.status}. No further responses can be added.
-              </p>
             </div>
           </div>
         )}
-      </Card>
+      </section>
     </div>
   );
-};
+}
 
-export default ComplaintDetails;
+function Outcome({ tone, heading, body, footer, rating, onRate }) {
+  const config = getStatus(tone);
+  return (
+    <section
+      className="mt-5 rounded-lg p-6"
+      style={{ backgroundColor: config.bg, color: config.fg }}
+    >
+      <h2 className="font-display text-lg font-semibold">{heading}</h2>
+      {body && <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{body}</p>}
+      {footer && <p className="mt-3 text-caption">{footer}</p>}
+
+      {onRate && (
+        <div className="mt-4 border-t pt-4" style={{ borderColor: 'currentColor', opacity: 0.95 }}>
+          {rating ? (
+            <p className="text-sm font-semibold">Thank you for rating this {rating} out of 5.</p>
+          ) : (
+            <>
+              <p className="text-sm font-semibold">Was this actually sorted?</p>
+              <div className="mt-2 flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((score) => (
+                  <button
+                    key={score}
+                    type="button"
+                    onClick={() => onRate(score)}
+                    className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-white/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
+                    aria-label={`Rate ${score} out of 5`}
+                  >
+                    <StarIcon className="h-6 w-6" aria-hidden="true" />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}

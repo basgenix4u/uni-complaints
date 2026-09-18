@@ -1,162 +1,185 @@
 <div align="center">
 
-# 🎓 UniComplaints
+# Resolve
 
-**A campus complaint management system for Nigerian universities** — students submit and track complaints; administrators triage, respond, and resolve them with full accountability.
+**Complaint and case resolution for institutions**
 
-[![Flask](https://img.shields.io/badge/Backend-Flask%203-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
-[![React](https://img.shields.io/badge/Frontend-React%2018-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev)
-[![Vite](https://img.shields.io/badge/Build-Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Styling-Tailwind-38bdf8?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
+Every complaint gets an owner, a clock, and an answer.
+
+[![CI](https://github.com/basgenix4u/uni-complaints/actions/workflows/ci.yml/badge.svg)](https://github.com/basgenix4u/uni-complaints/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 </div>
 
 ---
 
-## ✨ Overview
+## What this is
 
-University complaints usually disappear into suggestion boxes, departmental email threads, or verbal promises. **UniComplaints** gives them a home: students file structured complaints and follow their progress, while administrators triage, assign, respond, and close the loop — with every action recorded.
+Complaints at most institutions arrive by paper, WhatsApp and physical queue, then disappear. There is no ticket, no named owner, no deadline and no record — so nothing can be chased, measured or escalated.
 
----
+Resolve gives every complaint a ticket number, a department, a named officer and a response deadline, and escalates automatically when that deadline passes. Students track progress without phoning anyone. Administrators see what is overdue and who owns it.
 
-## 👥 Roles
+It is **multi-tenant**: one deployment serves many institutions, each with its own departments, service levels, branding and users. No institution can see another's data.
 
-| Role | Capabilities |
+## Who uses it
+
+| Role | What they do |
 | --- | --- |
-| **Student** | Register, log in, file a complaint, track status, view responses, manage notifications and profile |
-| **Admin** | Dashboard and analytics, triage all complaints, respond, manage users, configure settings |
+| Student | Files complaints, tracks them, replies, rates the outcome |
+| Officer | Works a queue, replies, moves complaints through their states |
+| Department head | Assigns ownership, sees department performance |
+| Institution admin | Manages staff, departments, service levels and settings |
+| Platform admin | Provisions institutions across the deployment |
+
+## How a complaint moves
+
+```
+submitted → acknowledged → in_progress → resolved → closed
+                    ↘ awaiting_student ↗
+                    ↘ declined
+```
+
+Transitions are validated on the server. Resolving requires an explanation and declining requires a reason, both of which the student sees. Every change is written to an append-only audit trail.
+
+## Service levels
+
+Deadlines count **working hours only**, skipping weekends and public holidays. A complaint filed at 18:00 on Friday against an eight hour target is due Monday at 16:00 — not Saturday at 02:00, which would have breached before anyone returned to work.
+
+Priority scales the target: urgent is a quarter of the standard window, low is double.
+
+When a deadline passes, `flask escalate` raises the complaint, notifies the student and department heads, and records it. The sweep is idempotent, so it is safe to run on a schedule.
 
 ---
 
-## 🚀 Features
-
-### 🎓 Student
-- Register and log in with JWT authentication
-- **File a complaint** with category, priority, and attachments
-- Track complaint status end to end
-- Read official responses and updates
-- Notifications on status changes
-- Profile management
-
-### 🛡️ Admin
-- **Executive dashboard** with KPI cards and analytics
-- Full complaint queue with filtering
-- **Complaint detail** with response thread and internal notes
-- User management
-- Platform settings
-
-### 🧩 Shared
-- **Design system** — Button, Card, Badge, Modal, Input, Select, Textarea, Avatar, StatCard, StatusBadge, EmptyState, Spinner, PageHeader
-- Animated transitions with Framer Motion
-- Responsive layouts down to mobile
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-| --- | --- |
-| Backend | Python 3, Flask 3, SQLAlchemy 2, Flask-Migrate |
-| Auth | Flask-JWT-Extended, Flask-Bcrypt, PyJWT |
-| Database | PostgreSQL (SQLite for local dev) |
-| Frontend | React 18, Vite, Tailwind CSS |
-| Data fetching | Axios + TanStack Query |
-| State | Zustand |
-| Forms | React Hook Form + Zod |
-| UI | Headless UI, Heroicons, Lucide, Framer Motion |
-| CI | GitHub Actions |
-
----
-
-## ⚡ Quick Start
+## Running it locally
 
 ### Backend
 
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-flask run
-# → http://localhost:5000
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+
+cp .env.example .env          # then set SECRET_KEY and JWT_SECRET_KEY
+flask seed --demo             # creates an institution and sample accounts
+python run.py                 # http://localhost:5000
 ```
+
+`flask seed` creates the first platform administrator. This cannot be done through the API, because creating staff requires an existing administrator.
+
+Demo accounts created by `--demo`:
+
+| Email | Password | Role |
+| --- | --- | --- |
+| `admin@resolve.ng` | `ChangeMe123` | Platform admin |
+| `admin@demo.edu.ng` | `Password123` | Institution admin |
+| `amina@demo.edu.ng` | `Password123` | Student |
 
 ### Frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev
-# → http://localhost:5173
+npm run dev                   # http://localhost:5173
+```
+
+The dev server proxies `/api` to the backend, so no cross-origin setup is needed.
+
+### Tests
+
+```bash
+cd backend && pytest           # 80 tests
+cd frontend && npm run lint && npm run build
 ```
 
 ---
 
-## 📁 Project Structure
+## Scheduled commands
 
-```text
-uni-complaints/
-├── backend/
-│   ├── app/
-│   │   ├── models/          # SQLAlchemy models (User, Complaint, Response)
-│   │   ├── routes/          # Blueprints
-│   │   └── extensions.py    # db, jwt, bcrypt, migrate
-│   └── requirements.txt
-├── frontend/
-│   └── src/
-│       ├── pages/
-│       │   ├── auth/        # Login, Register
-│       │   ├── student/     # Dashboard, New/My Complaints, Details, Notifications, Profile
-│       │   └── admin/       # Dashboard, Complaints, Analytics, Users, Settings
-│       ├── components/      # ui · layout · shared
-│       ├── services/api.js  # Axios client
-│       └── stores/          # Zustand auth store
-└── .github/workflows/       # CI (Flask + Vite)
-```
+| Command | Purpose | Suggested interval |
+| --- | --- | --- |
+| `flask escalate` | Escalate complaints past their deadline | every 30 minutes |
+| `flask send-queue` | Deliver queued email | every 5 minutes |
+
+Both are idempotent and safe to run concurrently with the web process.
 
 ---
 
-## 📜 Available Scripts
+## Security
 
-### Frontend
-
-| Command | Description |
+| Concern | Approach |
 | --- | --- |
-| `npm run dev` | Start the Vite dev server |
-| `npm run build` | Production build |
-| `npm run preview` | Preview the production build |
-| `npm run lint` | Run ESLint |
+| Tenant isolation | Every tenant table carries `institution_id`; queries are scoped by middleware, and fail closed if no tenant is bound |
+| Authorisation | Role hierarchy enforced server side on every route, never in the client |
+| Revoked access | Tokens are checked against the stored user each request, so deactivation takes effect immediately |
+| Account enumeration | Login returns one message for both an unknown email and a wrong password |
+| Brute force | Rate limits on registration, login and password change |
+| Uploads | Allow-list of types, file signatures verified against the declared type, generated filenames, stored outside the served tree |
+| File access | Served only through an authorised endpoint, so a guessed URL reveals nothing |
+| Private notes | Filtered for students in the API, and students cannot set the flag |
+| Transport | Security headers on every response; personal data is never cached |
+| Secrets | Production refuses to start with development defaults |
 
 ---
 
-## 🔐 Security
+## Deployment
 
-- Passwords hashed with **bcrypt**
-- Stateless **JWT** access tokens
-- Role checks enforced server-side on admin routes
-- CORS restricted to configured origins
+```bash
+docker build -t resolve-api ./backend
+docker run -p 5000:5000 --env-file backend/.env resolve-api
+```
 
----
+The image runs as an unprivileged user, serves through gunicorn, and exposes `/api/ready` as a health check that confirms the database answers.
 
-## 🗺 Roadmap
+For the frontend, `npm run build` produces static files for any CDN or static host. Set `VITE_API_URL` to the API origin.
 
-- [ ] Complaint categories and SLA configuration
-- [ ] Email notifications
-- [ ] File attachment storage
-- [ ] Escalation workflow
-- [ ] End-to-end test suite
+### Required configuration
 
----
-
-## 📄 License
-
-Released under the [MIT License](./LICENSE).
+| Variable | Notes |
+| --- | --- |
+| `SECRET_KEY`, `JWT_SECRET_KEY` | Generate with `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `DATABASE_URL` | PostgreSQL in production; SQLite is for local work only |
+| `CORS_ORIGINS` | Comma-separated list of allowed origins |
+| `UPLOAD_DIR` | Must be a persistent volume |
+| `SMTP_*`, `MAIL_FROM` | Without these, messages queue rather than being discarded |
 
 ---
 
-<div align="center">
+## Design
 
-Built by [Abdulbasit Abdulalim](https://github.com/basgenix4u)
+The interface is built to a written specification covering colour, type, spacing, motion, voice and accessibility.
 
-</div>
+Two decisions worth calling out:
+
+**Status is never colour alone.** Simulating deuteranopia, "in progress" amber and "declined" red measure 1.19 contrast against each other, and "submitted" blue against "closed" slate measures 1.20 — effectively identical. A colour-blind student could not tell *being worked on* from *rejected*. Every status renders an icon and a text label, enforced by the component's API.
+
+**Dates are written day-first with a named month.** A numeric date is read differently in Nigeria and the United States, and that ambiguity is unacceptable on a response deadline.
+
+All text meets WCAG 2.2 AA. The primary action measures 6.45:1.
+
+---
+
+## Project layout
+
+```
+backend/
+  app/
+    models/       institution, user, complaint, attachment, message
+    routes/       auth, complaints, attachments, dashboard,
+                  notifications, admin, platform
+    services/     tickets, sla, storage, delivery, notifications
+    security.py   role checks and tenant scoping
+  tests/          80 tests
+frontend/
+  src/
+    components/   ui primitives, complaint views
+    pages/        auth, public, student, admin
+    services/     API client
+    styles/       design tokens
+```
+
+---
+
+## Licence
+
+[MIT](./LICENSE)

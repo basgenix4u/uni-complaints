@@ -198,39 +198,3 @@ export const platformService = {
 };
 
 export default api;
-
-/*
- * Compatibility layer.
- *
- * Maps the service names used by screens that have not yet been migrated
- * onto the current endpoints. Remove each entry as its screens are
- * rewritten against the services above.
- */
-
-export const studentService = {
-  getCategories: async () => ({ data: { categories: [] } }),
-  getPriorities: async () => ({ data: { priorities: [] } }),
-  getMyComplaints: (params) => complaintService.list(params).then((d) => ({ data: d })),
-  createComplaint: (data) => complaintService.create(data).then((d) => ({ data: d })),
-  getComplaintDetails: (id) => complaintService.get(id).then((d) => ({ data: d })),
-  addResponse: (id, data) => complaintService.reply(id, data).then((d) => ({ data: d })),
-  trackComplaint: (ticket) => publicService.track(ticket).then((d) => ({ data: d })),
-  getStats: () => dashboardService.studentStats().then((d) => ({ data: d })),
-  getNotifications: (params) => notificationService.list(params).then((d) => ({ data: d })),
-  markNotificationRead: (id) => notificationService.markRead(id).then((d) => ({ data: d })),
-  markAllNotificationsRead: () => notificationService.markAllRead().then((d) => ({ data: d })),
-};
-
-export const legacyAdminService = {
-  getAllComplaints: (params) => complaintService.list(params).then((d) => ({ data: d })),
-  getComplaintDetails: (id) => complaintService.get(id).then((d) => ({ data: d })),
-  updateStatus: (id, data) => complaintService.setStatus(id, data).then((d) => ({ data: d })),
-  updatePriority: (id, data) => complaintService.setPriority(id, data).then((d) => ({ data: d })),
-  assignComplaint: (id, data) => complaintService.assign(id, data).then((d) => ({ data: d })),
-  addResponse: (id, data) => complaintService.reply(id, data).then((d) => ({ data: d })),
-  updateNotes: (id, data) => complaintService.reply(id, { ...data, is_internal: true }).then((d) => ({ data: d })),
-  getAllUsers: (params) => adminService.users(params).then((d) => ({ data: d })),
-  getUserDetails: (id) => adminService.user(id).then((d) => ({ data: d })),
-  toggleUserActive: (id) => adminService.toggleActive(id).then((d) => ({ data: d })),
-  getAdminList: () => adminService.users({ staff: true }).then((d) => ({ data: { admins: d.users } })),
-};

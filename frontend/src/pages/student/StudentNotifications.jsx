@@ -1,173 +1,160 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
-import {
-  BellIcon,
-  CheckIcon,
-  DocumentTextIcon,
-  ChatBubbleLeftIcon,
-  ArrowPathIcon,
-} from '@heroicons/react/24/outline';
-import { Card, Button, Spinner, EmptyState, PageHeader } from '../../components/ui';
-import { studentService } from '../../services/api';
-import { formatRelativeTime } from '../../utils/helpers';
-import { cn } from '../../utils/cn';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BellIcon, CheckIcon } from '@heroicons/react/24/outline';
 
-const notificationIcons = {
-  complaint_submitted: DocumentTextIcon,
-  status_changed: ArrowPathIcon,
-  new_response: ChatBubbleLeftIcon,
-  complaint_resolved: CheckIcon,
-  default: BellIcon,
+import Button from '../../components/ui/Button';
+import { SkeletonList } from '../../components/ui/Skeleton';
+import { notificationService } from '../../services/api';
+import { formatRelative } from '../../utils/format';
+
+const TONE = {
+  escalation: { bg: 'var(--status-overdue-bg)', fg: 'var(--status-overdue-fg)' },
+  response: { bg: 'var(--status-submitted-bg)', fg: 'var(--status-submitted-fg)' },
+  assignment: { bg: 'var(--status-acknowledged-bg)', fg: 'var(--status-acknowledged-fg)' },
+  submitted: { bg: 'var(--status-resolved-bg)', fg: 'var(--status-resolved-fg)' },
 };
 
-const StudentNotifications = () => {
+export default function StudentNotifications() {
   const queryClient = useQueryClient();
 
-  // Fetch notifications
   const { data, isLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => studentService.getNotifications({ per_page: 50 }),
+    queryFn: () => notificationService.list({ per_page: 50 }),
   });
 
-  const notifications = data?.data?.notifications || [];
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const notifications = data?.notifications || [];
+  const unread = data?.unread_count || 0;
 
-  // Mark as read mutation
-  const markReadMutation = useMutation({
-    mutationFn: (id) => studentService.markNotificationRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['notifications']);
-    },
-  });
-
-  // Mark all as read mutation
-  const markAllReadMutation = useMutation({
-    mutationFn: () => studentService.markAllNotificationsRead(),
-    onSuccess: () => {
-      toast.success('All notifications marked as read');
-      queryClient.invalidateQueries(['notifications']);
-    },
-  });
-
-  const handleMarkRead = (id) => {
-    markReadMutation.mutate(id);
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['unread-count'] });
   };
 
+  const markOne = useMutation({
+    mutationFn: (id) => notificationService.markRead(id),
+    // Applied immediately and reconciled afterwards, so the list responds
+    // at once rather than after a round trip.
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['notifications'] });
+      const previous = queryClient.getQueryData(['notifications']);
+      queryClient.setQueryData(['notifications'], (current) =>
+        current
+          ? {
+              ...current,
+              unread_count: Math.max((current.unread_count || 1) - 1, 0),
+              notifications: current.notifications.map((item) =>
+                item.id === id ? { ...item, is_read: true } : item,
+              ),
+            }
+          : current,
+      );
+      return { previous };
+    },
+    onError: (_error, _id, context) =>
+      queryClient.setQueryData(['notifications'], context?.previous),
+    onSettled: invalidate,
+  });
+
+  const markAll = useMutation({
+    mutationFn: () => notificationService.markAllRead(),
+    onSuccess: invalidate,
+  });
+
   return (
-    <div className="max-w-3xl mx-auto">
-      <PageHeader
-        title="Notifications"
-        description={unreadCount > 0 ? `You have ${unreadCount} unread notification${unreadCount !== 1 ? 's' : ''}` : 'All caught up!'}
-        action={
-          unreadCount > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => markAllReadMutation.mutate()}
-              loading={markAllReadMutation.isPending}
-              leftIcon={<CheckIcon className="w-4 h-4" />}
-            >
-              Mark All as Read
-            </Button>
-          )
-        }
-      />
+    <div className="mx-auto max-w-2xl px-4 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+            Notifications
+          </h1>
+          <p className="mt-1 text-ink-600">
+            {unread > 0 ? `${unread} unread` : 'You are up to date.'}
+          </p>
+        </div>
+        {unread > 0 && (
+          <Button variant="secondary" size="sm" loading={markAll.isPending} onClick={() => markAll.mutate()}>
+            <CheckIcon className="h-4 w-4" aria-hidden="true" />
+            Mark all as read
+          </Button>
+        )}
+      </div>
 
-      <Card padding={false}>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-16">
-            <Spinner size="lg" />
-          </div>
-        ) : notifications.length === 0 ? (
-          <EmptyState
-            icon={BellIcon}
-            title="No notifications"
-            description="You don't have any notifications yet. We'll notify you when there are updates to your complaints."
-          />
-        ) : (
-          <div className="divide-y divide-neutral-100">
-            {notifications.map((notification, index) => {
-              const IconComponent = notificationIcons[notification.type] || notificationIcons.default;
-              
-              return (
-                <motion.div
-                  key={notification.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={cn(
-                    'p-4 sm:p-6 hover:bg-neutral-50 transition-colors',
-                    !notification.is_read && 'bg-primary-50/50'
-                  )}
-                >
-                  <div className="flex gap-4">
-                    {/* Icon */}
-                    <div className={cn(
-                      'w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0',
-                      notification.is_read ? 'bg-neutral-100' : 'bg-primary-100'
-                    )}>
-                      <IconComponent className={cn(
-                        'w-5 h-5',
-                        notification.is_read ? 'text-neutral-500' : 'text-primary-600'
-                      )} />
-                    </div>
+      <div className="mt-6">
+        {isLoading && <SkeletonList rows={4} />}
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-4">
-                        <div>
-                          <p className={cn(
-                            'font-medium',
-                            notification.is_read ? 'text-neutral-700' : 'text-neutral-900'
-                          )}>
-                            {notification.title}
-                          </p>
-                          <p className="text-sm text-neutral-500 mt-0.5">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-neutral-400 mt-2">
-                            {formatRelativeTime(notification.created_at)}
-                          </p>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          {!notification.is_read && (
-                            <button
-                              onClick={() => handleMarkRead(notification.id)}
-                              className="p-2 rounded-lg text-neutral-400 hover:text-primary-600 hover:bg-primary-50 transition-colors"
-                              title="Mark as read"
-                            >
-                              <CheckIcon className="w-4 h-4" />
-                            </button>
-                          )}
-                          {notification.complaint_id && (
-                            <Link
-                              to={`/student/complaints/${notification.complaint_id}`}
-                              className="text-sm font-medium text-primary-600 hover:text-primary-700"
-                            >
-                              View
-                            </Link>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Unread Indicator */}
-                    {!notification.is_read && (
-                      <div className="w-2 h-2 rounded-full bg-primary-500 flex-shrink-0 mt-2" />
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
+        {!isLoading && notifications.length === 0 && (
+          <div className="rounded-lg border border-dashed border-line bg-surface px-6 py-16 text-center">
+            <BellIcon className="mx-auto h-10 w-10 text-ink-500" aria-hidden="true" />
+            <h2 className="mt-3 font-display text-lg font-semibold text-ink-900">
+              Nothing to catch up on
+            </h2>
+            <p className="mt-1 text-sm text-ink-600">
+              We will let you know as soon as anything changes on your complaints.
+            </p>
           </div>
         )}
-      </Card>
+
+        <ul className="space-y-2">
+          {notifications.map((notification) => {
+            const tone = TONE[notification.type] || {
+              bg: 'var(--status-closed-bg)',
+              fg: 'var(--status-closed-fg)',
+            };
+            const body = (
+              <div
+                className={`flex gap-3 rounded-lg border p-4 text-left transition-colors duration-150 ${
+                  notification.is_read
+                    ? 'border-line bg-surface'
+                    : 'border-brand-200 bg-brand-50'
+                }`}
+              >
+                <span
+                  className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full"
+                  style={{ backgroundColor: tone.bg, color: tone.fg }}
+                  aria-hidden="true"
+                >
+                  <BellIcon className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-ink-900">{notification.title}</p>
+                  <p className="mt-0.5 text-sm text-ink-600">{notification.message}</p>
+                  <p className="mt-1 text-caption text-ink-500">
+                    {formatRelative(notification.created_at)}
+                  </p>
+                </div>
+                {!notification.is_read && (
+                  <span
+                    className="mt-1.5 h-2 w-2 flex-none rounded-full bg-brand-700"
+                    aria-label="Unread"
+                  />
+                )}
+              </div>
+            );
+
+            return (
+              <li key={notification.id}>
+                {notification.complaint_id ? (
+                  <Link
+                    to={`/student/complaints/${notification.complaint_id}`}
+                    onClick={() => !notification.is_read && markOne.mutate(notification.id)}
+                    className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+                  >
+                    {body}
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => !notification.is_read && markOne.mutate(notification.id)}
+                    className="block w-full rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+                  >
+                    {body}
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
-};
-
-export default StudentNotifications;
+}

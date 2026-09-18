@@ -1,294 +1,160 @@
-import React, { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  PlusIcon,
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  DocumentTextIcon,
-} from '@heroicons/react/24/outline';
-import { Card, Button, Input, Select, Spinner, EmptyState, PageHeader } from '../../components/ui';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
+
+import Button from '../../components/ui/Button';
+import { Input, Select } from '../../components/ui/Field';
 import StatusBadge from '../../components/ui/StatusBadge';
-import PriorityBadge from '../../components/ui/PriorityBadge';
-import { studentService } from '../../services/api';
-import { formatRelativeTime, getCategoryLabel, getCategoryIcon } from '../../utils/helpers';
-import { CATEGORIES } from '../../utils/constants';
+import { SkeletonList } from '../../components/ui/Skeleton';
+import { complaintService } from '../../services/api';
+import { STATUS, categoryLabel } from '../../utils/status';
+import { formatDeadline, formatRelative } from '../../utils/format';
 
-const statusOptions = [
-  { value: '', label: 'All Statuses' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'resolved', label: 'Resolved' },
-  { value: 'closed', label: 'Closed' },
-  { value: 'rejected', label: 'Rejected' },
-];
+export default function MyComplaints() {
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('');
+  const [search, setSearch] = useState('');
 
-const categoryOptions = [
-  { value: '', label: 'All Categories' },
-  ...CATEGORIES.map(c => ({ value: c.value, label: c.label })),
-];
-
-const MyComplaints = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Get filter values from URL
-  const page = parseInt(searchParams.get('page') || '1');
-  const status = searchParams.get('status') || '';
-  const category = searchParams.get('category') || '';
-  const search = searchParams.get('search') || '';
-
-  // Local state for search input
-  const [searchInput, setSearchInput] = useState(search);
-
-  // Fetch complaints
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['myComplaints', { page, status, category, search }],
-    queryFn: () => studentService.getMyComplaints({ page, per_page: 10, status, category, search }),
-    keepPreviousData: true,
+  const { data, isLoading } = useQuery({
+    queryKey: ['complaints', { page, status, search }],
+    queryFn: () => complaintService.list({ page, per_page: 10, status, search }),
+    // Keeps the previous page on screen while the next one loads, so the
+    // layout does not collapse on a slow connection.
+    placeholderData: keepPreviousData,
   });
 
-  const complaints = data?.data?.complaints || [];
-  const pagination = data?.data?.pagination || {};
-
-  // Update URL params
-  const updateParams = (newParams) => {
-    const params = new URLSearchParams(searchParams);
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, value);
-      } else {
-        params.delete(key);
-      }
-    });
-    // Reset to page 1 when filters change
-    if (!newParams.page) {
-      params.set('page', '1');
-    }
-    setSearchParams(params);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    updateParams({ search: searchInput });
-  };
-
-  const clearFilters = () => {
-    setSearchInput('');
-    setSearchParams({});
-  };
-
-  const hasActiveFilters = status || category || search;
+  const complaints = data?.complaints || [];
+  const pagination = data?.pagination || {};
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <PageHeader
-        title="My Complaints"
-        description="View and track all your submitted complaints"
-        action={
-          <Link to="/student/complaints/new">
-            <Button leftIcon={<PlusIcon className="w-5 h-5" />}>
-              New Complaint
-            </Button>
-          </Link>
-        }
-      />
-
-      {/* Filters Section */}
-      <Card padding={false}>
-        <div className="p-4 border-b border-neutral-100">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <form onSubmit={handleSearch} className="flex-1">
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search by ticket number or title..."
-                  className="w-full pl-11 pr-4 py-2.5 bg-neutral-50 border-0 rounded-xl text-sm placeholder:text-neutral-400 focus:bg-white focus:ring-2 focus:ring-primary-500/20 transition-all"
-                />
-              </div>
-            </form>
-
-            {/* Filter Toggle */}
-            <Button
-              variant={showFilters ? 'primary' : 'outline'}
-              leftIcon={<FunnelIcon className="w-5 h-5" />}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              Filters
-              {hasActiveFilters && (
-                <span className="ml-1 w-2 h-2 rounded-full bg-primary-500" />
-              )}
-            </Button>
-          </div>
-
-          {/* Expandable Filters */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Select
-                    label="Status"
-                    options={statusOptions}
-                    value={status}
-                    onChange={(value) => updateParams({ status: value })}
-                    placeholder="All Statuses"
-                  />
-                  <Select
-                    label="Category"
-                    options={categoryOptions}
-                    value={category}
-                    onChange={(value) => updateParams({ category: value })}
-                    placeholder="All Categories"
-                  />
-                  <div className="sm:col-span-2 flex items-end">
-                    <Button
-                      variant="ghost"
-                      onClick={clearFilters}
-                      disabled={!hasActiveFilters}
-                      className="w-full sm:w-auto"
-                    >
-                      Clear Filters
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+    <div className="mx-auto max-w-4xl px-4 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+            My complaints
+          </h1>
+          <p className="mt-1 text-ink-600">Everything you have filed, and where it has reached.</p>
         </div>
+        <Link to="/student/complaints/new">
+          <Button>
+            <PlusIcon className="h-5 w-5" aria-hidden="true" />
+            File a complaint
+          </Button>
+        </Link>
+      </div>
 
-        {/* Results Count */}
-        <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100 flex items-center justify-between">
-          <p className="text-sm text-neutral-600">
-            {pagination.total_items || 0} complaint{pagination.total_items !== 1 ? 's' : ''} found
-          </p>
-          {isFetching && <Spinner size="sm" />}
+      <div className="mt-6 flex flex-wrap gap-3">
+        <div className="min-w-[220px] flex-1">
+          <Input
+            label="Search"
+            placeholder="Title or ticket number"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
         </div>
-
-        {/* Complaints List */}
-        <div className="divide-y divide-neutral-100">
-          {isLoading ? (
-            <div className="p-8">
-              <div className="space-y-4">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="h-24 rounded-xl bg-neutral-100 animate-pulse" />
-                ))}
-              </div>
-            </div>
-          ) : complaints.length === 0 ? (
-            <EmptyState
-              icon={DocumentTextIcon}
-              title={hasActiveFilters ? 'No complaints match your filters' : 'No complaints yet'}
-              description={
-                hasActiveFilters
-                  ? 'Try adjusting your filters or search terms'
-                  : "You haven't submitted any complaints. Start by submitting your first complaint."
-              }
-              actionLabel={hasActiveFilters ? 'Clear Filters' : 'Submit Complaint'}
-              onAction={hasActiveFilters ? clearFilters : () => window.location.href = '/student/complaints/new'}
-            />
-          ) : (
-            complaints.map((complaint, index) => (
-              <motion.div
-                key={complaint.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link
-                  to={`/student/complaints/${complaint.id}`}
-                  className="block p-4 sm:p-6 hover:bg-neutral-50 transition-colors group"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                    {/* Category Icon */}
-                    <div className="hidden sm:flex w-12 h-12 rounded-xl bg-primary-50 items-center justify-center text-2xl flex-shrink-0">
-                      {getCategoryIcon(complaint.category)}
-                    </div>
-
-                    {/* Main Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <span className="text-xs font-mono text-primary-600 bg-primary-50 px-2 py-0.5 rounded">
-                          {complaint.ticket_number}
-                        </span>
-                        <StatusBadge status={complaint.status} />
-                        <PriorityBadge priority={complaint.priority} />
-                      </div>
-                      
-                      <h3 className="font-semibold text-neutral-900 group-hover:text-primary-600 transition-colors line-clamp-1">
-                        {complaint.title}
-                      </h3>
-                      
-                      <p className="text-sm text-neutral-500 line-clamp-1 mt-1">
-                        {complaint.description}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-neutral-400">
-                        <span>{getCategoryLabel(complaint.category)}</span>
-                        <span>•</span>
-                        <span>{formatRelativeTime(complaint.created_at)}</span>
-                        {complaint.response_count > 0 && (
-                          <>
-                            <span>•</span>
-                            <span>{complaint.response_count} response{complaint.response_count !== 1 ? 's' : ''}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Arrow */}
-                    <ChevronRightIcon className="w-5 h-5 text-neutral-300 group-hover:text-primary-500 transition-colors hidden sm:block" />
-                  </div>
-                </Link>
-              </motion.div>
-            ))
-          )}
+        <div className="min-w-[180px]">
+          <Select
+            label="Status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Any status</option>
+            {Object.entries(STATUS)
+              .filter(([key]) => key !== 'overdue')
+              .map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.label}
+                </option>
+              ))}
+          </Select>
         </div>
+      </div>
 
-        {/* Pagination */}
-        {pagination.total_pages > 1 && (
-          <div className="p-4 border-t border-neutral-100 flex items-center justify-between">
-            <p className="text-sm text-neutral-500">
-              Page {pagination.page} of {pagination.total_pages}
+      <div className="mt-6">
+        {isLoading && <SkeletonList rows={5} />}
+
+        {!isLoading && complaints.length === 0 && (
+          <div className="rounded-lg border border-dashed border-line bg-surface px-6 py-16 text-center">
+            <MagnifyingGlassIcon className="mx-auto h-10 w-10 text-ink-500" aria-hidden="true" />
+            <h2 className="mt-3 font-display text-lg font-semibold text-ink-900">
+              {search || status ? 'Nothing matches that' : 'No complaints yet'}
+            </h2>
+            <p className="mx-auto mt-1 max-w-sm text-sm text-ink-600">
+              {search || status
+                ? 'Try a different search or clear the filters.'
+                : 'When you file one, you will track it here from start to finish.'}
             </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!pagination.has_prev}
-                onClick={() => updateParams({ page: page - 1 })}
-                leftIcon={<ChevronLeftIcon className="w-4 h-4" />}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!pagination.has_next}
-                onClick={() => updateParams({ page: page + 1 })}
-                rightIcon={<ChevronRightIcon className="w-4 h-4" />}
-              >
-                Next
-              </Button>
-            </div>
+            {!search && !status && (
+              <Link to="/student/complaints/new" className="mt-5 inline-block">
+                <Button>File your first complaint</Button>
+              </Link>
+            )}
           </div>
         )}
-      </Card>
+
+        <ul className="space-y-3">
+          {complaints.map((complaint) => (
+            <li key={complaint.id}>
+              <Link
+                to={`/student/complaints/${complaint.id}`}
+                className="block rounded-lg border border-line bg-surface p-4 transition-shadow duration-150 hover:shadow-e2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-mono text-caption text-ink-500">{complaint.ticket_number}</p>
+                    <h2 className="mt-0.5 truncate font-semibold text-ink-900">{complaint.title}</h2>
+                    <p className="mt-1 text-caption text-ink-500">
+                      {categoryLabel(complaint.category)} · {formatRelative(complaint.created_at)}
+                      {complaint.response_count > 0 &&
+                        ` · ${complaint.response_count} ${
+                          complaint.response_count === 1 ? 'reply' : 'replies'
+                        }`}
+                    </p>
+                  </div>
+                  <StatusBadge status={complaint.status} overdue={complaint.is_overdue} size="sm" />
+                </div>
+
+                {!['resolved', 'closed', 'declined'].includes(complaint.status) && (
+                  <p className="mt-2 text-caption text-ink-500">
+                    Response due {formatDeadline(complaint.resolve_due_at)}
+                  </p>
+                )}
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {pagination.total_pages > 1 && (
+          <nav className="mt-6 flex items-center justify-between" aria-label="Pages">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!pagination.has_prev}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              Previous
+            </Button>
+            <p className="text-sm text-ink-600">
+              Page {pagination.page} of {pagination.total_pages}
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!pagination.has_next}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Next
+            </Button>
+          </nav>
+        )}
+      </div>
     </div>
   );
-};
-
-export default MyComplaints;
+}
