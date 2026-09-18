@@ -43,6 +43,15 @@ class Config:
     UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
     MAX_CONTENT_LENGTH = 6 * 1024 * 1024
 
+    # Outbound delivery. Absent configuration leaves messages queued
+    # rather than discarded.
+    SMTP_HOST = os.getenv("SMTP_HOST")
+    SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USERNAME = os.getenv("SMTP_USERNAME")
+    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
+    MAIL_FROM = os.getenv("MAIL_FROM", "no-reply@resolve.ng")
+    SMS_PROVIDER = os.getenv("SMS_PROVIDER")
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

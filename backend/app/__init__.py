@@ -92,6 +92,14 @@ def register_jwt_handlers(app: Flask) -> None:
 def register_cli(app: Flask) -> None:
     import click
 
+    @app.cli.command("send-queue")
+    def send_queue():
+        """Deliver queued email and text messages."""
+        from app.services.delivery import process_queue
+
+        result = process_queue()
+        click.echo(f"Sent {result['sent']}, failed {result['failed']}.")
+
     @app.cli.command("escalate")
     def escalate():
         """Escalate complaints past their deadline.
