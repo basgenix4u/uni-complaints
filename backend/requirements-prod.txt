@@ -1,0 +1,4 @@
+# Production extras. Installed on the deployment target, where the
+# PostgreSQL client libraries are available.
+-r requirements.txt
+psycopg2-binary==2.9.10
