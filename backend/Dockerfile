@@ -1,6 +1,7 @@
 FROM python:3.12-slim AS base
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
+ENV FLASK_APP=run.py \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
@@ -29,4 +30,6 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -fsS http://localhost:5000/api/ready || exit 1
 
-CMD ["gunicorn", "-c", "gunicorn.conf.py", "run:app"]
+# Migrations are applied before the workers start, so a container can
+# never serve against a schema older than the code it is running.
+CMD ["sh", "-c", "flask db upgrade && exec gunicorn -c gunicorn.conf.py run:app"]

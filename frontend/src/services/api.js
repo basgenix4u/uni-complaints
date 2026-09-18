@@ -106,6 +106,9 @@ export const authService = {
   me: () => api.get('/auth/me').then(unwrap),
   updateProfile: (data) => api.put('/auth/profile', data).then(unwrap),
   changePassword: (data) => api.post('/auth/change-password', data).then(unwrap),
+  forgotPassword: (email) => api.post('/auth/forgot-password', { email }).then(unwrap),
+  resetPassword: (token, password) =>
+    api.post('/auth/reset-password', { token, password }).then(unwrap),
 };
 
 export const publicService = {

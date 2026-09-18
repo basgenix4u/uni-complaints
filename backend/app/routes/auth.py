@@ -2,13 +2,16 @@
 
 import re
 
-from flask import Blueprint, g, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required
 
 from app.extensions import db, limiter
+from app.models.base import utcnow
 from app.models.institution import Institution
+from app.models.reset import PasswordReset, hash_token
 from app.models.user import User, normalise_matric, normalise_phone
 from app.security import auth_required, load_current_user
+from app.services.delivery import queue_email
 
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
@@ -214,3 +217,103 @@ def change_password():
     user.set_password(new_password)
     db.session.commit()
     return ok(message="Password changed.")
+
+
+@bp.post("/forgot-password")
+@limiter.limit("5 per hour")
+def forgot_password():
+    """Start a password reset.
+
+    Always reports success. Saying whether an address is registered would
+    turn this into a way to discover who holds an account, which for a
+    complaints system also reveals who has complained.
+    """
+    payload = request.get_json(silent=True) or {}
+    email = (payload.get("email") or "").strip().lower()
+    confirmation = (
+        "If that email belongs to an account, a reset link is on its way. "
+        "It expires in an hour."
+    )
+
+    if not EMAIL_RE.match(email):
+        return ok(message=confirmation)
+
+    user = User.query.filter_by(email=email, is_active=True).first()
+    if not user:
+        return ok(message=confirmation)
+
+    # Any earlier unused token stops working, so a forwarded old email
+    # cannot be replayed.
+    PasswordReset.query.filter_by(user_id=user.id, used_at=None).update(
+        {PasswordReset.used_at: utcnow()}, synchronize_session=False
+    )
+
+    _, raw_token = PasswordReset.issue(user, request.remote_addr)
+
+    base = current_app.config.get("APP_URL", "").rstrip("/")
+    link = f"{base}/reset-password?token={raw_token}"
+
+    queue_email(
+        user.institution_id,
+        user.email,
+        "Reset your password",
+        (
+            f"Hello {user.full_name},\n\n"
+            f"Use the link below to choose a new password. It expires in an hour.\n\n"
+            f"{link}\n\n"
+            "If you did not ask for this, you can ignore this message and your "
+            "password stays as it is."
+        ),
+        user_id=user.id,
+    )
+    db.session.commit()
+
+    return ok(message=confirmation)
+
+
+@bp.post("/reset-password")
+@limiter.limit("10 per hour")
+def reset_password():
+    """Complete a password reset."""
+    payload = request.get_json(silent=True) or {}
+    token = (payload.get("token") or "").strip()
+    new_password = payload.get("password") or ""
+
+    error = validate_password(new_password)
+    if error:
+        return fail(error, 422, {"password": error})
+
+    record = PasswordReset.query.filter_by(token_hash=hash_token(token)).first()
+    if not record or not record.is_usable:
+        return fail(
+            "That reset link has expired or has already been used. Ask for a new one.", 400
+        )
+
+    user = db.session.get(User, record.user_id)
+    if not user or not user.is_active:
+        return fail("That account is no longer active.", 400)
+
+    user.set_password(new_password)
+    record.consume()
+
+    # Other outstanding tokens are retired too, so a second email cannot be
+    # used after the password has changed.
+    PasswordReset.query.filter(
+        PasswordReset.user_id == user.id,
+        PasswordReset.used_at.is_(None),
+    ).update({PasswordReset.used_at: utcnow()}, synchronize_session=False)
+
+    queue_email(
+        user.institution_id,
+        user.email,
+        "Your password was changed",
+        (
+            f"Hello {user.full_name},\n\n"
+            "Your password has just been changed. If this was not you, contact your "
+            "institution immediately."
+        ),
+        user_id=user.id,
+    )
+    db.session.commit()
+
+    return ok(message="Your password has been changed. You can sign in with it now.")
