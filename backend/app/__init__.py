@@ -22,12 +22,20 @@ def create_app(config_name: str | None = None) -> Flask:
     )
 
     from app import models  # noqa: F401  (registers tables with Flask-Migrate)
+    from app.routes.admin import bp as admin_bp
     from app.routes.auth import bp as auth_bp
     from app.routes.complaints import bp as complaints_bp, public_bp
+    from app.routes.dashboard import bp as dashboard_bp
+    from app.routes.notifications import bp as notifications_bp
+    from app.routes.platform import bp as platform_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(complaints_bp)
     app.register_blueprint(public_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(notifications_bp)
+    app.register_blueprint(admin_bp)
+    app.register_blueprint(platform_bp)
 
     register_error_handlers(app)
     register_jwt_handlers(app)
