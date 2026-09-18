@@ -11,8 +11,9 @@ import {
   EyeIcon,
 } from '@heroicons/react/24/outline';
 import { Card, Button, Select, Spinner, EmptyState, PageHeader, Avatar } from '../../components/ui';
-import { StatusBadge, PriorityBadge } from '../../components/ui/StatusBadge';
-import { adminService } from '../../services/api';
+import StatusBadge from '../../components/ui/StatusBadge';
+import PriorityBadge from '../../components/ui/PriorityBadge';
+import { legacyAdminService as adminService } from '../../services/api';
 import { formatRelativeTime, getCategoryLabel, getCategoryIcon } from '../../utils/helpers';
 import { CATEGORIES } from '../../utils/constants';
 

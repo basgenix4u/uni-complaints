@@ -13,7 +13,8 @@ import {
   CheckIcon,
 } from '@heroicons/react/24/outline';
 import { Card, Button, Textarea, Spinner, Avatar, PageHeader } from '../../components/ui';
-import { StatusBadge, PriorityBadge } from '../../components/ui/StatusBadge';
+import StatusBadge from '../../components/ui/StatusBadge';
+import PriorityBadge from '../../components/ui/PriorityBadge';
 import { studentService } from '../../services/api';
 import { formatDate, formatRelativeTime, getCategoryLabel, getCategoryIcon, copyToClipboard } from '../../utils/helpers';
 import useAuthStore from '../../stores/authStore';

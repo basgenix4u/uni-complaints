@@ -1,34 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
-import { AnimatePresence } from 'framer-motion';
 
 // Layouts
 import { AuthLayout, DashboardLayout } from './components/layout';
 
-// Auth Pages
-import { LoginPage, RegisterPage } from './pages/auth';
+// Route components are loaded on demand: a student signing in should not
+// download the admin analytics bundle.
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
+const TrackPage = lazy(() => import('./pages/public/TrackPage'));
 
-// Student Pages
-import {
-  StudentDashboard,
-  MyComplaints,
-  NewComplaint,
-  ComplaintDetails,
-  StudentNotifications,
-  StudentProfile,
-} from './pages/student';
+const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
+const MyComplaints = lazy(() => import('./pages/student/MyComplaints'));
+const NewComplaint = lazy(() => import('./pages/student/NewComplaint'));
+const ComplaintDetails = lazy(() => import('./pages/student/ComplaintDetails'));
+const StudentNotifications = lazy(() => import('./pages/student/StudentNotifications'));
+const StudentProfile = lazy(() => import('./pages/student/StudentProfile'));
 
-// Admin Pages
-import {
-  AdminDashboard,
-  AdminComplaints,
-  AdminComplaintDetails,
-  AdminAnalytics,
-  AdminUsers,
-  AdminSettings,
-} from './pages/admin';
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminComplaints = lazy(() => import('./pages/admin/AdminComplaints'));
+const AdminComplaintDetails = lazy(() => import('./pages/admin/AdminComplaintDetails'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 
 // Shared
 import { ProtectedRoute } from './components/shared';
@@ -44,6 +40,14 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function RouteFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-canvas" role="status" aria-label="Loading">
+      <span className="h-8 w-8 animate-spin rounded-full border-2 border-brand-700 border-t-transparent" />
+    </div>
+  );
+}
 
 // Home Redirect Component
 const HomeRedirect = () => {
@@ -70,8 +74,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AnimatePresence mode="wait">
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
+            <Route path="/track" element={<TrackPage />} />
             {/* Home Redirect */}
             <Route path="/" element={<HomeRedirect />} />
 
@@ -116,7 +121,7 @@ function App() {
             {/* 404 */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </AnimatePresence>
+          </Suspense>
       </BrowserRouter>
 
       <Toaster

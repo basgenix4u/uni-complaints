@@ -17,7 +17,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Card, Button, Input, Select, Spinner, EmptyState, Modal, Avatar, PageHeader } from '../../components/ui';
-import { adminService, authService } from '../../services/api';
+import { legacyAdminService as adminService, authService } from '../../services/api';
 import { formatDate } from '../../utils/helpers';
 import useAuthStore from '../../stores/authStore';
 
