@@ -38,6 +38,11 @@ class Config:
 
     JSON_SORT_KEYS = False
 
+    # Uploads live outside the served tree and are returned through an
+    # authorised endpoint rather than by static path.
+    UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
+    MAX_CONTENT_LENGTH = 6 * 1024 * 1024
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
@@ -45,6 +50,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
+    UPLOAD_DIR = os.path.join(BASE_DIR, "uploads_test")
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     RATELIMIT_ENABLED = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=5)

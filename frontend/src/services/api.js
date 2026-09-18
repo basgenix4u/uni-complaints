@@ -121,6 +121,43 @@ export const complaintService = {
   rate: (id, rating) => api.post(`/complaints/${id}/rate`, { rating }).then(unwrap),
 };
 
+export const attachmentService = {
+  upload: (complaintId, file, isInternal = false) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (isInternal) form.append('is_internal', 'true');
+    // The browser sets the multipart boundary, so the default JSON
+    // content type must be cleared.
+    return api
+      .post(`/complaints/${complaintId}/attachments`, form, {
+        headers: { 'Content-Type': undefined },
+      })
+      .then(unwrap);
+  },
+  remove: (complaintId, attachmentId) =>
+    api.delete(`/complaints/${complaintId}/attachments/${attachmentId}`).then(unwrap),
+  /**
+   * Fetches the file with the auth header and hands the browser a blob.
+   *
+   * A plain link cannot carry the bearer token, and the endpoint is
+   * authorised, so the request is made here and saved from memory.
+   */
+  download: async (complaintId, attachmentId, filename) => {
+    const response = await api.get(
+      `/complaints/${complaintId}/attachments/${attachmentId}`,
+      { responseType: 'blob' },
+    );
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename || 'attachment';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
+};
+
 export const dashboardService = {
   overview: () => api.get('/dashboard/overview').then(unwrap),
   studentStats: () => api.get('/dashboard/student-stats').then(unwrap),
