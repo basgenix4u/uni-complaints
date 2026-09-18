@@ -18,8 +18,9 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 import { Card, Button, Textarea, Select, Spinner, Avatar, Modal } from '../../components/ui';
-import { StatusBadge, PriorityBadge } from '../../components/ui/StatusBadge';
-import { adminService } from '../../services/api';
+import StatusBadge from '../../components/ui/StatusBadge';
+import PriorityBadge from '../../components/ui/PriorityBadge';
+import { legacyAdminService as adminService } from '../../services/api';
 import { formatDate, formatRelativeTime, getCategoryLabel, getCategoryIcon, copyToClipboard } from '../../utils/helpers';
 import useAuthStore from '../../stores/authStore';
 

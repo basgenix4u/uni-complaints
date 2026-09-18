@@ -1,269 +1,199 @@
 import axios from 'axios';
-import { API_BASE_URL } from '../utils/constants';
 
-// Create axios instance
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  headers: { 'Content-Type': 'application/json' },
 });
 
-// Request interceptor - Add auth token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+export const tokens = {
+  get access() {
+    return localStorage.getItem('access_token');
   },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+  get refresh() {
+    return localStorage.getItem('refresh_token');
+  },
+  set({ access_token, refresh_token }) {
+    if (access_token) localStorage.setItem('access_token', access_token);
+    if (refresh_token) localStorage.setItem('refresh_token', refresh_token);
+  },
+  clear() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+  },
+};
 
-// Response interceptor - Handle errors
+api.interceptors.request.use((config) => {
+  const token = tokens.access;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// A single refresh is shared between concurrent 401s so that a burst of
+// parallel requests does not trigger several refresh calls.
+let refreshing = null;
+
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const original = error.config;
+    const status = error.response?.status;
 
-    // Handle 401 - Token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      const refreshToken = localStorage.getItem('refresh_token');
-      
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {}, {
-            headers: {
-              Authorization: `Bearer ${refreshToken}`,
-            },
-          });
-
-          const { access_token } = response.data.data;
-          localStorage.setItem('access_token', access_token);
-
-          originalRequest.headers.Authorization = `Bearer ${access_token}`;
-          return api(originalRequest);
-        } catch (refreshError) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-          return Promise.reject(refreshError);
-        }
-      } else {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
-      }
+    if (status !== 401 || original?._retried || original?.url?.includes('/auth/')) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
-  }
+    if (!tokens.refresh) {
+      tokens.clear();
+      return Promise.reject(error);
+    }
+
+    original._retried = true;
+
+    refreshing =
+      refreshing ||
+      axios
+        .post(`${API_BASE_URL}/auth/refresh`, {}, {
+          headers: { Authorization: `Bearer ${tokens.refresh}` },
+        })
+        .then((response) => {
+          const token = response.data?.data?.access_token;
+          tokens.set({ access_token: token });
+          return token;
+        })
+        .catch((refreshError) => {
+          tokens.clear();
+          throw refreshError;
+        })
+        .finally(() => {
+          refreshing = null;
+        });
+
+    try {
+      const token = await refreshing;
+      original.headers.Authorization = `Bearer ${token}`;
+      return api(original);
+    } catch (refreshError) {
+      return Promise.reject(refreshError);
+    }
+  },
 );
+
+/** Unwraps the `{ success, message, data }` envelope the API returns. */
+const unwrap = (response) => response.data?.data ?? {};
+
+/** Extracts a message suitable for showing to a user. */
+export function errorMessage(error, fallback = 'Something went wrong. Please try again.') {
+  if (error?.code === 'ERR_NETWORK') {
+    return "You appear to be offline. Check your connection and try again.";
+  }
+  return error?.response?.data?.message || fallback;
+}
+
+/** Field-level validation errors, keyed by field name. */
+export function fieldErrors(error) {
+  return error?.response?.data?.errors || {};
+}
+
+export const authService = {
+  register: (data) => api.post('/auth/register', data).then(unwrap),
+  login: (data) => api.post('/auth/login', data).then(unwrap),
+  me: () => api.get('/auth/me').then(unwrap),
+  updateProfile: (data) => api.put('/auth/profile', data).then(unwrap),
+  changePassword: (data) => api.post('/auth/change-password', data).then(unwrap),
+};
+
+export const publicService = {
+  institutions: () => api.get('/public/institutions').then(unwrap),
+  track: (ticket) => api.get(`/public/track/${encodeURIComponent(ticket)}`).then(unwrap),
+};
+
+export const complaintService = {
+  list: (params) => api.get('/complaints', { params }).then(unwrap),
+  get: (id) => api.get(`/complaints/${id}`).then(unwrap),
+  create: (data) => api.post('/complaints', data).then(unwrap),
+  reply: (id, data) => api.post(`/complaints/${id}/responses`, data).then(unwrap),
+  setStatus: (id, data) => api.put(`/complaints/${id}/status`, data).then(unwrap),
+  setPriority: (id, data) => api.put(`/complaints/${id}/priority`, data).then(unwrap),
+  assign: (id, data) => api.put(`/complaints/${id}/assign`, data).then(unwrap),
+  rate: (id, rating) => api.post(`/complaints/${id}/rate`, { rating }).then(unwrap),
+};
+
+export const dashboardService = {
+  overview: () => api.get('/dashboard/overview').then(unwrap),
+  studentStats: () => api.get('/dashboard/student-stats').then(unwrap),
+  statusChart: () => api.get('/dashboard/charts/status').then(unwrap),
+  categoryChart: () => api.get('/dashboard/charts/category').then(unwrap),
+  priorityChart: () => api.get('/dashboard/charts/priority').then(unwrap),
+  trendChart: (days = 30) => api.get('/dashboard/charts/trend', { params: { days } }).then(unwrap),
+  monthlyChart: () => api.get('/dashboard/charts/monthly').then(unwrap),
+  summary: () => api.get('/dashboard/reports/summary').then(unwrap),
+  staffPerformance: () => api.get('/dashboard/reports/staff-performance').then(unwrap),
+};
+
+export const notificationService = {
+  list: (params) => api.get('/notifications', { params }).then(unwrap),
+  unreadCount: () => api.get('/notifications/unread-count').then(unwrap),
+  markRead: (id) => api.put(`/notifications/${id}/read`).then(unwrap),
+  markAllRead: () => api.put('/notifications/read-all').then(unwrap),
+};
+
+export const adminService = {
+  users: (params) => api.get('/admin/users', { params }).then(unwrap),
+  user: (id) => api.get(`/admin/users/${id}`).then(unwrap),
+  createStaff: (data) => api.post('/admin/staff', data).then(unwrap),
+  toggleActive: (id) => api.put(`/admin/users/${id}/toggle-active`).then(unwrap),
+  setRole: (id, role) => api.put(`/admin/users/${id}/role`, { role }).then(unwrap),
+  departments: () => api.get('/admin/departments').then(unwrap),
+  createDepartment: (data) => api.post('/admin/departments', data).then(unwrap),
+  updateDepartment: (id, data) => api.put(`/admin/departments/${id}`, data).then(unwrap),
+  settings: () => api.get('/admin/settings').then(unwrap),
+  updateSettings: (data) => api.put('/admin/settings', data).then(unwrap),
+};
+
+export const platformService = {
+  institutions: () => api.get('/platform/institutions').then(unwrap),
+  createInstitution: (data) => api.post('/platform/institutions', data).then(unwrap),
+  toggleInstitution: (id) => api.put(`/platform/institutions/${id}/toggle-active`).then(unwrap),
+  stats: () => api.get('/platform/stats').then(unwrap),
+};
 
 export default api;
 
-// ==================== AUTH SERVICES ====================
-
-export const authService = {
-  register: async (data) => {
-    const response = await api.post('/auth/register', data);
-    return response.data;
-  },
-
-  login: async (data) => {
-    const response = await api.post('/auth/login', data);
-    return response.data;
-  },
-
-  getMe: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
-  },
-
-  updateProfile: async (data) => {
-    const response = await api.put('/auth/profile', data);
-    return response.data;
-  },
-
-  changePassword: async (data) => {
-    const response = await api.post('/auth/change-password', data);
-    return response.data;
-  },
-
-  registerAdmin: async (data) => {
-    const response = await api.post('/auth/register-admin', data);
-    return response.data;
-  },
-};
-
-// ==================== STUDENT SERVICES ====================
+/*
+ * Compatibility layer.
+ *
+ * Maps the service names used by screens that have not yet been migrated
+ * onto the current endpoints. Remove each entry as its screens are
+ * rewritten against the services above.
+ */
 
 export const studentService = {
-  getCategories: async () => {
-    const response = await api.get('/student/categories');
-    return response.data;
-  },
-
-  getPriorities: async () => {
-    const response = await api.get('/student/priorities');
-    return response.data;
-  },
-
-  getMyComplaints: async (params = {}) => {
-    const response = await api.get('/student/complaints', { params });
-    return response.data;
-  },
-
-  createComplaint: async (data) => {
-    const response = await api.post('/student/complaints', data);
-    return response.data;
-  },
-
-  getComplaintDetails: async (id) => {
-    const response = await api.get(`/student/complaints/${id}`);
-    return response.data;
-  },
-
-  addResponse: async (complaintId, data) => {
-    const response = await api.post(`/student/complaints/${complaintId}/responses`, data);
-    return response.data;
-  },
-
-  trackComplaint: async (ticketNumber) => {
-    const response = await api.get(`/student/complaints/${ticketNumber}/track`);
-    return response.data;
-  },
-
-  getStats: async () => {
-    const response = await api.get('/student/stats');
-    return response.data;
-  },
-
-  getNotifications: async (params = {}) => {
-    const response = await api.get('/student/notifications', { params });
-    return response.data;
-  },
-
-  markNotificationRead: async (id) => {
-    const response = await api.put(`/student/notifications/${id}/read`);
-    return response.data;
-  },
-
-  markAllNotificationsRead: async () => {
-    const response = await api.put('/student/notifications/read-all');
-    return response.data;
-  },
+  getCategories: async () => ({ data: { categories: [] } }),
+  getPriorities: async () => ({ data: { priorities: [] } }),
+  getMyComplaints: (params) => complaintService.list(params).then((d) => ({ data: d })),
+  createComplaint: (data) => complaintService.create(data).then((d) => ({ data: d })),
+  getComplaintDetails: (id) => complaintService.get(id).then((d) => ({ data: d })),
+  addResponse: (id, data) => complaintService.reply(id, data).then((d) => ({ data: d })),
+  trackComplaint: (ticket) => publicService.track(ticket).then((d) => ({ data: d })),
+  getStats: () => dashboardService.studentStats().then((d) => ({ data: d })),
+  getNotifications: (params) => notificationService.list(params).then((d) => ({ data: d })),
+  markNotificationRead: (id) => notificationService.markRead(id).then((d) => ({ data: d })),
+  markAllNotificationsRead: () => notificationService.markAllRead().then((d) => ({ data: d })),
 };
 
-// ==================== ADMIN SERVICES ====================
-
-export const adminService = {
-  getAllComplaints: async (params = {}) => {
-    const response = await api.get('/admin/complaints', { params });
-    return response.data;
-  },
-
-  getComplaintDetails: async (id) => {
-    const response = await api.get(`/admin/complaints/${id}`);
-    return response.data;
-  },
-
-  updateStatus: async (id, data) => {
-    const response = await api.put(`/admin/complaints/${id}/status`, data);
-    return response.data;
-  },
-
-  updatePriority: async (id, data) => {
-    const response = await api.put(`/admin/complaints/${id}/priority`, data);
-    return response.data;
-  },
-
-  assignComplaint: async (id, data) => {
-    const response = await api.put(`/admin/complaints/${id}/assign`, data);
-    return response.data;
-  },
-
-  addResponse: async (complaintId, data) => {
-    const response = await api.post(`/admin/complaints/${complaintId}/responses`, data);
-    return response.data;
-  },
-
-  updateNotes: async (id, data) => {
-    const response = await api.put(`/admin/complaints/${id}/notes`, data);
-    return response.data;
-  },
-
-  getAllUsers: async (params = {}) => {
-    const response = await api.get('/admin/users', { params });
-    return response.data;
-  },
-
-  getUserDetails: async (id) => {
-    const response = await api.get(`/admin/users/${id}`);
-    return response.data;
-  },
-
-  toggleUserActive: async (id) => {
-    const response = await api.put(`/admin/users/${id}/toggle-active`);
-    return response.data;
-  },
-
-  getAdminList: async () => {
-    const response = await api.get('/admin/admins');
-    return response.data;
-  },
-};
-
-// ==================== DASHBOARD SERVICES ====================
-
-export const dashboardService = {
-  getOverview: async () => {
-    const response = await api.get('/dashboard/overview');
-    return response.data;
-  },
-
-  getStatusChart: async () => {
-    const response = await api.get('/dashboard/charts/status');
-    return response.data;
-  },
-
-  getCategoryChart: async () => {
-    const response = await api.get('/dashboard/charts/category');
-    return response.data;
-  },
-
-  getPriorityChart: async () => {
-    const response = await api.get('/dashboard/charts/priority');
-    return response.data;
-  },
-
-  getTrendChart: async (days = 30) => {
-    const response = await api.get('/dashboard/charts/trend', { params: { days } });
-    return response.data;
-  },
-
-  getMonthlyChart: async () => {
-    const response = await api.get('/dashboard/charts/monthly');
-    return response.data;
-  },
-
-  getSummaryReport: async (params = {}) => {
-    const response = await api.get('/dashboard/reports/summary', { params });
-    return response.data;
-  },
-
-  getAdminPerformance: async () => {
-    const response = await api.get('/dashboard/reports/admin-performance');
-    return response.data;
-  },
+export const legacyAdminService = {
+  getAllComplaints: (params) => complaintService.list(params).then((d) => ({ data: d })),
+  getComplaintDetails: (id) => complaintService.get(id).then((d) => ({ data: d })),
+  updateStatus: (id, data) => complaintService.setStatus(id, data).then((d) => ({ data: d })),
+  updatePriority: (id, data) => complaintService.setPriority(id, data).then((d) => ({ data: d })),
+  assignComplaint: (id, data) => complaintService.assign(id, data).then((d) => ({ data: d })),
+  addResponse: (id, data) => complaintService.reply(id, data).then((d) => ({ data: d })),
+  updateNotes: (id, data) => complaintService.reply(id, { ...data, is_internal: true }).then((d) => ({ data: d })),
+  getAllUsers: (params) => adminService.users(params).then((d) => ({ data: d })),
+  getUserDetails: (id) => adminService.user(id).then((d) => ({ data: d })),
+  toggleUserActive: (id) => adminService.toggleActive(id).then((d) => ({ data: d })),
+  getAdminList: () => adminService.users({ staff: true }).then((d) => ({ data: { admins: d.users } })),
 };

@@ -26,7 +26,8 @@ import {
   Line,
 } from 'recharts';
 import { Card, StatCard, Button, Spinner } from '../../components/ui';
-import { StatusBadge, PriorityBadge } from '../../components/ui/StatusBadge';
+import StatusBadge from '../../components/ui/StatusBadge';
+import PriorityBadge from '../../components/ui/PriorityBadge';
 import { dashboardService } from '../../services/api';
 import { formatRelativeTime, getCategoryLabel } from '../../utils/helpers';
 import useAuthStore from '../../stores/authStore';

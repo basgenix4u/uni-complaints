@@ -11,7 +11,8 @@ import {
   ArrowRightIcon,
 } from '@heroicons/react/24/outline';
 import { Card, StatCard, Button, Spinner, EmptyState } from '../../components/ui';
-import { StatusBadge, PriorityBadge } from '../../components/ui/StatusBadge';
+import StatusBadge from '../../components/ui/StatusBadge';
+import PriorityBadge from '../../components/ui/PriorityBadge';
 import { studentService } from '../../services/api';
 import { formatRelativeTime, getCategoryLabel } from '../../utils/helpers';
 import useAuthStore from '../../stores/authStore';
