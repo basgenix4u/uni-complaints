@@ -1,0 +1,97 @@
+/**
+ * Design tokens.
+ *
+ * Contrast ratios are recorded beside each value and were computed against
+ * WCAG 2.2. Changing a colour means re-checking the pair it is used with.
+ */
+
+:root {
+  /* Brand */
+  --brand-50: #ECFDF5;
+  --brand-100: #D1FAE5;
+  --brand-200: #A7F3D0;
+  --brand-300: #6EE7B7;
+  --brand-400: #34D399;
+  --brand-500: #10B981;
+  --brand-600: #0B8A6B;
+  --brand-700: #0B6B57; /* primary action, white text 6.45:1 */
+  --brand-800: #065F46; /* hover, white text 7.68:1 */
+  --brand-900: #064E3B;
+  --brand-950: #022C22;
+
+  /* Surfaces */
+  --canvas: #F7F8FA;
+  --surface: #FFFFFF;
+  --border: #E5E7EB;
+
+  /* Text */
+  --ink-900: #0A0F1A; /* 18.03:1 on canvas */
+  --ink-700: #1F2937; /* 13.81:1 */
+  --ink-600: #4B5563; /* 7.11:1 */
+  --ink-500: #6B7280; /* 4.55:1, smallest passing body colour */
+
+  /* Status. Always paired with an icon and a text label: several of these
+     hues are indistinguishable under deuteranopia. */
+  --status-submitted-fg: #1D4ED8;
+  --status-submitted-bg: #EFF4FF;
+  --status-acknowledged-fg: #7C3AED;
+  --status-acknowledged-bg: #F5F3FF;
+  --status-progress-fg: #B45309;
+  --status-progress-bg: #FFF7ED;
+  --status-resolved-fg: #046C4E;
+  --status-resolved-bg: #ECFDF5;
+  --status-closed-fg: #475569;
+  --status-closed-bg: #F1F5F9;
+  --status-declined-fg: #B91C1C;
+  --status-declined-bg: #FEF2F2;
+  --status-overdue-fg: #9F1239;
+  --status-overdue-bg: #FFF1F2;
+
+  /* Elevation */
+  --e1: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .10);
+  --e2: 0 4px 8px -2px rgba(16, 24, 40, .08), 0 2px 4px -2px rgba(16, 24, 40, .06);
+  --e3: 0 12px 16px -4px rgba(16, 24, 40, .08), 0 4px 6px -2px rgba(16, 24, 40, .03);
+  --e4: 0 20px 24px -4px rgba(16, 24, 40, .08), 0 8px 8px -4px rgba(16, 24, 40, .03);
+
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-2xl: 28px;
+
+  /* Motion */
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --t-instant: 100ms;
+  --t-fast: 160ms;
+  --t-base: 220ms;
+  --t-slow: 320ms;
+}
+
+.dark {
+  --canvas: #0B1220;
+  --surface: #131C2E;
+  --border: #243149;
+  --ink-900: #E6EAF2; /* 15.53:1 on dark canvas */
+  --ink-700: #D3DAE6;
+  --ink-600: #A9B4C7; /* 8.95:1 */
+  --ink-500: #7E8CA3; /* 5.50:1 */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Minimum 44px touch targets and a visible focus ring are accessibility
+   requirements, not styling preferences. */
+:focus-visible {
+  outline: 2px solid var(--brand-700);
+  outline-offset: 2px;
+}
