@@ -33,6 +33,9 @@ class Config:
         if o.strip()
     ]
 
+    # In-process counters are per worker, so a limit of ten is really ten
+    # times the worker count. Point this at Redis in production or the
+    # protection is largely notional.
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_HEADERS_ENABLED = True
     # Escape hatch for end to end runs, which sign in repeatedly against a
@@ -53,6 +56,8 @@ class Config:
     SMTP_USERNAME = os.getenv("SMTP_USERNAME")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
     MAIL_FROM = os.getenv("MAIL_FROM", "no-reply@resolve.ng")
+    # Where reset links point. Must match the deployed front end.
+    APP_URL = os.getenv("APP_URL", "http://localhost:5173")
     # One of: termii, africastalking, console. Empty disables SMS.
     SMS_PROVIDER = os.getenv("SMS_PROVIDER")
     SMS_SENDER_ID = os.getenv("SMS_SENDER_ID", "Resolve")
@@ -82,6 +87,22 @@ class ProductionConfig(Config):
             value = os.getenv(key, "")
             if not value or "change-me" in value or value.startswith("dev-"):
                 raise RuntimeError(f"{key} must be set to a secure value in production")
+
+        # Rate limits held in process memory are counted per worker, so the
+        # configured limit is multiplied by the number of workers. With more
+        # than one worker that is not a limit worth relying on.
+        storage = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
+        workers = int(os.getenv("WEB_CONCURRENCY", "0"))
+        if storage.startswith("memory://") and workers != 1:
+            raise RuntimeError(
+                "RATELIMIT_STORAGE_URI must point at shared storage such as Redis "
+                "when running more than one worker, otherwise each worker counts "
+                "separately and the login limit does not hold. Set WEB_CONCURRENCY=1 "
+                "only for a single process deployment."
+            )
+
+        if os.getenv("RATELIMIT_ENABLED", "true").lower() == "false":
+            raise RuntimeError("RATELIMIT_ENABLED must not be disabled in production")
 
 
 CONFIGS = {

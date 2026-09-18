@@ -61,6 +61,7 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
 cp .env.example .env          # then set SECRET_KEY and JWT_SECRET_KEY
+flask db upgrade              # builds the schema
 flask seed --demo             # creates an institution and sample accounts
 python run.py                 # http://localhost:5000
 ```
@@ -88,13 +89,13 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 105 tests
+cd backend && pytest                    # 118 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
 cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
   RATELIMIT_ENABLED=false python run.py &
-cd frontend && npm run test:e2e         # 44 journeys
+cd frontend && npm run test:e2e         # 52 journeys
 ```
 
 The browser suite signs in once per role through the API and replays the
@@ -122,7 +123,9 @@ Both are idempotent and safe to run concurrently with the web process.
 | Authorisation | Role hierarchy enforced server side on every route, never in the client |
 | Revoked access | Tokens are checked against the stored user each request, so deactivation takes effect immediately |
 | Account enumeration | Login returns one message for both an unknown email and a wrong password |
-| Brute force | Rate limits on registration, login and password change |
+| Brute force | Rate limits on registration, login and password reset |
+| Account discovery | A reset request answers identically whether or not the address is registered, which for a complaints system also hides who has complained |
+| Reset tokens | Only a hash is stored, they expire after an hour, are single use, and requesting a new one retires the old |
 | Uploads | Allow-list of types, file signatures verified against the declared type, generated filenames, stored outside the served tree |
 | File access | Served only through an authorised endpoint, so a guessed URL reveals nothing |
 | Private notes | Filtered for students in the API, and students cannot set the flag |
@@ -175,6 +178,10 @@ The image runs as an unprivileged user, serves through gunicorn, and exposes `/a
 
 For the frontend, `npm run build` produces static files for any CDN or static host. Set `VITE_API_URL` to the API origin.
 
+Schema changes are applied with `flask db upgrade`. The schema is never
+created implicitly on start, so a deployment cannot quietly diverge from
+what is in version control.
+
 ### Required configuration
 
 | Variable | Notes |
@@ -185,6 +192,8 @@ For the frontend, `npm run build` produces static files for any CDN or static ho
 | `UPLOAD_DIR` | Must be a persistent volume |
 | `SMTP_*`, `MAIL_FROM` | Without these, messages queue rather than being discarded |
 | `SMS_PROVIDER` | `termii`, `africastalking`, or `console` for local work |
+| `APP_URL` | Where password reset links point |
+| `RATELIMIT_STORAGE_URI` | Must be shared storage such as Redis when running more than one worker. Rate limits are counted per process, so in-memory counters multiply the limit by the worker count. Production refuses to start in that combination |
 
 ---
 
@@ -213,9 +222,9 @@ backend/
     services/     tickets, sla, storage, delivery, notifications,
                   sms, export, thumbnails
     security.py   role checks and tenant scoping
-  tests/          105 tests
+  tests/          118 tests
 frontend/
-  e2e/            44 browser journeys
+  e2e/            52 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin

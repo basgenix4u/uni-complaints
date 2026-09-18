@@ -239,6 +239,41 @@ test.describe('registers', () => {
   });
 });
 
+test.describe('password reset', () => {
+  test('the link on the sign in page reaches a real screen', async ({ page }) => {
+    await page.goto('/login');
+    await page.getByRole('link', { name: /forgot/i }).click();
+
+    // This route did not exist, so the link went nowhere.
+    await expect(page.getByRole('heading', { name: /forgotten your password/i })).toBeVisible();
+  });
+
+  test('the confirmation does not reveal whether an account exists', async ({ page }) => {
+    await page.goto('/forgot-password');
+    await page.getByLabel(/email/i).fill('definitely-not-registered@test.ng');
+    await page.getByRole('button', { name: /send the reset link/i }).click();
+
+    await expect(page.getByRole('heading', { name: /check your email/i })).toBeVisible();
+    await expect(page.getByText(/if that address belongs to an account/i)).toBeVisible();
+  });
+
+  test('a reset link with no token explains itself', async ({ page }) => {
+    await page.goto('/reset-password');
+
+    await expect(page.getByRole('heading', { name: /link is incomplete/i })).toBeVisible();
+  });
+
+  test('password rules are shown as they are met', async ({ page }) => {
+    await page.goto('/reset-password?token=example');
+
+    const save = page.getByRole('button', { name: /save the new password/i });
+    await expect(save).toBeDisabled();
+
+    await page.getByLabel(/new password/i).fill('Strong123');
+    await expect(save).toBeEnabled();
+  });
+});
+
 test.describe('command palette', () => {
   test('opens with the keyboard and jumps to a page', async ({ page }) => {
     await signIn(page, ADMIN);

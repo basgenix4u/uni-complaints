@@ -20,6 +20,7 @@ from app.models.complaint import (  # noqa: F401
 )
 from app.models.institution import Department, Institution  # noqa: F401
 from app.models.message import OutboundMessage  # noqa: F401
+from app.models.reset import PasswordReset  # noqa: F401
 from app.models.user import ROLES, User, normalise_matric, normalise_phone  # noqa: F401
 
 __all__ = [
@@ -27,6 +28,7 @@ __all__ = [
     "Institution",
     "Department",
     "OutboundMessage",
+    "PasswordReset",
     "User",
     "Complaint",
     "Response",

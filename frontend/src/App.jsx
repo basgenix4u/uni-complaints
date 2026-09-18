@@ -11,6 +11,8 @@ import { AuthLayout, DashboardLayout } from './components/layout';
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const TrackPage = lazy(() => import('./pages/public/TrackPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const MyComplaints = lazy(() => import('./pages/student/MyComplaints'));
@@ -87,6 +89,8 @@ function App() {
             <Route element={<AuthLayout />}>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
             </Route>
 
             {/* Student Routes */}
