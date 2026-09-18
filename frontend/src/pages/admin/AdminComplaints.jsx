@@ -1,342 +1,242 @@
-import React, { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FunnelIcon,
-  MagnifyingGlassIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  DocumentTextIcon,
-  EyeIcon,
-} from '@heroicons/react/24/outline';
-import { Card, Button, Select, Spinner, EmptyState, PageHeader, Avatar } from '../../components/ui';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { InboxIcon } from '@heroicons/react/24/outline';
+
+import Button from '../../components/ui/Button';
+import { Input, Select } from '../../components/ui/Field';
 import StatusBadge from '../../components/ui/StatusBadge';
 import PriorityBadge from '../../components/ui/PriorityBadge';
-import { legacyAdminService as adminService } from '../../services/api';
-import { formatRelativeTime, getCategoryLabel, getCategoryIcon } from '../../utils/helpers';
-import { CATEGORIES } from '../../utils/constants';
+import { SkeletonList } from '../../components/ui/Skeleton';
+import { complaintService } from '../../services/api';
+import { PRIORITY, STATUS, categoryLabel } from '../../utils/status';
+import { formatDeadline, formatRelative } from '../../utils/format';
 
-const statusOptions = [
-  { value: '', label: 'All Statuses' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'resolved', label: 'Resolved' },
-  { value: 'closed', label: 'Closed' },
-  { value: 'rejected', label: 'Rejected' },
+// Saved views cover the questions staff actually open this screen to ask.
+const VIEWS = [
+  { key: 'all', label: 'Everything', params: {} },
+  { key: 'unassigned', label: 'Unassigned', params: { unassigned: '1' } },
+  { key: 'overdue', label: 'Overdue', params: { overdue: '1' } },
+  { key: 'mine', label: 'Mine', params: { scope: 'mine' } },
 ];
 
-const priorityOptions = [
-  { value: '', label: 'All Priorities' },
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
-];
+export default function AdminComplaints() {
+  const [view, setView] = useState('all');
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('');
+  const [priority, setPriority] = useState('');
+  const [search, setSearch] = useState('');
 
-const categoryOptions = [
-  { value: '', label: 'All Categories' },
-  ...CATEGORIES.map(c => ({ value: c.value, label: c.label })),
-];
+  const viewParams = VIEWS.find((entry) => entry.key === view)?.params || {};
 
-const AdminComplaints = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [showFilters, setShowFilters] = useState(false);
-  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
-
-  const page = parseInt(searchParams.get('page') || '1');
-  const status = searchParams.get('status') || '';
-  const priority = searchParams.get('priority') || '';
-  const category = searchParams.get('category') || '';
-  const search = searchParams.get('search') || '';
-  const unassigned = searchParams.get('unassigned') === 'true';
-
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['adminComplaints', { page, status, priority, category, search, unassigned }],
-    queryFn: () => adminService.getAllComplaints({ page, per_page: 10, status, priority, category, search, unassigned }),
-    keepPreviousData: true,
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-complaints', { view, page, status, priority, search }],
+    queryFn: () =>
+      complaintService.list({ page, per_page: 10, status, priority, search, ...viewParams }),
+    placeholderData: keepPreviousData,
   });
 
-  const complaints = data?.data?.complaints || [];
-  const pagination = data?.data?.pagination || {};
+  const complaints = data?.complaints || [];
+  const pagination = data?.pagination || {};
 
-  const updateParams = (newParams) => {
-    const params = new URLSearchParams(searchParams);
-    Object.entries(newParams).forEach(([key, value]) => {
-      if (value) {
-        params.set(key, String(value));
-      } else {
-        params.delete(key);
-      }
-    });
-    if (!newParams.page) {
-      params.set('page', '1');
-    }
-    setSearchParams(params);
+  const changeView = (key) => {
+    setView(key);
+    setPage(1);
   };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    updateParams({ search: searchInput });
-  };
-
-  const clearFilters = () => {
-    setSearchInput('');
-    setSearchParams({});
-  };
-
-  const hasActiveFilters = status || priority || category || search || unassigned;
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="All Complaints"
-        description="Manage and respond to all student complaints"
-      />
+    <div className="mx-auto max-w-6xl px-4 py-8">
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">Complaints</h1>
+      <p className="mt-1 text-ink-600">Triage, assign and respond.</p>
 
-      {/* Quick Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={!hasActiveFilters ? 'primary' : 'outline'}
-          size="sm"
-          onClick={clearFilters}
-        >
-          All
-        </Button>
-        <Button
-          variant={status === 'pending' ? 'primary' : 'outline'}
-          size="sm"
-          onClick={() => updateParams({ status: 'pending' })}
-        >
-          Pending
-        </Button>
-        <Button
-          variant={status === 'in_progress' ? 'primary' : 'outline'}
-          size="sm"
-          onClick={() => updateParams({ status: 'in_progress' })}
-        >
-          In Progress
-        </Button>
-        <Button
-          variant={unassigned ? 'primary' : 'outline'}
-          size="sm"
-          onClick={() => updateParams({ unassigned: !unassigned ? 'true' : '' })}
-        >
-          Unassigned
-        </Button>
-        <Button
-          variant={priority === 'urgent' ? 'danger' : 'outline'}
-          size="sm"
-          onClick={() => updateParams({ priority: 'urgent' })}
-        >
-          🔴 Urgent
-        </Button>
+      <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Saved views">
+        {VIEWS.map((entry) => (
+          <button
+            key={entry.key}
+            type="button"
+            role="tab"
+            aria-selected={view === entry.key}
+            onClick={() => changeView(entry.key)}
+            className={`min-h-touch rounded-md border px-4 text-sm font-semibold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 ${
+              view === entry.key
+                ? 'border-brand-700 bg-brand-50 text-brand-800'
+                : 'border-line bg-surface text-ink-600 hover:border-brand-600'
+            }`}
+          >
+            {entry.label}
+          </button>
+        ))}
       </div>
 
-      <Card padding={false}>
-        {/* Search & Filters */}
-        <div className="p-4 border-b border-neutral-100">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <form onSubmit={handleSearch} className="flex-1">
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="text"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search tickets, titles, student names..."
-                  className="w-full pl-11 pr-4 py-2.5 bg-neutral-50 border-0 rounded-xl text-sm placeholder:text-neutral-400 focus:bg-white focus:ring-2 focus:ring-primary-500/20 transition-all"
-                />
-              </div>
-            </form>
-            <Button
-              variant={showFilters ? 'primary' : 'outline'}
-              leftIcon={<FunnelIcon className="w-5 h-5" />}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              Filters
-            </Button>
-          </div>
-
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <Select
-                    label="Status"
-                    options={statusOptions}
-                    value={status}
-                    onChange={(value) => updateParams({ status: value })}
-                  />
-                  <Select
-                    label="Priority"
-                    options={priorityOptions}
-                    value={priority}
-                    onChange={(value) => updateParams({ priority: value })}
-                  />
-                  <Select
-                    label="Category"
-                    options={categoryOptions}
-                    value={category}
-                    onChange={(value) => updateParams({ category: value })}
-                  />
-                  <div className="flex items-end">
-                    <Button variant="ghost" onClick={clearFilters} disabled={!hasActiveFilters}>
-                      Clear All
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <div className="min-w-[220px] flex-1">
+          <Input
+            label="Search"
+            placeholder="Title, ticket or description"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setPage(1);
+            }}
+          />
         </div>
-
-        {/* Results */}
-        <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100 flex items-center justify-between">
-          <p className="text-sm text-neutral-600">
-            {pagination.total_items || 0} complaint{pagination.total_items !== 1 ? 's' : ''}
-          </p>
-          {isFetching && <Spinner size="sm" />}
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="p-8 space-y-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-20 rounded-xl bg-neutral-100 animate-pulse" />
+        <div className="min-w-[170px]">
+          <Select
+            label="Status"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Any status</option>
+            {Object.entries(STATUS)
+              .filter(([key]) => key !== 'overdue')
+              .map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.label}
+                </option>
               ))}
-            </div>
-          ) : complaints.length === 0 ? (
-            <EmptyState
-              icon={DocumentTextIcon}
-              title="No complaints found"
-              description={hasActiveFilters ? 'Try adjusting your filters' : 'No complaints have been submitted yet'}
-              actionLabel={hasActiveFilters ? 'Clear Filters' : undefined}
-              onAction={hasActiveFilters ? clearFilters : undefined}
-            />
-          ) : (
-            <table className="w-full">
-              <thead className="bg-neutral-50 border-b border-neutral-100">
-                <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase">Ticket</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase">Student</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase hidden lg:table-cell">Category</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase">Status</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase hidden md:table-cell">Priority</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase hidden xl:table-cell">Assigned</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-neutral-500 uppercase">Action</th>
+          </Select>
+        </div>
+        <div className="min-w-[150px]">
+          <Select
+            label="Priority"
+            value={priority}
+            onChange={(event) => {
+              setPriority(event.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Any priority</option>
+            {Object.entries(PRIORITY).map(([key, config]) => (
+              <option key={key} value={key}>
+                {config.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        {isLoading && <SkeletonList rows={6} />}
+
+        {!isLoading && complaints.length === 0 && (
+          <div className="rounded-lg border border-dashed border-line bg-surface px-6 py-16 text-center">
+            <InboxIcon className="mx-auto h-10 w-10 text-ink-500" aria-hidden="true" />
+            <h2 className="mt-3 font-display text-lg font-semibold text-ink-900">
+              Nothing here
+            </h2>
+            <p className="mt-1 text-sm text-ink-600">
+              {view === 'unassigned'
+                ? 'Every complaint has an owner.'
+                : view === 'overdue'
+                  ? 'Nothing has passed its deadline.'
+                  : 'No complaints match these filters.'}
+            </p>
+          </div>
+        )}
+
+        {complaints.length > 0 && (
+          <div className="overflow-hidden rounded-lg border border-line bg-surface shadow-e1">
+            <table className="w-full text-sm">
+              <caption className="sr-only">Complaints</caption>
+              <thead>
+                <tr className="border-b border-line">
+                  <Th>Ticket</Th>
+                  <Th>Complaint</Th>
+                  <Th>Status</Th>
+                  <Th className="hidden md:table-cell">Priority</Th>
+                  <Th className="hidden lg:table-cell">Owner</Th>
+                  <Th className="hidden sm:table-cell">Due</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {complaints.map((complaint, index) => (
-                  <motion.tr
-                    key={complaint.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.03 }}
-                    className="hover:bg-neutral-50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div>
-                        <p className="text-xs font-mono text-primary-600 bg-primary-50 px-2 py-0.5 rounded inline-block">
-                          {complaint.ticket_number}
-                        </p>
-                        <p className="font-medium text-neutral-900 mt-1 line-clamp-1 max-w-[200px]">
-                          {complaint.title}
-                        </p>
-                        <p className="text-xs text-neutral-400 mt-0.5">
-                          {formatRelativeTime(complaint.created_at)}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar name={complaint.student?.full_name} size="sm" />
-                        <div>
-                          <p className="font-medium text-neutral-900 text-sm">
-                            {complaint.student?.full_name}
-                          </p>
-                          <p className="text-xs text-neutral-500">
-                            {complaint.student?.matric_number}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 hidden lg:table-cell">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{getCategoryIcon(complaint.category)}</span>
-                        <span className="text-sm text-neutral-600">{getCategoryLabel(complaint.category)}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <StatusBadge status={complaint.status} />
-                    </td>
-                    <td className="px-6 py-4 hidden md:table-cell">
-                      <PriorityBadge priority={complaint.priority} />
-                    </td>
-                    <td className="px-6 py-4 hidden xl:table-cell">
-                      {complaint.assigned_admin ? (
-                        <div className="flex items-center gap-2">
-                          <Avatar name={complaint.assigned_admin.full_name} size="sm" />
-                          <span className="text-sm text-neutral-600">
-                            {complaint.assigned_admin.full_name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-neutral-400">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <Link to={`/admin/complaints/${complaint.id}`}>
-                        <Button variant="ghost" size="sm" leftIcon={<EyeIcon className="w-4 h-4" />}>
-                          View
-                        </Button>
+              <tbody>
+                {complaints.map((complaint) => (
+                  <tr key={complaint.id} className="border-b border-line last:border-0 hover:bg-canvas">
+                    <td className="px-4 py-3 align-middle">
+                      <Link
+                        to={`/admin/complaints/${complaint.id}`}
+                        className="font-mono text-caption font-semibold text-brand-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+                      >
+                        {complaint.ticket_number}
                       </Link>
                     </td>
-                  </motion.tr>
+                    <td className="max-w-xs px-4 py-3 align-middle">
+                      <Link to={`/admin/complaints/${complaint.id}`} className="block">
+                        <span className="block truncate font-medium text-ink-900">
+                          {complaint.title}
+                        </span>
+                        <span className="block text-caption text-ink-500">
+                          {categoryLabel(complaint.category)} ·{' '}
+                          {formatRelative(complaint.created_at)}
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 align-middle">
+                      <StatusBadge
+                        status={complaint.status}
+                        overdue={complaint.is_overdue}
+                        size="sm"
+                      />
+                    </td>
+                    <td className="hidden px-4 py-3 align-middle md:table-cell">
+                      <PriorityBadge priority={complaint.priority} />
+                    </td>
+                    <td className="hidden px-4 py-3 align-middle text-ink-600 lg:table-cell">
+                      {complaint.assigned_admin?.full_name || (
+                        <span className="text-ink-500">Unassigned</span>
+                      )}
+                    </td>
+                    <td className="hidden px-4 py-3 align-middle text-caption sm:table-cell">
+                      <span className={complaint.is_overdue ? 'font-semibold text-[#9F1239]' : 'text-ink-600'}>
+                        {['resolved', 'closed', 'declined'].includes(complaint.status)
+                          ? '—'
+                          : formatDeadline(complaint.resolve_due_at)}
+                      </span>
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
-
-        {/* Pagination */}
-        {pagination.total_pages > 1 && (
-          <div className="p-4 border-t border-neutral-100 flex items-center justify-between">
-            <p className="text-sm text-neutral-500">
-              Page {pagination.page} of {pagination.total_pages}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!pagination.has_prev}
-                onClick={() => updateParams({ page: page - 1 })}
-                leftIcon={<ChevronLeftIcon className="w-4 h-4" />}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!pagination.has_next}
-                onClick={() => updateParams({ page: page + 1 })}
-                rightIcon={<ChevronRightIcon className="w-4 h-4" />}
-              >
-                Next
-              </Button>
-            </div>
           </div>
         )}
-      </Card>
+
+        {pagination.total_pages > 1 && (
+          <nav className="mt-6 flex items-center justify-between" aria-label="Pages">
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!pagination.has_prev}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              Previous
+            </Button>
+            <p className="text-sm text-ink-600">
+              Page {pagination.page} of {pagination.total_pages} · {pagination.total_items} total
+            </p>
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={!pagination.has_next}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Next
+            </Button>
+          </nav>
+        )}
+      </div>
     </div>
   );
-};
+}
 
-export default AdminComplaints;
+function Th({ children, className = '' }) {
+  return (
+    <th
+      scope="col"
+      className={`px-4 py-3 text-left text-caption font-bold uppercase tracking-wider text-ink-500 ${className}`}
+    >
+      {children}
+    </th>
+  );
+}

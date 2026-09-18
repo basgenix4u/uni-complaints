@@ -1,397 +1,260 @@
-import React, { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
-import {
-  DocumentTextIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ArrowLeftIcon,
-} from '@heroicons/react/24/outline';
-import { Card, Button, Input, Textarea, PageHeader } from '../../components/ui';
-import { studentService } from '../../services/api';
-import { CATEGORIES } from '../../utils/constants';
+import { ArrowLeftIcon, ArrowRightIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 
-// Validation Schema
-const complaintSchema = z.object({
-  category: z.string().min(1, 'Please select a category'),
-  title: z
-    .string()
-    .min(1, 'Title is required')
-    .min(5, 'Title must be at least 5 characters')
-    .max(200, 'Title must be less than 200 characters'),
-  description: z
-    .string()
-    .min(1, 'Description is required')
-    .min(20, 'Description must be at least 20 characters')
-    .max(5000, 'Description must be less than 5000 characters'),
-  priority: z.string().min(1, 'Please select a priority'),
-});
+import Button from '../../components/ui/Button';
+import { Input, Select, Textarea } from '../../components/ui/Field';
+import Receipt from '../../components/complaints/Receipt';
+import { CATEGORY_GROUPS, PRIORITY, categoryLabel } from '../../utils/status';
+import { complaintService, errorMessage, fieldErrors } from '../../services/api';
+import useAuthStore from '../../stores/authStore';
 
-const priorityOptions = [
-  { value: 'low', label: 'Low - Not urgent, can wait', icon: '🟢' },
-  { value: 'medium', label: 'Medium - Should be addressed soon', icon: '🟡' },
-  { value: 'high', label: 'High - Needs prompt attention', icon: '🟠' },
-  { value: 'urgent', label: 'Urgent - Critical issue', icon: '🔴' },
-];
+const TITLE_MIN = 5;
+const BODY_MIN = 20;
+const BODY_MAX = 5000;
 
-const categoryOptions = CATEGORIES.map(c => ({
-  value: c.value,
-  label: c.label,
-  icon: c.icon,
-}));
+const STEPS = ['What is it about', 'What happened', 'Check and send'];
 
-const NewComplaint = () => {
+export default function NewComplaint() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const { user } = useAuthStore();
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    getValues,     // <--- Added this
-    setError,      // <--- Added this
-    clearErrors,   // <--- Added this
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(complaintSchema),
-    mode: 'onSubmit',
-    defaultValues: {
-      category: '',
-      title: '',
-      description: '',
-      priority: 'medium',
-    },
-  });
+  const [step, setStep] = useState(0);
+  const [search, setSearch] = useState('');
+  const [form, setForm] = useState({ category: '', title: '', description: '', priority: 'medium' });
+  const [errors, setErrors] = useState({});
+  const [receipt, setReceipt] = useState(null);
 
-  const watchCategory = watch('category');
-  const watchPriority = watch('priority');
-  const watchTitle = watch('title');
-  const watchDescription = watch('description');
+  const set = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => ({ ...current, [field]: undefined }));
+  };
 
-  // Submit mutation
-  const submitMutation = useMutation({
-    mutationFn: (data) => studentService.createComplaint(data),
-    onSuccess: (response) => {
-      const ticket = response.data?.complaint?.ticket_number;
-      toast.success(
-        <div>
-          <p className="font-semibold">Complaint submitted successfully!</p>
-          <p className="text-sm text-neutral-500">Ticket: {ticket}</p>
-        </div>
-      );
-      navigate('/student/complaints');
-    },
+  const groups = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return CATEGORY_GROUPS;
+    return CATEGORY_GROUPS.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.label.toLowerCase().includes(term)),
+    })).filter((group) => group.items.length > 0);
+  }, [search]);
+
+  const submit = useMutation({
+    mutationFn: () => complaintService.create(form),
+    onSuccess: (data) => setReceipt(data.complaint),
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to submit complaint');
+      const fields = fieldErrors(error);
+      setErrors(Object.keys(fields).length ? fields : { form: errorMessage(error) });
+      // Send the user back to the step holding the problem.
+      if (fields.title || fields.description) setStep(1);
+      else if (fields.category) setStep(0);
     },
   });
 
-  const onSubmit = (data) => {
-    submitMutation.mutate(data);
-  };
+  if (receipt) {
+    return (
+      <div className="px-4 py-10">
+        <Receipt complaint={receipt} institution={user?.institution} />
+      </div>
+    );
+  }
 
-  // FIXED: Manual validation per step to prevent crashing
-  const nextStep = () => {
-    const data = getValues();
-
+  const validateStep = () => {
+    const found = {};
+    if (step === 0 && !form.category) found.category = 'Choose what this is about.';
     if (step === 1) {
-      // Create a mini-schema just for Step 1
-      const step1Schema = complaintSchema.pick({ category: true });
-      const result = step1Schema.safeParse(data);
-
-      if (!result.success) {
-        // If validation fails, manually set the error so the UI shows it
-        setError('category', { message: result.error.errors[0].message });
-        return;
+      if (form.title.trim().length < TITLE_MIN) {
+        found.title = `Give it a short title of at least ${TITLE_MIN} characters.`;
       }
-      clearErrors('category');
-      setStep(2);
-    } 
-    else if (step === 2) {
-      // Create a mini-schema just for Step 2
-      const step2Schema = complaintSchema.pick({ title: true, description: true });
-      const result = step2Schema.safeParse(data);
-
-      if (!result.success) {
-        // Map Zod errors to Form errors
-        result.error.errors.forEach((err) => {
-          setError(err.path[0], { message: err.message });
-        });
-        return;
+      if (form.description.trim().length < BODY_MIN) {
+        found.description = `Add a bit more detail — what happened, and when? (${BODY_MIN} characters minimum)`;
       }
-      clearErrors(['title', 'description']);
-      setStep(3);
     }
+    setErrors(found);
+    return Object.keys(found).length === 0;
   };
 
-  const prevStep = () => {
-    setStep(step - 1);
-  };
-
-  const selectedCategory = CATEGORIES.find(c => c.value === watchCategory);
+  const next = () => validateStep() && setStep((current) => current + 1);
 
   return (
-    <div className="max-w-3xl mx-auto">
-      {/* Page Header */}
-      <PageHeader
-        title="Submit New Complaint"
-        description="Fill out the form below to submit your complaint or request"
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/student/dashboard' },
-          { label: 'Complaints', href: '/student/complaints' },
-          { label: 'New Complaint' },
-        ]}
-      />
+    <div className="mx-auto max-w-2xl px-4 py-8">
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+        File a complaint
+      </h1>
+      <p className="mt-1 text-ink-600">
+        Give us the details and we will route it to the right department.
+      </p>
 
-      {/* Progress Steps */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          {[1, 2, 3].map((s) => (
-            <React.Fragment key={s}>
-              <div className="flex items-center gap-3">
-                <motion.div
-                  animate={{
-                    scale: step === s ? 1.1 : 1,
-                    backgroundColor: step >= s ? '#3b82f6' : '#e5e5e5',
-                  }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                >
-                  {step > s ? (
-                    <CheckCircleIcon className="w-6 h-6" />
-                  ) : (
-                    s
-                  )}
-                </motion.div>
-                <span className={`hidden sm:block text-sm font-medium ${step >= s ? 'text-neutral-900' : 'text-neutral-400'}`}>
-                  {s === 1 && 'Category'}
-                  {s === 2 && 'Details'}
-                  {s === 3 && 'Review'}
-                </span>
-              </div>
-              {s < 3 && (
-                <div className={`flex-1 h-1 mx-4 rounded-full ${step > s ? 'bg-primary-500' : 'bg-neutral-200'}`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-
-      {/* Form Card */}
-      <Card>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Step 1: Category Selection */}
-          {step === 1 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+      <ol className="mt-6 flex gap-2" aria-label="Progress">
+        {STEPS.map((label, index) => (
+          <li key={label} className="flex-1" aria-current={index === step ? 'step' : undefined}>
+            <div
+              className={`h-1.5 rounded-full ${index <= step ? 'bg-brand-700' : 'bg-line'}`}
+              aria-hidden="true"
+            />
+            <p
+              className={`mt-2 text-caption font-semibold ${
+                index <= step ? 'text-ink-900' : 'text-ink-500'
+              }`}
             >
-              <h2 className="text-xl font-semibold text-neutral-900 mb-2">
-                What's your complaint about?
-              </h2>
-              <p className="text-neutral-500 mb-6">
-                Select the category that best describes your issue
+              {label}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      <div className="mt-7 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        {step === 0 && (
+          <div className="space-y-5">
+            <Input
+              label="Find a category"
+              placeholder="Try 'transcript' or 'hostel'"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              hint="Or pick from the groups below."
+            />
+
+            {errors.category && (
+              <p role="alert" className="text-caption font-medium text-[#B91C1C]">
+                {errors.category}
               </p>
+            )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {categoryOptions.map((cat) => (
-                  <motion.button
-                    key={cat.value}
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setValue('category', cat.value);
-                      clearErrors('category'); // Clear error immediately on select
-                    }}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
-                      watchCategory === cat.value
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'
-                    }`}
-                  >
-                    <span className="text-2xl mb-2 block">{cat.icon}</span>
-                    <span className={`text-sm font-medium ${watchCategory === cat.value ? 'text-primary-700' : 'text-neutral-700'}`}>
-                      {cat.label}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-
-              {errors.category && (
-                <p className="mt-3 text-sm text-danger-600">{errors.category.message}</p>
-              )}
-            </motion.div>
-          )}
-
-          {/* Step 2: Complaint Details */}
-          {step === 2 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-6"
-            >
-              <div>
-                <h2 className="text-xl font-semibold text-neutral-900 mb-2">
-                  Describe your issue
-                </h2>
-                <p className="text-neutral-500 mb-6">
-                  Provide as much detail as possible to help us understand and resolve your issue
+            <div className="space-y-5">
+              {groups.map((group) => (
+                <fieldset key={group.name}>
+                  <legend className="mb-2 text-sm font-bold text-ink-900">
+                    <span aria-hidden="true">{group.icon}</span> {group.name}
+                  </legend>
+                  <div className="flex flex-wrap gap-2">
+                    {group.items.map((item) => {
+                      const selected = form.category === item.value;
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => set('category', item.value)}
+                          aria-pressed={selected}
+                          className={`min-h-touch rounded-md border px-3.5 py-2 text-sm font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 ${
+                            selected
+                              ? 'border-brand-700 bg-brand-50 text-brand-800'
+                              : 'border-line bg-surface text-ink-700 hover:border-brand-600'
+                          }`}
+                        >
+                          {item.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              ))}
+              {groups.length === 0 && (
+                <p className="text-sm text-ink-500">
+                  Nothing matches that. Clear the search to see every category.
                 </p>
-              </div>
-
-              {/* Selected Category Display */}
-              {selectedCategory && (
-                <div className="flex items-center gap-3 p-4 rounded-xl bg-primary-50 border border-primary-100">
-                  <span className="text-2xl">{selectedCategory.icon}</span>
-                  <div>
-                    <p className="text-xs text-primary-600 font-medium">Category</p>
-                    <p className="font-semibold text-primary-900">{selectedCategory.label}</p>
-                  </div>
-                </div>
               )}
+            </div>
+          </div>
+        )}
 
-              {/* Title */}
-              <Input
-                label="Complaint Title"
-                placeholder="Brief summary of your issue"
-                leftIcon={<DocumentTextIcon className="w-5 h-5" />}
-                error={errors.title?.message}
-                hint={`${watchTitle?.length || 0}/200 characters`}
-                {...register('title')}
-              />
-
-              {/* Description */}
-              <Textarea
-                label="Detailed Description"
-                placeholder="Explain your issue in detail. Include relevant dates, names, and any steps you've already taken..."
-                rows={6}
-                error={errors.description?.message}
-                hint={`${watchDescription?.length || 0}/5000 characters (minimum 20)`}
-                {...register('description')}
-              />
-
-              {/* Priority */}
-              <div>
-                <label className="label">Priority Level</label>
-                <div className="grid grid-cols-2 gap-3">
-                  {priorityOptions.map((p) => (
-                    <button
-                      key={p.value}
-                      type="button"
-                      onClick={() => setValue('priority', p.value)}
-                      className={`p-3 rounded-xl border-2 text-left transition-all ${
-                        watchPriority === p.value
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-neutral-200 hover:border-neutral-300'
-                      }`}
-                    >
-                      <span className="text-lg mr-2">{p.icon}</span>
-                      <span className={`text-sm font-medium ${watchPriority === p.value ? 'text-primary-700' : 'text-neutral-700'}`}>
-                        {p.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 3: Review */}
-          {step === 3 && (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+        {step === 1 && (
+          <div className="space-y-5">
+            <Input
+              label="Title"
+              required
+              placeholder="Transcript request not processed"
+              value={form.title}
+              onChange={(event) => set('title', event.target.value)}
+              error={errors.title}
+              hint="One line that sums it up."
+              maxLength={200}
+            />
+            <Textarea
+              label="What happened"
+              required
+              rows={7}
+              placeholder="Explain what happened, when it started, and anything you have already tried."
+              value={form.description}
+              onChange={(event) => set('description', event.target.value)}
+              error={errors.description}
+              hint={`${form.description.length} of ${BODY_MAX} characters. Dates and reference numbers help.`}
+              maxLength={BODY_MAX}
+            />
+            <Select
+              label="How urgent is it"
+              value={form.priority}
+              onChange={(event) => set('priority', event.target.value)}
+              hint="Staff may adjust this once they have read it."
             >
-              <h2 className="text-xl font-semibold text-neutral-900 mb-2">
-                Review your complaint
-              </h2>
-              <p className="text-neutral-500 mb-6">
-                Please review the details before submitting
+              {Object.entries(PRIORITY).map(([value, config]) => (
+                <option key={value} value={value}>
+                  {config.label} — {config.hint}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="space-y-4">
+            <h2 className="text-sm font-bold text-ink-900">Check this before sending</h2>
+            <dl className="divide-y divide-line overflow-hidden rounded-md border border-line text-sm">
+              <Summary label="About" value={categoryLabel(form.category)} />
+              <Summary label="Title" value={form.title} />
+              <Summary label="Urgency" value={PRIORITY[form.priority]?.label} />
+            </dl>
+            <div>
+              <p className="mb-1.5 text-caption font-bold uppercase tracking-wider text-ink-500">
+                What happened
               </p>
-
-              <div className="space-y-4">
-                {/* Category */}
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <p className="text-xs text-neutral-500 font-medium mb-1">Category</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{selectedCategory?.icon}</span>
-                    <span className="font-semibold text-neutral-900">{selectedCategory?.label}</span>
-                  </div>
-                </div>
-
-                {/* Title */}
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <p className="text-xs text-neutral-500 font-medium mb-1">Title</p>
-                  <p className="font-semibold text-neutral-900">{watchTitle}</p>
-                </div>
-
-                {/* Description */}
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <p className="text-xs text-neutral-500 font-medium mb-1">Description</p>
-                  <p className="text-neutral-700 whitespace-pre-wrap">{watchDescription}</p>
-                </div>
-
-                {/* Priority */}
-                <div className="p-4 rounded-xl bg-neutral-50 border border-neutral-100">
-                  <p className="text-xs text-neutral-500 font-medium mb-1">Priority</p>
-                  <div className="flex items-center gap-2">
-                    <span>{priorityOptions.find(p => p.value === watchPriority)?.icon}</span>
-                    <span className="font-semibold text-neutral-900 capitalize">{watchPriority}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Warning */}
-              <div className="mt-6 p-4 rounded-xl bg-warning-50 border border-warning-200 flex gap-3">
-                <ExclamationTriangleIcon className="w-6 h-6 text-warning-600 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-warning-800">Before you submit</p>
-                  <p className="text-sm text-warning-700">
-                    Make sure all information is accurate. You'll receive a ticket number to track your complaint.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-neutral-100">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={step === 1 ? () => navigate('/student/complaints') : prevStep}
-              leftIcon={<ArrowLeftIcon className="w-4 h-4" />}
-            >
-              {step === 1 ? 'Cancel' : 'Back'}
-            </Button>
-
-            {step < 3 ? (
-              <Button type="button" onClick={nextStep}>
-                Continue
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                loading={submitMutation.isPending}
-                leftIcon={<CheckCircleIcon className="w-5 h-5" />}
-              >
-                Submit Complaint
-              </Button>
+              <p className="whitespace-pre-wrap rounded-md border border-line bg-canvas p-4 text-sm leading-relaxed text-ink-700">
+                {form.description}
+              </p>
+            </div>
+            <p className="rounded-md border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
+              Once sent you will get a ticket number and a date by which the department must reply.
+              You can add files afterwards.
+            </p>
+            {errors.form && (
+              <p role="alert" className="text-caption font-medium text-[#B91C1C]">
+                {errors.form}
+              </p>
             )}
           </div>
-        </form>
-      </Card>
+        )}
+
+        <div className="mt-7 flex items-center justify-between gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => (step === 0 ? navigate(-1) : setStep((current) => current - 1))}
+          >
+            <ArrowLeftIcon className="h-4 w-4" aria-hidden="true" />
+            {step === 0 ? 'Cancel' : 'Back'}
+          </Button>
+
+          {step < 2 ? (
+            <Button type="button" onClick={next}>
+              Continue
+              <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          ) : (
+            <Button type="button" loading={submit.isPending} onClick={() => submit.mutate()}>
+              {submit.isPending ? 'Securing your complaint' : 'Send complaint'}
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
-};
+}
 
-export default NewComplaint;
+function Summary({ label, value }) {
+  return (
+    <div className="flex items-start justify-between gap-4 bg-surface px-4 py-3">
+      <dt className="text-ink-500">{label}</dt>
+      <dd className="text-right font-semibold text-ink-900">{value}</dd>
+    </div>
+  );
+}

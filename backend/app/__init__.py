@@ -1,6 +1,6 @@
 """Application factory."""
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 from app.config import get_config
 from app.extensions import bcrypt, cors, db, jwt, limiter, migrate
@@ -46,6 +46,35 @@ def create_app(config_name: str | None = None) -> Flask:
     @app.get("/api/health")
     def health():
         return jsonify({"success": True, "status": "ok"})
+
+    @app.get("/api/ready")
+    def ready():
+        """Readiness probe: confirms the database answers."""
+        from sqlalchemy import text
+
+        try:
+            db.session.execute(text("SELECT 1"))
+            return jsonify({"success": True, "status": "ready"})
+        except Exception:
+            return jsonify({"success": False, "status": "database unavailable"}), 503
+
+    @app.after_request
+    def security_headers(response):
+        # The API returns JSON only, so a restrictive policy costs nothing
+        # and closes off sniffing and framing.
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'")
+        response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+        if not app.debug:
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+        # Attachments and personal data must not be cached by proxies.
+        if request.path.startswith("/api/") and request.path != "/api/health":
+            response.headers.setdefault("Cache-Control", "no-store")
+        return response
 
     return app
 

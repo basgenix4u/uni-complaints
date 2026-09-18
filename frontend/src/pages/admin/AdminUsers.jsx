@@ -17,7 +17,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Card, Button, Input, Select, Spinner, EmptyState, Modal, Avatar, PageHeader } from '../../components/ui';
-import { legacyAdminService as adminService, authService } from '../../services/api';
+import { adminService } from '../../services/api';
 import { formatDate } from '../../utils/helpers';
 import useAuthStore from '../../stores/authStore';
 
@@ -56,18 +56,18 @@ const AdminUsers = () => {
   // --- FIX START: Hooks moved to the top ---
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['adminUsers', { page, role, search }],
-    queryFn: () => adminService.getAllUsers({ page, per_page: 10, role, search }),
+    queryFn: () => adminService.users({ page, per_page: 10, role, search }),
     keepPreviousData: true,
     enabled: isSuperAdmin(), // Only run query if user is super admin
   });
 
-  const users = data?.data?.users || [];
-  const pagination = data?.data?.pagination || {};
+  const users = data?.users || [];
+  const pagination = data?.pagination || {};
 
   const toggleActiveMutation = useMutation({
-    mutationFn: (userId) => adminService.toggleUserActive(userId),
+    mutationFn: (userId) => adminService.toggleActive(userId),
     onSuccess: (response) => {
-      const status = response.data?.user?.is_active ? 'activated' : 'deactivated';
+      const status = response?.user?.is_active ? 'activated' : 'deactivated';
       toast.success(`User ${status} successfully`);
       queryClient.invalidateQueries(['adminUsers']);
     },
@@ -77,7 +77,7 @@ const AdminUsers = () => {
   });
 
   const createAdminMutation = useMutation({
-    mutationFn: (data) => authService.registerAdmin(data),
+    mutationFn: (data) => adminService.createStaff(data),
     onSuccess: () => {
       toast.success('Admin account created successfully');
       setShowAddModal(false);
