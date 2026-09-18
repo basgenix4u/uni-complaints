@@ -78,7 +78,13 @@ class Complaint(TimestampMixin, db.Model):
     decline_reason = db.Column(db.Text)
 
     satisfaction_rating = db.Column(db.Integer)
+    satisfaction_comment = db.Column(db.String(500))
     response_count = db.Column(db.Integer, default=0, nullable=False)
+
+    # Set once when the deadline passes, so a sweep cannot escalate the
+    # same complaint twice.
+    escalated_at = db.Column(db.DateTime(timezone=True), index=True)
+    reminder_sent_at = db.Column(db.DateTime(timezone=True))
 
     student = db.relationship("User", foreign_keys=[student_id])
     assigned_to = db.relationship("User", foreign_keys=[assigned_to_id])
@@ -95,17 +101,19 @@ class Complaint(TimestampMixin, db.Model):
         cascade="all, delete-orphan",
         order_by="ComplaintEvent.created_at",
     )
+    attachments = db.relationship(
+        "Attachment", cascade="all, delete-orphan", order_by="Attachment.created_at"
+    )
 
     # -- SLA ----------------------------------------------------------
 
     def apply_sla(self, institution, department=None) -> None:
-        base_hours = (department.sla_hours if department and department.sla_hours else None) or (
-            institution.default_sla_hours
+        """Set deadlines, counting only the institution's working hours."""
+        from app.services.sla import deadline_for
+
+        self.acknowledge_due_at, self.resolve_due_at = deadline_for(
+            institution, department, self.priority, self.created_at or utcnow()
         )
-        factor = PRIORITY_SLA_FACTOR.get(self.priority, 1.0)
-        now = utcnow()
-        self.acknowledge_due_at = now + timedelta(hours=institution.acknowledge_sla_hours)
-        self.resolve_due_at = now + timedelta(hours=base_hours * factor)
 
     @property
     def is_overdue(self) -> bool:
@@ -142,6 +150,7 @@ class Complaint(TimestampMixin, db.Model):
             "resolution_note": self.resolution_note,
             "decline_reason": self.decline_reason,
             "satisfaction_rating": self.satisfaction_rating,
+            "is_escalated": self.escalated_at is not None,
             "resolution_hours": self.resolution_hours,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
@@ -172,6 +181,9 @@ class Complaint(TimestampMixin, db.Model):
         if include_responses:
             data["responses"] = [
                 r.to_dict() for r in self.responses if is_staff or not r.is_internal
+            ]
+            data["attachments"] = [
+                a.to_dict() for a in self.attachments if is_staff or not a.is_internal
             ]
 
         return data

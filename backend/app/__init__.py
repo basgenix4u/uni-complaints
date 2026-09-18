@@ -23,6 +23,7 @@ def create_app(config_name: str | None = None) -> Flask:
 
     from app import models  # noqa: F401  (registers tables with Flask-Migrate)
     from app.routes.admin import bp as admin_bp
+    from app.routes.attachments import bp as attachments_bp
     from app.routes.auth import bp as auth_bp
     from app.routes.complaints import bp as complaints_bp, public_bp
     from app.routes.dashboard import bp as dashboard_bp
@@ -35,6 +36,7 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(notifications_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(attachments_bp)
     app.register_blueprint(platform_bp)
 
     register_error_handlers(app)
@@ -58,6 +60,10 @@ def register_error_handlers(app: Flask) -> None:
     @app.errorhandler(404)
     def not_found(_):
         return jsonify({"success": False, "message": "We could not find that."}), 404
+
+    @app.errorhandler(413)
+    def too_large(_):
+        return jsonify({"success": False, "message": "That file is too large."}), 413
 
     @app.errorhandler(429)
     def rate_limited(_):
@@ -85,6 +91,27 @@ def register_jwt_handlers(app: Flask) -> None:
 
 def register_cli(app: Flask) -> None:
     import click
+
+    @app.cli.command("send-queue")
+    def send_queue():
+        """Deliver queued email and text messages."""
+        from app.services.delivery import process_queue
+
+        result = process_queue()
+        click.echo(f"Sent {result['sent']}, failed {result['failed']}.")
+
+    @app.cli.command("escalate")
+    def escalate():
+        """Escalate complaints past their deadline.
+
+        Intended to run on a schedule, for example every 30 minutes.
+        """
+        from app.services.sla import run_escalation_sweep
+
+        result = run_escalation_sweep()
+        click.echo(
+            f"Escalated {result['escalated']}, reminded {result['reminded']}."
+        )
 
     @app.cli.command("seed")
     @click.option("--demo", is_flag=True, help="Also create a demo institution and accounts.")
