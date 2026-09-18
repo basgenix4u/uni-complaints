@@ -239,6 +239,47 @@ test.describe('registers', () => {
   });
 });
 
+test.describe('command palette', () => {
+  test('opens with the keyboard and jumps to a page', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/dashboard');
+    await ready(page);
+
+    await page.keyboard.press('Control+k');
+    const palette = page.getByPlaceholder(/search a ticket number/i);
+    await expect(palette).toBeVisible();
+
+    await palette.fill('analytics');
+    await page.keyboard.press('Enter');
+
+    await expect(page).toHaveURL(/analytics/);
+  });
+
+  test('closes on escape', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/dashboard');
+    await ready(page);
+
+    await page.keyboard.press('Control+k');
+    await expect(page.getByPlaceholder(/search a ticket number/i)).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByPlaceholder(/search a ticket number/i)).toBeHidden();
+  });
+
+  test('offers a student only their own destinations', async ({ page }) => {
+    await signIn(page, STUDENT);
+    await page.goto('/student/dashboard');
+    await ready(page);
+
+    await page.keyboard.press('Control+k');
+    await page.getByPlaceholder(/search a ticket number/i).fill('people');
+
+    // Staff destinations must not be reachable from a student session.
+    await expect(page.getByText('Nothing matches that.')).toBeVisible();
+  });
+});
+
 test.describe('accessibility', () => {
   test('every form control has a label', async ({ page }) => {
     await page.goto('/login');
