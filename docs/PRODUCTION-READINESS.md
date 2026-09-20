@@ -1,6 +1,10 @@
 # Production Readiness — Honest Gap Analysis
 
-**Date:** 2026-09-18 · **Status of build:** 118 backend tests, 52 browser journeys, 53 API routes, CI green
+**Date:** 2026-09-20 · **Status of build:** 152 backend tests, 52 browser journeys, 58 API routes, CI green
+
+> **Update.** Phases A and B are complete. What remains below is either a
+> decision for the controller, a dependency to provision, or evidence that
+> only real use can produce. The software side of launch is done.
 
 The software works. That is not the same as being ready to take real complaints from real students at a real institution. This is what is actually left, separated by whether it is a legal requirement, an operational necessity, or a preference.
 
@@ -10,19 +14,21 @@ The software works. That is not the same as being ready to take real complaints 
 
 Running this in Nigeria makes you a **data controller** under the **Nigeria Data Protection Act 2023**. Complaints contain names, matric numbers, and often allegations about named staff. That is squarely personal data, and some of it is sensitive.
 
-### What the law requires that we do not have
+### What the law requires
 
-| Requirement | NDPA reference | Current state |
+| Requirement | NDPA reference | State |
 |---|---|---|
-| Published privacy policy | s.27 transparency | ✗ none |
-| Lawful basis stated per processing activity | s.25 | ✗ none |
-| Right to erasure | s.37 | ✗ no way to delete an account |
-| Right to data portability | s.39 | ✗ students cannot export their own data |
-| Breach notification within 72 hours | s.40 | ✗ no detection, no procedure |
-| Record of Processing Activities (ROPA) | registration requirement | ✗ none |
-| Data Protection Impact Assessment | s.29, high-risk processing | ✗ none |
-| Retention schedule | s.24(d) storage limitation | ✗ data kept forever |
-| Data Protection Officer | s.31 | ✗ not appointed |
+| Published privacy policy | s.27 transparency | ✓ drafted, needs legal review |
+| Lawful basis per processing activity | s.25 | ✓ recorded in the ROPA |
+| Right to erasure | s.37 | ✓ built, self-service and by administrator |
+| Right to data portability | s.39 | ✓ built, JSON download |
+| Retention schedule | s.24(d) | ✓ built, per institution, nightly purge |
+| Accountability for access | s.24 | ✓ built, every staff view recorded |
+| Record of Processing Activities | registration | ✓ drafted, needs legal review |
+| Breach notification within 72 hours | s.40 | ◑ procedure written, detection is manual |
+| Data Protection Impact Assessment | s.29 | ✗ yours — a practitioner must produce it |
+| Data Protection Officer | s.31 | ✗ yours — an appointment, not code |
+| NDPC registration | s.44 | ✗ yours — assess against DCPMI thresholds |
 
 ### Penalty exposure
 
@@ -42,25 +48,19 @@ I cannot: appoint a DPO, register with the NDPC, or sign off a DPIA. Those are d
 
 ---
 
-## 2. 🔴 Operational — will cause an incident
+## 2. Operational
 
-### No observability
-There is no structured logging, no request correlation ID, and no error tracking. When a registrar says *"I submitted a complaint yesterday and it vanished"*, there is currently no way to answer them. Logs are unstructured lines on one container.
-
-### No deployment pipeline
-There is a Dockerfile and no deploy workflow, no environment definitions, no rollback. Every release is manual, which is how the wrong build reaches production at 2am.
-
-### No backups
-Nothing documents how the database is backed up, how often, where it is stored, or — the part people skip — **whether a restore has ever been tested**. An untested backup is a hope, not a backup.
-
-### Rate limiting needs Redis
-Already enforced at boot: production refuses to start with in-memory counters and multiple workers. But that means **production cannot start at all until Redis exists**. That is a deployment dependency, not a code task.
-
-### Uploads need real storage
-Files write to a local directory. On most container hosts that disappears on redeploy. Needs object storage, or a guaranteed persistent volume.
-
-### No access auditing
-The audit trail records every write. It does not record **reads**. For a system where a complaint may name a member of staff, *"which officers opened this complaint"* is a question an institution will eventually have to answer, possibly in a disciplinary context.
+| Item | State |
+|---|---|
+| Structured logging with request tracing | ✓ built. Every response carries `X-Request-ID`; errors return it as a quotable reference |
+| Error reporting | ✓ built. Optional Sentry, bodies and cookies stripped before sending |
+| Deployable stack | ✓ built. Compose with PostgreSQL, Redis, API, worker, daily backup |
+| Backup and restore drill | ✓ documented in `docs/OPERATIONS.md`, including what the dump omits |
+| Access auditing | ✓ built. Every staff view recorded with who, role, when and from where |
+| Redis instance | ✗ yours — provision it. Production will not start without it |
+| Object storage or a persistent volume | ◑ the compose volume covers a single host. Multiple hosts need object storage |
+| Domain, TLS, hosting account | ✗ yours |
+| Running the restore drill once | ✗ yours — the procedure is written, someone has to do it |
 
 ---
 
@@ -86,20 +86,41 @@ Dark mode, saved filter presets, complaint templates, richer analytics, a mobile
 
 ---
 
-## Suggested order
+## Where things stand
 
-| Phase | Work | Why this order |
+| Phase | Work | State |
 |---|---|---|
-| **A** | Privacy policy, ROPA, erasure, export, retention, access audit | Legal exposure starts with the first real record |
-| **B** | Structured logs, request IDs, error tracking, deploy workflow, backup and restore drill | You cannot safely run what you cannot observe |
-| **C** | Redis, object storage, staging environment | Deployment dependencies |
-| **D** | One pilot department, 50 complaints, one week | Everything after this should be driven by what it teaches |
-| **E** | Bulk import, SSO, email templates | Scale-up, informed by the pilot |
+| **A** | Erasure, export, retention, access audit, policy and ROPA drafts | ✓ done |
+| **B** | Structured logs, request tracing, error reporting, compose stack, operations guide | ✓ done |
+| **C** | Redis, hosting, domain, TLS, running the restore drill | Yours |
+| **D** | Legal review, DPO, DPIA, NDPC assessment | Yours |
+| **E** | Pilot, then bulk import and SSO informed by it | After C and D |
 
 ---
 
-## The honest summary
+## What is left, honestly
 
-The engineering is in reasonable shape. **What is missing is mostly not code** — it is legal groundwork, operational infrastructure, and evidence from real use.
+**Nothing in phases A and B remains as code.** Every obligation that could
+be implemented has been, every operational gap that could be closed in
+software is closed, and 152 backend tests plus 52 browser journeys cover
+it.
 
-The single biggest risk is not a bug. It is launching without the data protection groundwork, because the penalty is financial and the exposure begins the moment the first student files a real complaint.
+What remains splits cleanly:
+
+**Provisioning** — a server, a domain, TLS, a Redis instance, an SMTP
+account, an SMS account. These are purchases and configuration.
+
+**Legal** — a practitioner reviewing the two drafts, appointing a DPO,
+producing the DPIA, and assessing whether NDPC registration is triggered.
+A single pilot department probably falls below the DCPMI threshold; an
+operator holding records for several universities will not.
+
+**Evidence** — the restore drill has a written procedure and has never been
+run. The accessibility work is verified numerically and by keyboard, but no
+screen reader user has tried it. No real complaint has passed through the
+system.
+
+The remaining risk is no longer a missing feature. It is that the first
+week of real use will contradict some assumption baked into the routing
+rules, the SLA defaults or the category grouping — and no amount of further
+building will reveal which one.
