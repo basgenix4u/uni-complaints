@@ -42,7 +42,17 @@ services:
         sync: false
 
       # Attachments. Render's filesystem is ephemeral, so uploads must go
-      # to a bucket or they disappear on the next deploy.
+      # to a provider or they disappear on the next deploy. Cloudinary
+      # takes precedence when both are set.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: resolve/attachments
+
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY
@@ -113,6 +123,14 @@ services:
           envVarKey: JWT_SECRET_KEY
       - key: DATABASE_URL
         sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: resolve/attachments
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY

@@ -113,6 +113,15 @@ class Config:
     SUPABASE_URL = os.getenv("SUPABASE_URL")
     SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
     SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "attachments")
+
+    # Cloudinary. Takes precedence over Supabase Storage when both are
+    # set. Everything is uploaded with the authenticated delivery type,
+    # because Cloudinary's default makes assets public on the CDN and
+    # these are complaint attachments.
+    CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
+    CLOUDINARY_FOLDER = os.getenv("CLOUDINARY_FOLDER", "resolve/attachments")
     MAX_CONTENT_LENGTH = 6 * 1024 * 1024
 
     # Outbound delivery. Absent configuration leaves messages queued
