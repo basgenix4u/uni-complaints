@@ -16,10 +16,18 @@ def create_app(config_name: str | None = None) -> Flask:
     jwt.init_app(app)
     bcrypt.init_app(app)
     limiter.init_app(app)
+    # A regex is added only when configured, so the default stays an
+    # explicit allowlist.
+    cors_resource = {"origins": app.config["CORS_ORIGINS"]}
+    if app.config.get("CORS_ORIGIN_REGEX"):
+        cors_resource["origins"] = (
+            app.config["CORS_ORIGINS"] + [app.config["CORS_ORIGIN_REGEX"]]
+        )
     cors.init_app(
         app,
-        resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"]}},
+        resources={r"/api/*": cors_resource},
         supports_credentials=True,
+        expose_headers=["X-Request-ID"],
     )
 
     from app import models  # noqa: F401  (registers tables with Flask-Migrate)

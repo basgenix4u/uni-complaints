@@ -27,8 +27,10 @@ USER appuser
 
 EXPOSE 5000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -fsS http://localhost:5000/api/ready || exit 1
+# The port is injected by the platform, so the check reads it rather than
+# assuming 5000.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD curl -fsS "http://localhost:${PORT:-5000}/api/ready" || exit 1
 
 # Migrations are applied before the workers start, so a container can
 # never serve against a schema older than the code it is running.
