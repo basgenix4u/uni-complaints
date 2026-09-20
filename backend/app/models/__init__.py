@@ -3,6 +3,7 @@
 Imported here so Flask-Migrate detects every table.
 """
 
+from app.models.access_log import AccessLog  # noqa: F401
 from app.models.attachment import (  # noqa: F401
     ALLOWED_MIME_TYPES,
     MAX_FILE_BYTES,
@@ -24,6 +25,7 @@ from app.models.reset import PasswordReset  # noqa: F401
 from app.models.user import ROLES, User, normalise_matric, normalise_phone  # noqa: F401
 
 __all__ = [
+    "AccessLog",
     "Attachment",
     "Institution",
     "Department",

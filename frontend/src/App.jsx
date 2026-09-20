@@ -13,6 +13,7 @@ const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const TrackPage = lazy(() => import('./pages/public/TrackPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+const PrivacyPage = lazy(() => import('./pages/account/PrivacyPage'));
 
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const MyComplaints = lazy(() => import('./pages/student/MyComplaints'));
@@ -107,6 +108,7 @@ function App() {
               <Route path="/student/complaints/:id" element={<ComplaintDetails />} />
               <Route path="/student/notifications" element={<StudentNotifications />} />
               <Route path="/student/profile" element={<StudentProfile />} />
+              <Route path="/student/privacy" element={<PrivacyPage />} />
             </Route>
 
             {/* Admin Routes */}
@@ -124,6 +126,7 @@ function App() {
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/notifications" element={<StudentNotifications />} />
+              <Route path="/admin/privacy" element={<PrivacyPage />} />
             </Route>
 
             {/* Institution administration */}

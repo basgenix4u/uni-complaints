@@ -35,6 +35,11 @@ class Institution(TimestampMixin, db.Model):
     working_hours_end = db.Column(db.Integer, default=17, nullable=False)
 
     allow_anonymous = db.Column(db.Boolean, default=False, nullable=False)
+
+    # Months a closed complaint is kept before the purge removes it.
+    # Zero disables the purge, which is a deliberate choice an institution
+    # has to make rather than a default that quietly keeps data forever.
+    retention_months = db.Column(db.Integer, default=0, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     ticket_sequence = db.Column(db.Integer, default=0, nullable=False)
@@ -68,6 +73,7 @@ class Institution(TimestampMixin, db.Model):
                     "working_hours_start": self.working_hours_start,
                     "working_hours_end": self.working_hours_end,
                     "allow_anonymous": self.allow_anonymous,
+                    "retention_months": self.retention_months,
                 }
             )
         return data

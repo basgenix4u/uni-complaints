@@ -13,6 +13,7 @@ from app.models.institution import Department, Institution
 from app.models.user import User
 from app.routes.auth import fail, ok
 from app.security import auth_required, can_view_complaint, staff_required, tenant_query
+from app.models.access_log import AccessLog
 from app.services.notifications import notify, record_event
 from app.services.tickets import generate_ticket_number, normalise_ticket
 from app.models.base import utcnow
@@ -164,8 +165,25 @@ def get_complaint(complaint_id):
         return fail("We could not find that complaint.", 404)
 
     data = complaint.to_dict(viewer=user, include_responses=True)
+
     if user.is_staff:
         data["events"] = [e.to_dict() for e in complaint.events]
+
+        # Only staff reads are recorded. A student opening their own
+        # complaint is ordinary use, and logging it would bury the
+        # entries that matter.
+        db.session.add(
+            AccessLog(
+                institution_id=complaint.institution_id,
+                complaint_id=complaint.id,
+                actor_id=user.id,
+                actor_role=user.role,
+                action="viewed",
+                ip_address=request.remote_addr,
+                user_agent=(request.user_agent.string or "")[:255],
+            )
+        )
+        db.session.commit()
 
     return ok({"complaint": data})
 
