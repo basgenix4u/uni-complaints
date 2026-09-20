@@ -1,5 +1,7 @@
 """Attachment upload and download."""
 
+import io
+
 from flask import Blueprint, g, request, send_file
 
 from app.extensions import db, limiter
@@ -46,7 +48,7 @@ def upload(complaint_id):
     preview = None
     if thumbnails.can_preview(file_storage.mimetype.lower()):
         try:
-            preview = thumbnails.generate(storage.path_for(stored_name), stored_name)
+            preview = thumbnails.generate_from_bytes(storage.read(stored_name), stored_name)
         except storage.StorageError:
             preview = None
 
@@ -97,15 +99,12 @@ def download(complaint_id, attachment_id):
         return fail("We could not find that file.", 404)
 
     try:
-        path = storage.path_for(attachment.stored_name)
+        payload = storage.read(attachment.stored_name)
     except storage.StorageError:
-        return fail("We could not find that file.", 404)
-
-    if not path.exists():
         return fail("That file is no longer available.", 410)
 
     return send_file(
-        path,
+        io.BytesIO(payload),
         mimetype=attachment.mime_type,
         as_attachment=True,
         download_name=attachment.original_name,
@@ -137,14 +136,11 @@ def preview(complaint_id, attachment_id):
         return fail("We could not find that file.", 404)
 
     try:
-        path = storage.path_for(attachment.thumbnail_name)
+        payload = storage.read(attachment.thumbnail_name)
     except storage.StorageError:
-        return fail("We could not find that file.", 404)
-
-    if not path.exists():
         return fail("That file is no longer available.", 410)
 
-    return send_file(path, mimetype="image/webp", max_age=0)
+    return send_file(io.BytesIO(payload), mimetype="image/webp", max_age=0)
 
 
 @bp.delete("/<complaint_id>/attachments/<attachment_id>")

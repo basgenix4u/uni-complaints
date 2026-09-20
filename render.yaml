@@ -1,0 +1,169 @@
+# Render blueprint.
+#
+# The database is Supabase rather than a Render Postgres instance, so only
+# the API, a scheduler and a Redis instance are defined here.
+#
+# Import this file through Render's Blueprint option, then fill in the
+# values marked sync:false in the dashboard. Nothing secret lives here.
+
+services:
+  - type: web
+    name: resolve-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: frankfurt
+    healthCheckPath: /api/ready
+    autoDeploy: true
+
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: "5000"
+
+      # Two workers on the starter plan's memory. Rate limits are shared
+      # through Redis, so more than one worker is safe.
+      - key: WEB_CONCURRENCY
+        value: "2"
+
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+      # Supabase. Use the SESSION pooler on port 5432, not the direct
+      # connection: direct is IPv6 only on the free plan and Render is
+      # IPv4, so a direct URL simply will not connect.
+      - key: DATABASE_URL
+        sync: false
+
+      # Attachments. Render's filesystem is ephemeral, so uploads must go
+      # to a bucket or they disappear on the next deploy.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: attachments
+
+      - key: RATELIMIT_STORAGE_URI
+        fromService:
+          type: redis
+          name: resolve-redis
+          property: connectionString
+
+      # The Vercel origin. Without this the browser blocks every request.
+      - key: CORS_ORIGINS
+        sync: false
+      - key: APP_URL
+        sync: false
+
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+      - key: SMS_PROVIDER
+        sync: false
+      - key: TERMII_API_KEY
+        sync: false
+
+      - key: SENTRY_DSN
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
+
+  # Scheduled work. A separate service so a long purge cannot occupy a
+  # request worker, and so it can be restarted independently.
+  - type: cron
+    name: resolve-escalate
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: frankfurt
+    schedule: "*/30 * * * *"
+    dockerCommand: flask escalate
+    envVars: &jobEnv
+      - key: FLASK_APP
+        value: run.py
+      - key: FLASK_ENV
+        value: production
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: resolve-api
+          envVarKey: SECRET_KEY
+      - key: JWT_SECRET_KEY
+        fromService:
+          type: web
+          name: resolve-api
+          envVarKey: JWT_SECRET_KEY
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: attachments
+      - key: RATELIMIT_STORAGE_URI
+        fromService:
+          type: redis
+          name: resolve-redis
+          property: connectionString
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: SMS_PROVIDER
+        sync: false
+      - key: TERMII_API_KEY
+        sync: false
+
+  - type: cron
+    name: resolve-send-queue
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: frankfurt
+    schedule: "*/10 * * * *"
+    dockerCommand: flask send-queue
+    envVars: *jobEnv
+
+  - type: cron
+    name: resolve-purge
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: frankfurt
+    schedule: "0 2 * * *"
+    dockerCommand: flask purge-expired
+    envVars: *jobEnv
+
+  - type: redis
+    name: resolve-redis
+    plan: starter
+    region: frankfurt
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []

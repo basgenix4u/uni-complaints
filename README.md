@@ -89,7 +89,7 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 152 tests
+cd backend && pytest                    # 166 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
@@ -215,6 +215,17 @@ count, and production refuses to start in that combination.
 `docs/OPERATIONS.md` covers logs, backups, the restore drill, releases and
 rollback.
 
+### Hosted deployment
+
+`docs/DEPLOYMENT.md` walks through Vercel for the frontend, Render for the
+API and scheduled jobs, and Supabase for the database and file storage.
+
+Four things catch people out on that combination, and all four are already
+handled: Supabase's direct connection is IPv6 only so the session pooler is
+required, Render's filesystem is ephemeral so uploads go to a bucket, rate
+limits are counted per worker so Redis is mandatory, and the frontend needs
+`VITE_API_URL` because its relative default would point at Vercel.
+
 ### Observability
 
 Every log line is JSON carrying a `request_id`, and every response returns
@@ -279,7 +290,7 @@ backend/
     services/     tickets, sla, storage, delivery, notifications,
                   sms, export, thumbnails
     security.py   role checks and tenant scoping
-  tests/          152 tests
+  tests/          166 tests
 frontend/
   e2e/            52 browser journeys
   src/

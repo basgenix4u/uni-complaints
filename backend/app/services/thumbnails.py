@@ -5,6 +5,7 @@ what a photograph shows without downloading it. Pillow is optional, so a
 deployment without it keeps working and simply serves no previews.
 """
 
+import io
 from pathlib import Path
 
 from flask import current_app
@@ -32,28 +33,31 @@ def thumbnail_name(stored_name: str) -> str:
     return Path(stored_name).stem + THUMBNAIL_SUFFIX
 
 
-def generate(source: Path, stored_name: str) -> str | None:
-    """Write a downscaled preview beside the original.
+def generate_from_bytes(payload: bytes, stored_name: str) -> str | None:
+    """Build a downscaled preview and hand it back to storage.
 
-    Returns the preview filename, or None when one could not be produced.
-    A failure here must never fail the upload: the original is already
+    Returns the preview name, or None when one could not be produced. A
+    failure here must never fail the upload: the original is already
     stored and is what matters.
     """
     if not PILLOW_AVAILABLE:
         return None
 
+    from app.services import storage
+
     target_name = thumbnail_name(stored_name)
-    target = source.parent / target_name
+    buffer = io.BytesIO()
 
     try:
-        with Image.open(source) as image:
-            # Strip EXIF by copying pixel data only. Photographs taken on a
-            # phone carry GPS coordinates, and a complaint about a hostel
-            # should not disclose where the student was standing.
+        with Image.open(io.BytesIO(payload)) as image:
+            # Copying pixel data drops EXIF. Photographs taken on a phone
+            # carry GPS coordinates, and a complaint about a hostel should
+            # not disclose where the student was standing.
             image = image.convert("RGB")
             image.thumbnail(THUMBNAIL_MAX)
-            image.save(target, "WEBP", quality=78, method=4)
-    except (UnidentifiedImageError, OSError, ValueError):
+            image.save(buffer, "WEBP", quality=78, method=4)
+        storage.write_bytes(target_name, buffer.getvalue(), "image/webp")
+    except (UnidentifiedImageError, OSError, ValueError, Exception):
         current_app.logger.warning("Could not create a preview for %s", stored_name)
         return None
 

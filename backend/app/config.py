@@ -10,15 +10,60 @@ load_dotenv()
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 
+def _database_url() -> str:
+    """Normalise the database URL.
+
+    Some hosts still hand out the legacy postgres:// prefix, which
+    SQLAlchemy stopped accepting. Rewriting it here avoids a failure that
+    only appears on the deployed environment.
+    """
+    url = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'resolve.db')}")
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    return url
+
+
+def _engine_options() -> dict:
+    """Engine settings appropriate to the database in use."""
+    url = _database_url()
+
+    if url.startswith("sqlite"):
+        return {"pool_pre_ping": True}
+
+    options = {
+        # A dropped connection is common on managed Postgres and on hosts
+        # that idle a service to sleep. Without this the first request
+        # after an idle period fails.
+        "pool_pre_ping": True,
+        # Recycle below the usual pooler and load balancer idle timeout.
+        "pool_recycle": 280,
+        "pool_size": int(os.getenv("DB_POOL_SIZE", "5")),
+        "max_overflow": int(os.getenv("DB_MAX_OVERFLOW", "2")),
+        "connect_args": {"connect_timeout": 10},
+    }
+
+    # Only transaction mode multiplexes connections, and it is identified
+    # by the port rather than the host: the same pooler hostname serves
+    # session mode on 5432, where prepared statements are fine. Keying on
+    # the host would needlessly restrict session mode.
+    if ":6543" in url:
+        options["connect_args"]["prepare_threshold"] = None
+        options["connect_args"]["options"] = "-c statement_timeout=30000"
+        # The pooler keeps its own pool; a large client pool on top of it
+        # exhausts the tenant connection limit.
+        options["pool_size"] = int(os.getenv("DB_POOL_SIZE", "2"))
+        options["max_overflow"] = 0
+
+    return options
+
+
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-change-me")
 
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'resolve.db')}"
-    )
+    SQLALCHEMY_DATABASE_URI = _database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
+    SQLALCHEMY_ENGINE_OPTIONS = _engine_options()
 
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(
         minutes=int(os.getenv("JWT_ACCESS_TOKEN_MINUTES", "30"))
@@ -32,6 +77,11 @@ class Config:
         for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
         if o.strip()
     ]
+
+    # Preview deployments get a unique hostname each time, so they cannot
+    # be listed individually. A regex allows them without opening the API
+    # to any origin. Leave unset in production if previews are not used.
+    CORS_ORIGIN_REGEX = os.getenv("CORS_ORIGIN_REGEX")
 
     # In-process counters are per worker, so a limit of ten is really ten
     # times the worker count. Point this at Redis in production or the
@@ -54,6 +104,15 @@ class Config:
     # Uploads live outside the served tree and are returned through an
     # authorised endpoint rather than by static path.
     UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
+
+    # Object storage for attachments. Most container hosts give the
+    # container an ephemeral filesystem, so anything written to disk is
+    # lost on the next deploy. Set these and uploads go to a private
+    # bucket instead. The bucket must not be public: files are streamed
+    # by the API after the same authorisation checks.
+    SUPABASE_URL = os.getenv("SUPABASE_URL")
+    SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+    SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "attachments")
     MAX_CONTENT_LENGTH = 6 * 1024 * 1024
 
     # Outbound delivery. Absent configuration leaves messages queued

@@ -1,8 +1,13 @@
 """File storage.
 
-Files are written outside the web root under a generated name and served
-back through an authorised endpoint, never by static path. Guessing a URL
-must not be a way to read someone else's evidence.
+Files are written under a generated name and served back through an
+authorised endpoint, never by static path. Guessing a URL must not be a
+way to read someone else's evidence.
+
+Two backends. Object storage is used when configured, because most
+container hosts give the container an ephemeral filesystem and anything
+written to disk disappears on the next deploy. Local disk remains for
+development, where a bucket would be an obstacle.
 """
 
 import hashlib
@@ -84,10 +89,22 @@ def validate(file_storage) -> tuple[str, int]:
 
 def save(file_storage, institution_id: str) -> tuple[str, int]:
     """Persist a validated file and return its stored name and size."""
+    from app.services import object_storage
+
     mime, size = validate(file_storage)
 
     extension = ALLOWED_MIME_TYPES[mime]
     stored_name = f"{institution_id[:8]}_{secrets.token_urlsafe(24)}{extension}"
+
+    if object_storage.is_enabled():
+        payload = file_storage.stream.read()
+        if len(payload) > MAX_FILE_BYTES:
+            raise StorageError("That file is too large.")
+        try:
+            object_storage.upload(stored_name, payload, mime)
+        except object_storage.ObjectStorageError as error:
+            raise StorageError("We could not store that file. Try again shortly.") from error
+        return stored_name, size
 
     destination = upload_root() / stored_name
     file_storage.save(destination)
@@ -98,6 +115,52 @@ def save(file_storage, institution_id: str) -> tuple[str, int]:
         raise StorageError("That file is too large.")
 
     return stored_name, size
+
+
+def read(stored_name: str) -> bytes:
+    """Return a stored file's bytes, whichever backend holds it."""
+    from app.services import object_storage
+
+    if object_storage.is_enabled():
+        try:
+            return object_storage.download(stored_name)
+        except object_storage.ObjectStorageError as error:
+            raise StorageError("That file is no longer available.") from error
+
+    path = path_for(stored_name)
+    if not path.exists():
+        raise StorageError("That file is no longer available.")
+    return path.read_bytes()
+
+
+def exists(stored_name: str) -> bool:
+    from app.services import object_storage
+
+    if object_storage.is_enabled():
+        try:
+            object_storage.download(stored_name)
+            return True
+        except object_storage.ObjectStorageError:
+            return False
+
+    try:
+        return path_for(stored_name).exists()
+    except StorageError:
+        return False
+
+
+def write_bytes(stored_name: str, payload: bytes, content_type: str) -> None:
+    """Store bytes the application generated, such as a preview."""
+    from app.services import object_storage
+
+    if object_storage.is_enabled():
+        try:
+            object_storage.upload(stored_name, payload, content_type)
+        except object_storage.ObjectStorageError as error:
+            raise StorageError("We could not store that file.") from error
+        return
+
+    (upload_root() / stored_name).write_bytes(payload)
 
 
 def path_for(stored_name: str) -> Path:
@@ -114,6 +177,12 @@ def path_for(stored_name: str) -> Path:
 
 
 def delete(stored_name: str) -> None:
+    from app.services import object_storage
+
+    if object_storage.is_enabled():
+        object_storage.delete(stored_name)
+        return
+
     try:
         path_for(stored_name).unlink(missing_ok=True)
     except StorageError:
