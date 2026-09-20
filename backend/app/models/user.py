@@ -67,6 +67,9 @@ class User(TimestampMixin, db.Model):
     role = db.Column(db.String(30), default="student", nullable=False, index=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     last_login_at = db.Column(db.DateTime(timezone=True))
+    # Set when the account has been through erasure. The row survives so
+    # foreign keys stay intact, but it identifies nobody.
+    erased_at = db.Column(db.DateTime(timezone=True))
 
     institution = db.relationship("Institution", back_populates="users")
     department = db.relationship("Department", foreign_keys=[department_id])

@@ -127,6 +127,28 @@ export const complaintService = {
   rate: (id, rating) => api.post(`/complaints/${id}/rate`, { rating }).then(unwrap),
 };
 
+export const privacyService = {
+  /** Downloads everything held about the signed-in person. */
+  downloadMyData: async () => {
+    const response = await api.get('/privacy/my-data', { responseType: 'blob' });
+    const url = URL.createObjectURL(response.data);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `my-data-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
+  eraseMyAccount: (password, confirm) =>
+    api.post('/privacy/erase-my-account', { password, confirm }).then(unwrap),
+  eraseUser: (userId, reason) =>
+    api.post(`/privacy/users/${userId}/erase`, { reason }).then(unwrap),
+  accessLog: (complaintId) =>
+    api.get(`/privacy/complaints/${complaintId}/access-log`).then(unwrap),
+  runPurge: () => api.post('/privacy/retention/purge').then(unwrap),
+};
+
 export const attachmentService = {
   upload: (complaintId, file, isInternal = false) => {
     const form = new FormData();

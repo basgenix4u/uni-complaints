@@ -12,6 +12,7 @@ import {
   UsersIcon,
   BuildingOffice2Icon,
   BuildingLibraryIcon,
+  ShieldCheckIcon,
   ClipboardDocumentListIcon,
   ArrowRightOnRectangleIcon,
   XMarkIcon,
@@ -29,6 +30,7 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
     { name: 'Submit Complaint', href: '/student/complaints/new', icon: PlusCircleIcon },
     { name: 'Notifications', href: '/student/notifications', icon: BellIcon },
     { name: 'Profile', href: '/student/profile', icon: UserIcon },
+    { name: 'Your data', href: '/student/privacy', icon: ShieldCheckIcon },
   ];
 
   // Entries are filtered by role rather than hidden by CSS, so a link is
@@ -42,6 +44,7 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
     { name: 'Institution', href: '/admin/institution', icon: BuildingOffice2Icon, roles: ['institution_admin', 'platform_admin'] },
     { name: 'Institutions', href: '/platform/institutions', icon: BuildingLibraryIcon, roles: ['platform_admin'] },
     { name: 'My profile', href: '/admin/settings', icon: Cog6ToothIcon },
+    { name: 'Your data', href: '/admin/privacy', icon: ShieldCheckIcon },
   ];
 
   const ROLE_LABELS = {

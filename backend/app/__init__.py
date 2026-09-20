@@ -29,6 +29,7 @@ def create_app(config_name: str | None = None) -> Flask:
     from app.routes.dashboard import bp as dashboard_bp
     from app.routes.notifications import bp as notifications_bp
     from app.routes.platform import bp as platform_bp
+    from app.routes.privacy import bp as privacy_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(complaints_bp)
@@ -38,6 +39,7 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(attachments_bp)
     app.register_blueprint(platform_bp)
+    app.register_blueprint(privacy_bp)
 
     register_error_handlers(app)
     register_jwt_handlers(app)
@@ -128,6 +130,25 @@ def register_cli(app: Flask) -> None:
 
         result = process_queue()
         click.echo(f"Sent {result['sent']}, failed {result['failed']}.")
+
+    @app.cli.command("purge-expired")
+    def purge_expired():
+        """Apply each institution's retention period.
+
+        Storage limitation means personal data is not kept indefinitely.
+        Intended to run nightly.
+        """
+        from app.models.institution import Institution
+        from app.services.privacy import purge_expired_data
+
+        total = 0
+        for institution in Institution.query.filter(Institution.retention_months > 0).all():
+            result = purge_expired_data(institution)
+            purged = result.get("complaints_purged", 0)
+            total += purged
+            if purged:
+                click.echo(f"{institution.code}: purged {purged}")
+        click.echo(f"Purged {total} expired complaints.")
 
     @app.cli.command("escalate")
     def escalate():

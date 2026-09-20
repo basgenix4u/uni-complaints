@@ -89,7 +89,7 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 118 tests
+cd backend && pytest                    # 142 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
@@ -110,6 +110,7 @@ test would exhaust the rate limit, which is a protection worth keeping.
 | --- | --- | --- |
 | `flask escalate` | Escalate complaints past their deadline | every 30 minutes |
 | `flask send-queue` | Deliver queued email and texts | every 5 minutes |
+| `flask purge-expired` | Delete complaints past the retention period | nightly |
 
 Both are idempotent and safe to run concurrently with the web process.
 
@@ -146,6 +147,38 @@ scroll.
 
 Destinations are filtered by role, so a student is never offered a staff
 page they would then be refused.
+
+---
+
+## Data protection
+
+The Nigeria Data Protection Act 2023 applies from the first real record.
+Complaints contain names, matric numbers and often allegations about named
+staff, so the rights below are implemented in the software rather than
+handled by hand.
+
+| Right | How it works |
+| --- | --- |
+| Access and portability | *Your data → Download my data* returns everything held about the person as JSON |
+| Erasure | Self-service with password confirmation, or by an administrator on a written request |
+| Storage limitation | Each institution sets a retention period; `flask purge-expired` deletes closed complaints past it |
+| Accountability | Every staff view of a complaint is recorded with who, when and from where |
+
+**What erasure does.** Name, email, matric number, phone, uploaded files and
+everything the person wrote are removed permanently. Complaints survive as
+anonymous rows, because they are also the institution's record of what was
+reported and decided. Nothing in them points back to the person afterwards.
+This limit is stated in the interface before the user confirms, rather than
+discovered later.
+
+Student reads are deliberately not logged. Recording ordinary use would
+bury the staff entries that matter.
+
+Drafts of the privacy policy and the Record of Processing Activities are in
+`docs/`. They describe what the software does accurately, and still need
+review by a Nigerian data protection practitioner before publication.
+Appointing a Data Protection Officer and assessing NDPC registration are
+decisions for the controller, not tasks the software can do.
 
 ---
 
@@ -222,7 +255,7 @@ backend/
     services/     tickets, sla, storage, delivery, notifications,
                   sms, export, thumbnails
     security.py   role checks and tenant scoping
-  tests/          118 tests
+  tests/          142 tests
 frontend/
   e2e/            52 browser journeys
   src/
