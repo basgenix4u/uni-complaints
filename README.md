@@ -89,7 +89,7 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 166 tests
+cd backend && pytest                    # 186 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
@@ -222,9 +222,16 @@ API and scheduled jobs, and Supabase for the database and file storage.
 
 Four things catch people out on that combination, and all four are already
 handled: Supabase's direct connection is IPv6 only so the session pooler is
-required, Render's filesystem is ephemeral so uploads go to a bucket, rate
-limits are counted per worker so Redis is mandatory, and the frontend needs
-`VITE_API_URL` because its relative default would point at Vercel.
+required, Render's filesystem is ephemeral so uploads go to Cloudinary or a
+bucket, rate limits are counted per worker so Redis is mandatory, and the
+frontend needs `VITE_API_URL` because its relative default would point at
+Vercel.
+
+Attachments support Cloudinary, Supabase Storage or local disk. Cloudinary
+uploads use the `authenticated` delivery type: the default publishes assets
+to a public CDN, which for a photograph attached to a harassment complaint
+would be a breach. Files are streamed by the API after the usual permission
+checks, so no storage URL reaches a browser.
 
 ### Observability
 
@@ -260,6 +267,7 @@ what is in version control.
 | `UPLOAD_DIR` | Must be a persistent volume |
 | `SMTP_*`, `MAIL_FROM` | Without these, messages queue rather than being discarded |
 | `SMS_PROVIDER` | `termii`, `africastalking`, or `console` for local work |
+| `CLOUDINARY_*` or `SUPABASE_*` | Attachment storage. Required on any host with an ephemeral filesystem |
 | `APP_URL` | Where password reset links point |
 | `RATELIMIT_STORAGE_URI` | Must be shared storage such as Redis when running more than one worker. Rate limits are counted per process, so in-memory counters multiply the limit by the worker count. Production refuses to start in that combination |
 
@@ -288,9 +296,10 @@ backend/
     routes/       auth, complaints, attachments, dashboard,
                   notifications, admin, platform
     services/     tickets, sla, storage, delivery, notifications,
-                  sms, export, thumbnails
+                  sms, export, thumbnails, privacy,
+                  cloudinary_storage, object_storage
     security.py   role checks and tenant scoping
-  tests/          166 tests
+  tests/          186 tests
 frontend/
   e2e/            52 browser journeys
   src/

@@ -4,10 +4,14 @@ Files are written under a generated name and served back through an
 authorised endpoint, never by static path. Guessing a URL must not be a
 way to read someone else's evidence.
 
-Two backends. Object storage is used when configured, because most
-container hosts give the container an ephemeral filesystem and anything
-written to disk disappears on the next deploy. Local disk remains for
-development, where a bucket would be an obstacle.
+Three backends, chosen by configuration. Cloudinary and Supabase Storage
+both exist because most container hosts give the container an ephemeral
+filesystem, so anything written to disk disappears on the next deploy.
+Local disk remains for development, where a bucket would be an obstacle.
+
+Whichever is active, the bytes are streamed by the API after the usual
+permission checks. No storage URL is handed to a browser, so a leaked link
+cannot expose someone else's evidence.
 """
 
 import hashlib
@@ -32,6 +36,24 @@ MAGIC_NUMBERS = {
 
 class StorageError(Exception):
     """Raised when a file is rejected."""
+
+
+def _backend():
+    """Return the active backend module, or None for local disk."""
+    from app.services import cloudinary_storage, object_storage
+
+    if cloudinary_storage.is_enabled():
+        return cloudinary_storage
+    if object_storage.is_enabled():
+        return object_storage
+    return None
+
+
+def backend_name() -> str:
+    backend = _backend()
+    if backend is None:
+        return "local"
+    return "cloudinary" if backend.__name__.endswith("cloudinary_storage") else "supabase"
 
 
 def upload_root() -> Path:
@@ -89,20 +111,21 @@ def validate(file_storage) -> tuple[str, int]:
 
 def save(file_storage, institution_id: str) -> tuple[str, int]:
     """Persist a validated file and return its stored name and size."""
-    from app.services import object_storage
-
     mime, size = validate(file_storage)
 
     extension = ALLOWED_MIME_TYPES[mime]
+    # Generated rather than derived from the supplied filename, which is
+    # kept only for display. A crafted name must never reach storage.
     stored_name = f"{institution_id[:8]}_{secrets.token_urlsafe(24)}{extension}"
 
-    if object_storage.is_enabled():
+    backend = _backend()
+    if backend is not None:
         payload = file_storage.stream.read()
         if len(payload) > MAX_FILE_BYTES:
             raise StorageError("That file is too large.")
         try:
-            object_storage.upload(stored_name, payload, mime)
-        except object_storage.ObjectStorageError as error:
+            backend.upload(stored_name, payload, mime)
+        except Exception as error:
             raise StorageError("We could not store that file. Try again shortly.") from error
         return stored_name, size
 
@@ -119,12 +142,11 @@ def save(file_storage, institution_id: str) -> tuple[str, int]:
 
 def read(stored_name: str) -> bytes:
     """Return a stored file's bytes, whichever backend holds it."""
-    from app.services import object_storage
-
-    if object_storage.is_enabled():
+    backend = _backend()
+    if backend is not None:
         try:
-            return object_storage.download(stored_name)
-        except object_storage.ObjectStorageError as error:
+            return backend.download(stored_name)
+        except Exception as error:
             raise StorageError("That file is no longer available.") from error
 
     path = path_for(stored_name)
@@ -134,13 +156,12 @@ def read(stored_name: str) -> bytes:
 
 
 def exists(stored_name: str) -> bool:
-    from app.services import object_storage
-
-    if object_storage.is_enabled():
+    backend = _backend()
+    if backend is not None:
         try:
-            object_storage.download(stored_name)
+            backend.download(stored_name)
             return True
-        except object_storage.ObjectStorageError:
+        except Exception:
             return False
 
     try:
@@ -151,12 +172,11 @@ def exists(stored_name: str) -> bool:
 
 def write_bytes(stored_name: str, payload: bytes, content_type: str) -> None:
     """Store bytes the application generated, such as a preview."""
-    from app.services import object_storage
-
-    if object_storage.is_enabled():
+    backend = _backend()
+    if backend is not None:
         try:
-            object_storage.upload(stored_name, payload, content_type)
-        except object_storage.ObjectStorageError as error:
+            backend.upload(stored_name, payload, content_type)
+        except Exception as error:
             raise StorageError("We could not store that file.") from error
         return
 
@@ -177,10 +197,9 @@ def path_for(stored_name: str) -> Path:
 
 
 def delete(stored_name: str) -> None:
-    from app.services import object_storage
-
-    if object_storage.is_enabled():
-        object_storage.delete(stored_name)
+    backend = _backend()
+    if backend is not None:
+        backend.delete(stored_name)
         return
 
     try:
