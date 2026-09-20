@@ -44,6 +44,13 @@ class Config:
 
     JSON_SORT_KEYS = False
 
+    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+    RELEASE = os.getenv("RELEASE")
+    # Absent, error reporting is simply off.
+    SENTRY_DSN = os.getenv("SENTRY_DSN")
+    SENTRY_TRACES_SAMPLE_RATE = os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0")
+
     # Uploads live outside the served tree and are returned through an
     # authorised endpoint rather than by static path.
     UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))
