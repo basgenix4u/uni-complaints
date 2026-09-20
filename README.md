@@ -89,7 +89,7 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 142 tests
+cd backend && pytest                    # 152 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
@@ -203,9 +203,33 @@ serves no previews.
 ## Deployment
 
 ```bash
-docker build -t resolve-api ./backend
-docker run -p 5000:5000 --env-file backend/.env resolve-api
+cp .env.example .env     # fill in every value marked :?
+docker compose up -d --build
 ```
+
+Brings up PostgreSQL, Redis, the API, a worker for scheduled jobs, and a
+daily database backup. Redis is not optional: rate limits are counted per
+process, so in-memory counters multiply the login limit by the worker
+count, and production refuses to start in that combination.
+
+`docs/OPERATIONS.md` covers logs, backups, the restore drill, releases and
+rollback.
+
+### Observability
+
+Every log line is JSON carrying a `request_id`, and every response returns
+the same value in `X-Request-ID`. Error responses include it as
+`reference`, so somebody reporting a problem can quote a value that finds
+the exact request:
+
+```bash
+docker compose logs api | grep '"request_id": "a1b2c3d4"'
+```
+
+Passwords, tokens and authorisation headers are redacted before anything is
+written. Set `SENTRY_DSN` to report unhandled errors; request bodies and
+cookies are stripped first, since a body can contain someone's account of a
+grievance.
 
 The image runs as an unprivileged user, serves through gunicorn, and exposes `/api/ready` as a health check that confirms the database answers.
 
@@ -255,7 +279,7 @@ backend/
     services/     tickets, sla, storage, delivery, notifications,
                   sms, export, thumbnails
     security.py   role checks and tenant scoping
-  tests/          142 tests
+  tests/          152 tests
 frontend/
   e2e/            52 browser journeys
   src/

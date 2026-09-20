@@ -4,6 +4,7 @@ from flask import Flask, jsonify, request
 
 from app.config import get_config
 from app.extensions import bcrypt, cors, db, jwt, limiter, migrate
+from app.observability import configure_logging, configure_sentry, register_request_logging
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -41,7 +42,11 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(platform_bp)
     app.register_blueprint(privacy_bp)
 
-    register_error_handlers(app)
+    logger = configure_logging(app)
+    configure_sentry(app)
+    register_request_logging(app, logger)
+
+    register_error_handlers(app, logger)
     register_jwt_handlers(app)
     register_cli(app)
 
@@ -81,29 +86,47 @@ def create_app(config_name: str | None = None) -> Flask:
     return app
 
 
-def register_error_handlers(app: Flask) -> None:
-    """Return JSON for every error so the client never has to parse HTML."""
+def register_error_handlers(app: Flask, logger=None) -> None:
+    """Return JSON for every error so the client never has to parse HTML.
+
+    Every response carries the request id, so somebody reporting a problem
+    can quote a value that finds the exact request in the logs.
+    """
+    from app.observability import request_id
+
+    def problem(message: str, status: int):
+        body = {"success": False, "message": message}
+        reference = request_id()
+        if reference:
+            body["reference"] = reference
+        return jsonify(body), status
 
     @app.errorhandler(400)
     def bad_request(_):
-        return jsonify({"success": False, "message": "We could not read that request."}), 400
+        return problem("We could not read that request.", 400)
 
     @app.errorhandler(404)
     def not_found(_):
-        return jsonify({"success": False, "message": "We could not find that."}), 404
+        return problem("We could not find that.", 404)
 
     @app.errorhandler(413)
     def too_large(_):
-        return jsonify({"success": False, "message": "That file is too large."}), 413
+        return problem("That file is too large.", 413)
 
     @app.errorhandler(429)
     def rate_limited(_):
-        return jsonify({"success": False, "message": "Too many attempts. Please wait a moment."}), 429
+        return problem("Too many attempts. Please wait a moment.", 429)
 
     @app.errorhandler(500)
-    def server_error(_):
+    def server_error(error):
         db.session.rollback()
-        return jsonify({"success": False, "message": "Something went wrong on our side."}), 500
+        if logger:
+            # The detail goes to the log; the caller gets a reference.
+            logger.exception("unhandled_error", error=str(error))
+        return problem(
+            "Something went wrong on our side. Quote the reference below if you contact support.",
+            500,
+        )
 
 
 def register_jwt_handlers(app: Flask) -> None:
