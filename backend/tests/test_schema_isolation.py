@@ -25,6 +25,12 @@ BACKEND = Path(__file__).resolve().parent.parent
 CONTESTED = ("users", "notifications", "attachments", "responses", "alembic_version")
 
 
+psycopg2 = pytest.importorskip(
+    "psycopg2",
+    reason="the PostgreSQL driver is needed to render PostgreSQL DDL",
+)
+
+
 def generate_sql(schema: str | None) -> str:
     """Render the migration as SQL without needing a live database."""
     env = {
@@ -45,6 +51,16 @@ def generate_sql(schema: str | None) -> str:
         text=True,
         timeout=180,
     )
+
+    # Without this, a failed command returns an empty string and every
+    # assertion below reports a missing schema rather than the real
+    # cause.
+    if result.returncode != 0 or not result.stdout.strip():
+        raise AssertionError(
+            f"could not render migration SQL (exit {result.returncode}):\n"
+            f"{result.stderr[-1500:]}"
+        )
+
     return result.stdout
 
 
