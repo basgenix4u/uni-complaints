@@ -28,10 +28,17 @@ from app.models.complaint import (  # noqa: F401
     Response,
 )
 from app.models.institution import Department, Institution  # noqa: F401
+from app.models.invitation import Invitation  # noqa: F401
 from app.models.message import OutboundMessage  # noqa: F401
 from app.models.reset import PasswordReset  # noqa: F401
 from app.models.routing import DEFAULT_ROUTING, DEFAULT_UNITS, RoutingRule  # noqa: F401
-from app.models.user import ROLES, User, normalise_matric, normalise_phone  # noqa: F401
+from app.models.user import (  # noqa: F401
+    INVITABLE_ROLES,
+    ROLES,
+    User,
+    normalise_matric,
+    normalise_phone,
+)
 
 __all__ = [
     "AcademicDepartment",
@@ -39,6 +46,7 @@ __all__ = [
     "AccessLog",
     "Faculty",
     "InstitutionInterest",
+    "Invitation",
     "RoutingRule",
     "StudentRecord",
     "Attachment",
