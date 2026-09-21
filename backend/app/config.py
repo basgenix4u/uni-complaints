@@ -101,6 +101,11 @@ class Config:
     SENTRY_DSN = os.getenv("SENTRY_DSN")
     SENTRY_TRACES_SAMPLE_RATE = os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0")
 
+    # Shared secret for the HTTP task trigger. Unset means the endpoint
+    # does not exist, so a deployment that forgets it is not left with an
+    # open trigger. Needed only where the host has no scheduler.
+    TASK_TOKEN = os.getenv("TASK_TOKEN")
+
     # Uploads live outside the served tree and are returned through an
     # authorised endpoint rather than by static path.
     UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(BASE_DIR, "uploads"))

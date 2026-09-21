@@ -1,0 +1,102 @@
+# Render blueprint, free tier.
+#
+# Differs from render.yaml in three ways, each forced by what the free
+# plan does not include:
+#
+#   No Redis        Rate limits are counted in process, which is only
+#                   sound with a single worker. WEB_CONCURRENCY is
+#                   therefore pinned to 1, and the application enforces
+#                   that pairing at boot.
+#   No cron         Scheduled work is driven over HTTP instead. See the
+#                   workflow in .github/workflows/scheduled-tasks.yml.
+#   Sleeps          A free service stops after fifteen idle minutes and
+#                   takes roughly fifty seconds to wake. The scheduled
+#                   request wakes it as a side effect of doing the work.
+#
+# Rename this to render.yaml, or point Render at it directly.
+
+services:
+  - type: web
+    name: resolve-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: frankfurt
+    healthCheckPath: /api/ready
+    autoDeploy: true
+
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: ENVIRONMENT
+        value: production
+      - key: PORT
+        value: "5000"
+
+      # One worker is not a preference here. Without Redis the rate limit
+      # counters live in process memory, so a second worker would give
+      # each its own counter and multiply the login limit. The
+      # application refuses to start on any other combination.
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: RATELIMIT_STORAGE_URI
+        value: memory://
+
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+      # Secret for the HTTP task trigger. Generate it here and copy the
+      # value into the repository secrets so the workflow can call in.
+      - key: TASK_TOKEN
+        generateValue: true
+
+      # Supabase session pooler, port 5432. The direct connection is IPv6
+      # only on the free plan and will not resolve from Render.
+      - key: DATABASE_URL
+        sync: false
+
+      # Attachments. The filesystem is wiped on every deploy and every
+      # wake from sleep, so uploads must go elsewhere.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: resolve/attachments
+
+      - key: CORS_ORIGINS
+        sync: false
+      - key: APP_URL
+        sync: false
+
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+
+      - key: SMS_PROVIDER
+        sync: false
+      - key: TERMII_API_KEY
+        sync: false
+
+      - key: SENTRY_DSN
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
+
+      # Used once by `flask seed`. Change the password after signing in.
+      - key: PLATFORM_ADMIN_EMAIL
+        sync: false
+      - key: PLATFORM_ADMIN_PASSWORD
+        sync: false

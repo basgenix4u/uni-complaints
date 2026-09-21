@@ -147,9 +147,12 @@ Do not use `--demo` on production; it creates a fictional university.
 
 ### A note on the free plan
 Render's free web services sleep after inactivity, and the first request
-afterwards takes around fifty seconds. For anything real, use the starter
-plan. Cron jobs are not available on free at all, so escalation and email
-delivery would never run.
+afterwards takes around fifty seconds. Cron jobs are not available on the
+free plan at all.
+
+That does not rule it out. `docs/DEPLOYMENT-FREE.md` covers running this
+permanently free, with scheduled work driven by a GitHub Actions workflow
+instead of Render cron. Escalation, delivery and retention all still run.
 
 ---
 
