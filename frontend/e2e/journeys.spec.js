@@ -278,6 +278,63 @@ test.describe('email verification', () => {
   });
 });
 
+test.describe('getting staff in', () => {
+  test('an administrator can reach the invitation screen', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/invitations');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /invite your staff/i })).toBeVisible();
+    await expect(page.getByLabel(/their email/i)).toBeVisible();
+  });
+
+  test('the screen warns when email is not configured', async ({ page }) => {
+    // The test deployment has no SMTP provider, which is exactly the
+    // state an administrator needs to be told about.
+    await signIn(page, ADMIN);
+    await page.goto('/admin/invitations');
+    await ready(page);
+
+    await expect(page.getByText(/no email provider is set up/i)).toBeVisible();
+  });
+
+  test('a bulk list is checked before anything is sent', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/invitations');
+    await ready(page);
+
+    await page.getByRole('tab', { name: /a whole unit/i }).click();
+    await page.getByLabel(/paste the list/i).fill('email,full_name,role\nnot-an-address,X,officer');
+    await page.getByRole('button', { name: /check the list first/i }).click();
+
+    await expect(page.getByText(/skipped/i)).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('a student is not offered the invitation screen', async ({ page }) => {
+    await signIn(page, STUDENT);
+    await page.goto('/admin/invitations');
+
+    await expect(page).toHaveURL(/\/student\/dashboard/, { timeout: 15_000 });
+  });
+
+  test('a broken invitation link explains itself rather than dying', async ({ page }) => {
+    await page.goto('/accept-invitation?token=not-a-real-token');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /cannot be used/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText(/ask whoever invited you/i)).toBeVisible();
+  });
+
+  test('an invitation link with no token is handled', async ({ page }) => {
+    await page.goto('/accept-invitation');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /cannot be used/i })).toBeVisible();
+  });
+});
+
 test.describe('routing', () => {
   test('a filed complaint arrives at a named unit without the student choosing one', async ({
     page,

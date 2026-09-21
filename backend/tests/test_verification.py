@@ -395,3 +395,131 @@ def test_registrations_do_not_cross_institutions(client, alpha, db):
     )
 
     assert response.get_json()["data"]["count"] == 0
+
+
+# -- when email itself is the problem ----------------------------------
+
+
+def test_an_administrator_can_confirm_an_address_by_hand(client, alpha):
+    """Without this, verification is a door with no key.
+
+    Email is the only way to confirm, so a deployment where email is not
+    working is one where nobody can ever finish registering.
+    """
+    register(client)
+    make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    student = User.query.filter_by(email="amina@test.ng").first()
+    assert student.is_verified is False
+
+    response = client.put(
+        f"/api/admin/registrations/{student.id}/confirm-email",
+        headers=auth(login(client, "vc@test.ng")),
+    )
+
+    assert response.status_code == 200
+    assert User.query.filter_by(email="amina@test.ng").first().is_verified is True
+
+
+def test_a_hand_confirmed_student_can_file(client, alpha):
+    register(client)
+    make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    student = User.query.filter_by(email="amina@test.ng").first()
+    client.put(
+        f"/api/admin/registrations/{student.id}/confirm-email",
+        headers=auth(login(client, "vc@test.ng")),
+    )
+
+    token = login(client, "amina@test.ng")
+    assert client.post("/api/complaints", headers=auth(token), json=COMPLAINT).status_code == 201
+
+
+def test_confirming_by_hand_records_who_did_it(client, alpha):
+    """An assertion somebody checked, not proof the address works."""
+    register(client)
+    admin = make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    student = User.query.filter_by(email="amina@test.ng").first()
+    client.put(
+        f"/api/admin/registrations/{student.id}/confirm-email",
+        headers=auth(login(client, "vc@test.ng")),
+    )
+
+    assert User.query.filter_by(email="amina@test.ng").first().email_verified_by_id == admin.id
+
+
+def test_confirming_by_hand_retires_outstanding_links(client, alpha):
+    register(client)
+    raw = token_for("amina@test.ng")
+    make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    student = User.query.filter_by(email="amina@test.ng").first()
+    client.put(
+        f"/api/admin/registrations/{student.id}/confirm-email",
+        headers=auth(login(client, "vc@test.ng")),
+    )
+
+    assert client.post("/api/auth/verify-email", json={"token": raw}).status_code == 400
+
+
+def test_an_officer_cannot_confirm_someone_elses_address(client, alpha):
+    register(client)
+    make_user(alpha, "officer@test.ng", role="officer")
+
+    student = User.query.filter_by(email="amina@test.ng").first()
+    response = client.put(
+        f"/api/admin/registrations/{student.id}/confirm-email",
+        headers=auth(login(client, "officer@test.ng")),
+    )
+
+    assert response.status_code == 403
+
+
+def test_confirming_does_not_cross_institutions(client, alpha, beta):
+    register(client)
+    make_user(beta, "vc@beta.ng", role="institution_admin")
+
+    student = User.query.filter_by(email="amina@test.ng").first()
+    response = client.put(
+        f"/api/admin/registrations/{student.id}/confirm-email",
+        headers=auth(login(client, "vc@beta.ng")),
+    )
+
+    assert response.status_code == 404
+
+
+def test_an_unverified_student_appears_in_the_queue(client, alpha):
+    """Listing only those awaiting approval would hide exactly the people
+    stuck behind an unconfirmed address."""
+    register(client)
+    make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    rows = client.get(
+        "/api/admin/registrations", headers=auth(login(client, "vc@test.ng"))
+    ).get_json()["data"]["registrations"]
+
+    assert len(rows) == 1
+    assert rows[0]["awaiting_email_only"] is True
+
+
+def test_the_administrator_is_told_when_email_is_not_working(client, alpha):
+    """Otherwise the first sign is students reporting they are stuck."""
+    make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    health = client.get(
+        "/api/admin/delivery-health", headers=auth(login(client, "vc@test.ng"))
+    ).get_json()["data"]["email"]
+
+    assert health["state"] == "not_configured"
+    assert "confirm registrations by hand" in health["advice"]
+
+
+def test_delivery_health_is_not_public(client, alpha):
+    make_user(alpha, "officer@test.ng", role="officer")
+
+    response = client.get(
+        "/api/admin/delivery-health", headers=auth(login(client, "officer@test.ng"))
+    )
+
+    assert response.status_code == 403

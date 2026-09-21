@@ -44,7 +44,10 @@ Registering against an institution that has not been onboarded is
 refused. There would be nobody on the other end to answer the complaint.
 
 **Proving the address.** Every self-registration has to confirm its email
-before it can file. Nothing else stopped somebody opening an account on an
+before it can file. This needs an email provider — see
+[docs/EMAIL-SETUP.md](docs/EMAIL-SETUP.md). Without one, messages are
+**held** rather than lost, administrators are warned, and addresses can be
+confirmed by hand, so an institution is never completely stuck. Nothing else stopped somebody opening an account on an
 address that was not theirs, which for a complaints system means a
 grievance carrying a name and a matriculation number landing in a
 stranger's inbox. Staff are exempt: an invitation link only ever went to
@@ -146,13 +149,13 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 340 tests
+cd backend && pytest                    # 353 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
 cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
   RATELIMIT_ENABLED=false python run.py &
-cd frontend && npm run test:e2e         # 76 journeys
+cd frontend && npm run test:e2e         # 88 journeys
 ```
 
 The browser suite signs in once per role through the API and replays the
@@ -375,9 +378,9 @@ backend/
                   routing, directory, verification,
                   cloudinary_storage, object_storage
     security.py   role checks and tenant scoping
-  tests/          340 tests
+  tests/          353 tests
 frontend/
-  e2e/            76 browser journeys
+  e2e/            88 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin

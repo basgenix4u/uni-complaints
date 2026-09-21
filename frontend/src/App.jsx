@@ -14,6 +14,7 @@ const TrackPage = lazy(() => import('./pages/public/TrackPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
+const AcceptInvitationPage = lazy(() => import('./pages/auth/AcceptInvitationPage'));
 const PrivacyPage = lazy(() => import('./pages/account/PrivacyPage'));
 
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
@@ -33,6 +34,7 @@ const InstitutionSettings = lazy(() => import('./pages/admin/InstitutionSettings
 const RoutingRules = lazy(() => import('./pages/admin/RoutingRules'));
 const IgnoredComplaints = lazy(() => import('./pages/admin/IgnoredComplaints'));
 const PendingRegistrations = lazy(() => import('./pages/admin/PendingRegistrations'));
+const StaffInvitations = lazy(() => import('./pages/admin/StaffInvitations'));
 const PlatformInstitutions = lazy(() => import('./pages/platform/PlatformInstitutions'));
 
 // Shared
@@ -97,6 +99,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
+              <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
             </Route>
 
             {/* Student Routes */}
@@ -119,7 +122,7 @@ function App() {
             {/* Admin Routes */}
             <Route
               element={
-                <ProtectedRoute allowedRoles={['officer', 'dept_head', 'institution_admin', 'platform_admin']}>
+                <ProtectedRoute allowedRoles={['officer', 'dept_head', 'dean', 'institution_admin', 'platform_admin']}>
                   <DashboardLayout />
                 </ProtectedRoute>
               }
@@ -130,6 +133,8 @@ function App() {
               <Route path="/admin/analytics" element={<AdminAnalytics />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
+              {/* A unit head invites their own officers, so not admin only. */}
+              <Route path="/admin/invitations" element={<StaffInvitations />} />
               <Route path="/admin/notifications" element={<StudentNotifications />} />
               <Route path="/admin/privacy" element={<PrivacyPage />} />
             </Route>

@@ -102,11 +102,21 @@ def test_escalation_queues_email_for_student_and_the_handling_unit(client, alpha
     assert "head@test.ng" in recipients
 
 
-def test_queue_is_retried_and_eventually_marked_failed(app, alpha):
-    """No SMTP host is configured in tests, so delivery always fails."""
-    queue_email(alpha.id, "someone@test.ng", "Subject", "Body")
+def configure_smtp(app, monkeypatch, sender):
+    """A configured provider that behaves however the test needs."""
+    app.config["SMTP_HOST"] = "smtp.example.test"
+    monkeypatch.setattr("app.services.delivery._send_email", sender)
+
+
+def test_queue_is_retried_and_eventually_marked_failed(app, alpha, monkeypatch):
+    """A provider that rejects a message is retried, then given up on."""
     from app.extensions import db
 
+    def refuse(_message):
+        raise RuntimeError("mailbox full")
+
+    configure_smtp(app, monkeypatch, refuse)
+    queue_email(alpha.id, "someone@test.ng", "Subject", "Body")
     db.session.commit()
 
     for _ in range(5):
@@ -118,9 +128,13 @@ def test_queue_is_retried_and_eventually_marked_failed(app, alpha):
     assert message.error
 
 
-def test_failed_messages_are_not_retried_forever(app, alpha):
+def test_failed_messages_are_not_retried_forever(app, alpha, monkeypatch):
     from app.extensions import db
 
+    def refuse(_message):
+        raise RuntimeError("mailbox full")
+
+    configure_smtp(app, monkeypatch, refuse)
     queue_email(alpha.id, "someone@test.ng", "Subject", "Body")
     db.session.commit()
 
@@ -129,6 +143,57 @@ def test_failed_messages_are_not_retried_forever(app, alpha):
 
     # Once failed the message is left alone rather than retried endlessly.
     assert process_queue()["considered"] == 0
+
+
+def test_a_missing_provider_never_burns_the_retries(app, alpha):
+    """The bug this guards against locked every new student out.
+
+    Verification depends on email. When no provider was configured the
+    confirmation message failed five times and died, so by the time
+    somebody set up SMTP the backlog was already unrecoverable and every
+    one of those people was stuck with no way to confirm.
+    """
+    from app.extensions import db
+
+    queue_email(alpha.id, "someone@test.ng", "Confirm your email address", "link")
+    db.session.commit()
+
+    for _ in range(10):
+        result = process_queue()
+
+    message = OutboundMessage.query.first()
+    assert message.status == "pending"
+    assert message.attempts == 0
+    assert result["waiting"] == 1
+
+
+def test_the_backlog_sends_once_a_provider_appears(app, alpha, monkeypatch):
+    from app.extensions import db
+
+    queue_email(alpha.id, "someone@test.ng", "Confirm your email address", "link")
+    db.session.commit()
+    process_queue()
+
+    configure_smtp(app, monkeypatch, lambda _message: None)
+
+    assert process_queue()["sent"] == 1
+    assert OutboundMessage.query.first().status == "sent"
+
+
+def test_writing_to_the_log_is_off_unless_asked_for(app, alpha):
+    """A confirmation link is a credential, so this is never a default."""
+    assert app.config.get("MAIL_TO_CONSOLE") is not True
+
+
+def test_the_console_fallback_delivers_when_enabled(app, alpha):
+    from app.extensions import db
+
+    app.config["MAIL_TO_CONSOLE"] = True
+    queue_email(alpha.id, "someone@test.ng", "Confirm your email address", "link")
+    db.session.commit()
+
+    assert process_queue()["sent"] == 1
+    app.config["MAIL_TO_CONSOLE"] = False
 
 
 def test_email_is_not_queued_without_an_address(app, alpha):

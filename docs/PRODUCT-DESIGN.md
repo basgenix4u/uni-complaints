@@ -303,13 +303,37 @@ Each stage leaves the system working.
 | Stage | Work | Why this order | Status |
 |---|---|---|---|
 | **1** | Faculties, departments, units as real tables. Student linked to them | Nothing else can be built on free text | **Built** |
-| **2** | Invitations and bulk import for staff | Removes the hand-typing problem | **Built** |
+| **2** | Invitations and bulk import for staff | Removes the hand-typing problem | **Built**, with the interface added later |
 | **3** | Routing rules, and escalation up the real hierarchy | The core product gap | **Built** |
 | **4** | Institution directory, request-to-join, interest signal | Makes registration honest and captures demand | **Built** |
 | **5** | Email verification, then Google sign-in | Verification first; Google is an accelerator on top | **Verification built.** Google sign-in still to do |
 | **6** | Student register import and matric verification | Depends on 1 and 5 | **Built.** Registration now matches against the register |
 | **7** | Onboarding wizard for institution admins | Packages 1 to 6 into something self-service | To do |
 | **8** | Confidential queues, Dean role, appeals | Refinement once the shape is proven | Queues and the Dean built in 2 and 3; appeals to do |
+
+### Making email real
+
+The gate built in stage 5 had no key. Three things were wrong, and all
+three are now fixed:
+
+- An unconfigured provider counted as a delivery failure, so the
+  confirmation message retried five times and died. By the time anyone
+  set up SMTP the backlog was unrecoverable and every registered student
+  was locked out permanently. A missing provider is now a separate state
+  that holds the message without spending its retries.
+- `starttls()` was called unconditionally, which fails on port 465
+  (implicit TLS, used by Gmail and many Nigerian hosts) and on any relay
+  not offering it. The right mode is now chosen from the port, and a
+  password is never sent over an unencrypted connection.
+- Nobody could tell whether email worked. Administrators now see the
+  state on screen, and can confirm an address by hand when it does not.
+
+### Stage 2's missing interface
+
+Seven invitation endpoints had shipped with no screen at all, so the only
+way to create an officer was a curl request. Routing complaints to units
+with nobody in them is not much use, which made this a prerequisite for
+stage 3 working in practice rather than only in tests.
 
 ### What stages 4 to 6 actually changed
 

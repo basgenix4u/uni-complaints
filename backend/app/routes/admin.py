@@ -2,7 +2,7 @@
 
 import re
 
-from flask import Blueprint, g, request
+from flask import Blueprint, current_app, g, request
 
 from app.extensions import db
 from app.models.institution import Department, Institution
@@ -190,9 +190,19 @@ def pending_registrations():
     from app.models.academic import StudentRecord
     from app.services.register import normalise_matric
 
+    # Anyone who cannot yet file, for either reason. Listing only the
+    # ones awaiting approval would hide the students stuck behind an
+    # unconfirmed address, which is exactly the group that needs help
+    # when email is not working.
     rows = (
         tenant_query(User)
-        .filter(User.approval_status == "pending", User.role == "student")
+        .filter(
+            User.role == "student",
+            db.or_(
+                User.approval_status == "pending",
+                User.email_verified_at.is_(None),
+            ),
+        )
         .order_by(User.created_at)
         .limit(500)
         .all()
@@ -201,6 +211,15 @@ def pending_registrations():
     payload = []
     for person in rows:
         entry = person.to_dict()
+
+        # Someone who has simply not opened the link is not a
+        # registration to judge; they need the address confirming, which
+        # is a different action.
+        if person.approval_status == "approved" and not person.is_verified:
+            entry["reason"] = "Waiting on them to confirm their email address."
+            entry["awaiting_email_only"] = True
+            payload.append(entry)
+            continue
 
         # Why the automatic check did not settle it, so the administrator
         # is not left guessing.
@@ -224,6 +243,100 @@ def pending_registrations():
         payload.append(entry)
 
     return ok({"registrations": payload, "count": len(payload)})
+
+
+@bp.get("/delivery-health")
+@staff_required("institution_admin")
+def delivery_health():
+    """Whether outbound email is actually working.
+
+    Verification depends entirely on email, so an institution that
+    cannot send any is one where nobody can finish registering. Without
+    this the first sign of that is students reporting they are stuck,
+    which is far too late.
+    """
+    from app.models.message import OutboundMessage
+
+    configured = bool(current_app.config.get("SMTP_HOST"))
+    console = bool(current_app.config.get("MAIL_TO_CONSOLE"))
+
+    base = OutboundMessage.query.filter_by(
+        institution_id=g.institution_id, channel="email"
+    )
+    waiting = base.filter_by(status="pending").count()
+    failed = base.filter_by(status="failed").count()
+
+    if configured:
+        state, advice = "ok", None
+    elif console:
+        state, advice = "console", (
+            "Email is being written to the application log instead of sent. Fine for "
+            "testing; configure SMTP_HOST before real students use this."
+        )
+    else:
+        state, advice = "not_configured", (
+            "No email provider is set up, so confirmation links cannot reach anyone. "
+            "Messages are held rather than discarded and will send once SMTP_HOST is "
+            "configured. Until then, confirm registrations by hand."
+        )
+
+    return ok(
+        {
+            "email": {
+                "state": state,
+                "advice": advice,
+                "queued": waiting,
+                "failed": failed,
+                "sms_configured": bool(current_app.config.get("SMS_PROVIDER")),
+            }
+        }
+    )
+
+
+@bp.put("/registrations/<user_id>/confirm-email")
+@staff_required("institution_admin")
+def confirm_email_manually(user_id):
+    """Mark an address confirmed without the emailed link.
+
+    The escape hatch for the case where email itself is the problem: a
+    deployment with no SMTP provider yet, a link that never arrived, or a
+    student whose address bounces. Without this, verification is a door
+    with no key and the institution cannot let anybody in.
+
+    Deliberately restricted to an administrator and written to the audit
+    trail, because it is an assertion that somebody checked by other
+    means rather than proof the address works.
+    """
+    person = tenant_query(User).filter_by(id=user_id).first()
+    if not person:
+        return fail("We could not find that person.", 404)
+
+    if person.is_verified:
+        return ok({"user": person.to_dict()}, "That address was already confirmed.")
+
+    import structlog
+
+    from app.models.base import utcnow
+    from app.models.verification import EmailVerification
+
+    person.email_verified_at = utcnow()
+    person.email_verified_by_id = g.current_user.id
+
+    # Outstanding links are retired: the address is settled, and leaving
+    # a live token behind serves no purpose.
+    EmailVerification.query.filter_by(user_id=person.id, used_at=None).update(
+        {EmailVerification.used_at: utcnow()}, synchronize_session=False
+    )
+    db.session.commit()
+
+    structlog.get_logger().info(
+        "email_confirmed_manually",
+        actor_id=g.current_user.id,
+        subject_id=person.id,
+        institution_id=person.institution_id,
+    )
+
+    return ok({"user": person.to_dict()}, "Address confirmed.")
 
 
 @bp.put("/registrations/<user_id>")

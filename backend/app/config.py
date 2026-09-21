@@ -142,6 +142,12 @@ class Config:
     SMTP_USERNAME = os.getenv("SMTP_USERNAME")
     SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
     MAIL_FROM = os.getenv("MAIL_FROM", "no-reply@resolve.ng")
+
+    # Write emails to the log instead of sending them, so a deployment
+    # without SMTP can still be used: the confirmation link is readable
+    # in the log stream. Refused in production, where it would put
+    # account-confirmation links into logs that many people can read.
+    MAIL_TO_CONSOLE = os.getenv("MAIL_TO_CONSOLE", "false").lower() == "true"
     # Where reset links point. Must match the deployed front end.
     APP_URL = os.getenv("APP_URL", "http://localhost:5173")
     # One of: termii, africastalking, console. Empty disables SMS.
@@ -189,6 +195,14 @@ class ProductionConfig(Config):
 
         if os.getenv("RATELIMIT_ENABLED", "true").lower() == "false":
             raise RuntimeError("RATELIMIT_ENABLED must not be disabled in production")
+
+        # A confirmation link is a credential. Writing it to the log is a
+        # convenience for local work and never acceptable in production.
+        if os.getenv("MAIL_TO_CONSOLE", "false").lower() == "true":
+            raise RuntimeError(
+                "MAIL_TO_CONSOLE writes confirmation links to the log and must not be "
+                "enabled in production. Configure SMTP_HOST instead."
+            )
 
 
 CONFIGS = {
