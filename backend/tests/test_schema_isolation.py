@@ -81,8 +81,9 @@ def test_the_schema_is_created_before_anything_uses_it(shared_sql):
 def test_every_table_is_namespaced(shared_sql):
     created = shared_sql.count("CREATE TABLE resolve.")
 
-    # Eleven application tables plus alembic_version.
-    assert created == 12
+    # Asserted as a floor rather than an exact figure, so adding a table
+    # does not fail a test about isolation.
+    assert created >= 12
 
 
 def test_nothing_lands_in_public(shared_sql):
@@ -160,7 +161,7 @@ def test_sqlite_ignores_the_setting(tmp_path):
             )
         ]
 
-    assert len(tables) == 12
+    assert len(tables) >= 12
     assert "users" in tables
 
 
