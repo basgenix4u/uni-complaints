@@ -1,4 +1,7 @@
+import os
+
 import pytest
+from sqlalchemy import text
 
 from app import create_app
 from app.extensions import db as _db
@@ -6,14 +9,54 @@ from app.models.institution import Department, Institution
 from app.models.user import User
 
 
-@pytest.fixture
-def app():
+def _is_postgres() -> bool:
+    return not (os.getenv("TEST_DATABASE_URL") or "sqlite").startswith("sqlite")
+
+
+@pytest.fixture(scope="session")
+def _schema():
+    """Build the schema once when running against a real database.
+
+    Dropping and recreating every table for each of several hundred tests
+    is free on in-memory SQLite and ruinous on PostgreSQL. The tables are
+    created once and the rows cleared between tests instead.
+    """
+    if not _is_postgres():
+        yield
+        return
+
     app = create_app("testing")
     with app.app_context():
+        _db.drop_all()
         _db.create_all()
-        yield app
+        yield
         _db.session.remove()
         _db.drop_all()
+
+
+@pytest.fixture
+def app(_schema):
+    app = create_app("testing")
+    with app.app_context():
+        if _is_postgres():
+            yield app
+            # TRUNCATE ... CASCADE resets the tables and their sequences
+            # without touching the schema. Ordering does not matter, which
+            # is what makes this safe against the circular foreign key
+            # between faculties and users.
+            _db.session.rollback()
+            tables = ", ".join(
+                f'"{table.name}"' for table in reversed(_db.metadata.sorted_tables)
+            )
+            if tables:
+                _db.session.execute(text(f"TRUNCATE {tables} RESTART IDENTITY CASCADE"))
+                _db.session.commit()
+            _db.session.remove()
+        else:
+            _db.create_all()
+            yield app
+            _db.session.remove()
+            _db.drop_all()
 
 
 @pytest.fixture

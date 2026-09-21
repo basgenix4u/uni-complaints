@@ -106,3 +106,83 @@ def test_staff_performance_requires_department_head(client, alpha):
     head = login(client, "head@test.ng")
     assert client.get("/api/dashboard/reports/staff-performance",
                       headers=auth(head)).status_code == 200
+
+
+def test_the_monthly_chart_counts_complaints_in_the_right_month(client, alpha, db):
+    """The shape test above passes on a chart that counts nothing.
+
+    This endpoint used strftime, which is SQLite only and raises
+    UndefinedFunction on PostgreSQL, so it returned a 500 on every real
+    deployment while its test stayed green.
+    """
+    from datetime import datetime, timezone
+
+    from app.models.complaint import Complaint
+
+    student = make_user(alpha, "student@test.ng")
+    for month, count in ((3, 2), (7, 1)):
+        for index in range(count):
+            db.session.add(
+                Complaint(
+                    institution_id=alpha.id,
+                    student_id=student.id,
+                    ticket_number=f"AAA-M{month:02d}-{index:04d}",
+                    title="Fees receipt not reflecting",
+                    description="I paid three weeks ago and the portal still shows unpaid.",
+                    category="fees_payment",
+                    status="submitted",
+                    created_at=datetime(2026, month, 15, 12, 0, tzinfo=timezone.utc),
+                )
+            )
+    db.session.commit()
+
+    make_user(alpha, "officer@test.ng", role="officer")
+    token = login(client, "officer@test.ng")
+
+    data = client.get(
+        "/api/dashboard/charts/monthly?year=2026", headers=auth(token)
+    ).get_json()["data"]
+
+    by_month = {row["month"]: row["count"] for row in data["chart_data"]}
+    assert by_month[3] == 2
+    assert by_month[7] == 1
+    assert by_month[1] == 0
+
+
+def test_the_monthly_chart_excludes_other_years(client, alpha, db):
+    from datetime import datetime, timezone
+
+    from app.models.complaint import Complaint
+
+    student = make_user(alpha, "student@test.ng")
+    db.session.add(
+        Complaint(
+            institution_id=alpha.id,
+            student_id=student.id,
+            ticket_number="AAA-YEAR-0001",
+            title="Filed the previous year",
+            description="This belongs to the year before and must not be counted.",
+            category="fees_payment",
+            status="submitted",
+            created_at=datetime(2025, 6, 1, 12, 0, tzinfo=timezone.utc),
+        )
+    )
+    db.session.commit()
+
+    make_user(alpha, "officer@test.ng", role="officer")
+    token = login(client, "officer@test.ng")
+
+    data = client.get(
+        "/api/dashboard/charts/monthly?year=2026", headers=auth(token)
+    ).get_json()["data"]
+
+    assert sum(row["count"] for row in data["chart_data"]) == 0
+
+
+def test_an_absurd_year_is_refused(client, alpha):
+    make_user(alpha, "officer@test.ng", role="officer")
+    token = login(client, "officer@test.ng")
+
+    response = client.get("/api/dashboard/charts/monthly?year=99999", headers=auth(token))
+
+    assert response.status_code == 422

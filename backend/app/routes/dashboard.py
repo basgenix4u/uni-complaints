@@ -8,13 +8,13 @@ from collections import OrderedDict
 from datetime import timedelta
 
 from flask import Blueprint, Response, g, request
-from sqlalchemy import case, func
+from sqlalchemy import Integer, case, extract, func
 
 from app.extensions import db
 from app.models.base import as_aware, utcnow
 from app.models.complaint import Complaint
 from app.models.user import User
-from app.routes.auth import ok
+from app.routes.auth import fail, ok
 from app.security import auth_required, staff_required, tenant_query, visible_complaints
 
 bp = Blueprint("dashboard", __name__, url_prefix="/api/dashboard")
@@ -194,15 +194,43 @@ def trend_chart():
 @bp.get("/charts/monthly")
 @staff_required("officer")
 def monthly_chart():
+    """Complaints per month for one year.
+
+    Grouped by a date range rather than by a formatting function.
+    `strftime` is SQLite only and raises UndefinedFunction on
+    PostgreSQL, so this endpoint returned a 500 on every deployment
+    while passing its test on SQLite.
+
+    A half-open range on the indexed created_at column is also the
+    faster shape: extracting a part of every row's timestamp cannot use
+    the index.
+    """
+    from datetime import datetime, timezone
+
     year = request.args.get("year", utcnow().year, type=int)
+    if not 2000 <= year <= 2200:
+        return fail("Choose a realistic year.", 422)
+
+    # A half-open range on the indexed column, so the filter can use the
+    # index instead of computing a value for every row.
+    start = datetime(year, 1, 1, tzinfo=timezone.utc)
+    end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
+    # extract() is compiled per dialect by SQLAlchemy, so the grouping
+    # stays in the database on both. The counting itself must not come
+    # back to Python: an institution with a large history would ship
+    # every row of the year to do it.
+    month = func.cast(extract("month", Complaint.created_at), Integer).label("month")
+
     rows = (
         visible_complaints()
-        .filter(func.strftime("%Y", Complaint.created_at) == str(year))
-        .with_entities(func.strftime("%m", Complaint.created_at).label("month"), func.count(Complaint.id))
-        .group_by("month")
+        .filter(Complaint.created_at >= start, Complaint.created_at < end)
+        .with_entities(month, func.count(Complaint.id))
+        .group_by(month)
         .all()
     )
-    counts = {int(month): count for month, count in rows}
+
+    counts = {int(value): count for value, count in rows}
     names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
     return ok(

@@ -34,6 +34,82 @@ jobs:
       - name: Run tests
         run: pytest -q
 
+  backend-postgres:
+    name: Backend (PostgreSQL)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    # The deployed database is PostgreSQL; the fast suite runs on SQLite.
+    # That difference is not cosmetic. SQLite serialises writes, so it
+    # cannot express a lost update, and two concurrency defects reached
+    # main because the suite was structurally unable to fail. This job
+    # exists to close that gap, and also covers what SQLite does not
+    # model at all: schema isolation, server-side defaults, and the
+    # stricter type and constraint behaviour.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: resolve
+          POSTGRES_PASSWORD: resolve
+          POSTGRES_DB: resolve_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resolve"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      # gen_random_uuid() is used by the concurrency tests to insert rows
+      # directly. Built in from PostgreSQL 13, but the extension makes the
+      # requirement explicit rather than assumed.
+      - name: Prepare the database
+        env:
+          PGPASSWORD: resolve
+        run: psql -h localhost -U resolve -d resolve_test -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
+
+      # Migrations are what actually runs against a deployment. Running
+      # them here catches a revision that works on SQLite and fails on
+      # PostgreSQL, which create_all() would never reveal.
+      - name: Apply migrations
+        env:
+          FLASK_APP: run.py
+          DATABASE_URL: postgresql://resolve:resolve@localhost:5432/resolve_test
+        run: |
+          flask db upgrade
+          flask db downgrade base
+          flask db upgrade
+
+      - name: Run tests against PostgreSQL
+        env:
+          TEST_DATABASE_URL: postgresql://resolve:resolve@localhost:5432/resolve_test
+        run: pytest -q
+
+      # The same suite in a dedicated schema, which is how it is deployed
+      # into the shared Supabase project. A revision that hardcodes
+      # schema=None passes everywhere else and breaks only here.
+      - name: Run tests in an isolated schema
+        env:
+          TEST_DATABASE_URL: postgresql://resolve:resolve@localhost:5432/resolve_test
+          DB_SCHEMA: resolve
+        run: pytest -q
+
   frontend:
     name: Frontend (Vite)
     runs-on: ubuntu-latest
