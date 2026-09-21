@@ -38,6 +38,19 @@ def _schema():
     return _CONFIGURED_SCHEMA if op.get_bind().dialect.name == "postgresql" else None
 
 
+def _fk(target: str) -> str:
+    """Qualify a foreign key target with the schema in force.
+
+    Autogenerate writes these as literals, baking in whichever schema was
+    configured when the revision was produced. That made the revision
+    work only for that one deployment: with DB_SCHEMA unset the migration
+    demanded a schema that had never been created, and the first upgrade
+    against a database of our own failed outright.
+    """
+    schema = _schema()
+    return f"{schema}.{target}" if schema else target
+
+
 def upgrade():
     # The schema must exist before any table is created in it. Done here
     # as well as in env.py so a script generated with --sql is complete
@@ -83,7 +96,7 @@ def upgrade():
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_departments_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_departments_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_departments')),
     sa.UniqueConstraint('institution_id', 'slug', name='uq_department_slug_per_institution'),
     schema=SCHEMA
@@ -107,8 +120,8 @@ def upgrade():
     sa.Column('erased_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['department_id'], ['resolve.departments.id'], name=op.f('fk_users_department_id_departments'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_users_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['department_id'], [_fk('departments.id')], name=op.f('fk_users_department_id_departments'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_users_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_users')),
     sa.UniqueConstraint('institution_id', 'email', name='uq_user_email_per_institution'),
     sa.UniqueConstraint('institution_id', 'matric_number', name='uq_user_matric_per_institution'),
@@ -148,10 +161,10 @@ def upgrade():
     sa.Column('reminder_sent_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['assigned_to_id'], ['resolve.users.id'], name=op.f('fk_complaints_assigned_to_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['department_id'], ['resolve.departments.id'], name=op.f('fk_complaints_department_id_departments'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_complaints_institution_id_institutions'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['student_id'], ['resolve.users.id'], name=op.f('fk_complaints_student_id_users'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['assigned_to_id'], [_fk('users.id')], name=op.f('fk_complaints_assigned_to_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['department_id'], [_fk('departments.id')], name=op.f('fk_complaints_department_id_departments'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_complaints_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['student_id'], [_fk('users.id')], name=op.f('fk_complaints_student_id_users'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_complaints')),
     sa.UniqueConstraint('institution_id', 'ticket_number', name='uq_ticket_per_institution'),
     schema=SCHEMA
@@ -178,7 +191,7 @@ def upgrade():
     sa.Column('used_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('requested_ip', sa.String(length=45), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['user_id'], ['resolve.users.id'], name=op.f('fk_password_resets_user_id_users'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], [_fk('users.id')], name=op.f('fk_password_resets_user_id_users'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_password_resets')),
     schema=SCHEMA
     )
@@ -195,9 +208,9 @@ def upgrade():
     sa.Column('ip_address', sa.String(length=45), nullable=True),
     sa.Column('user_agent', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['actor_id'], ['resolve.users.id'], name=op.f('fk_access_logs_actor_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['complaint_id'], ['resolve.complaints.id'], name=op.f('fk_access_logs_complaint_id_complaints'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_access_logs_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['actor_id'], [_fk('users.id')], name=op.f('fk_access_logs_actor_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['complaint_id'], [_fk('complaints.id')], name=op.f('fk_access_logs_complaint_id_complaints'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_access_logs_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_access_logs')),
     schema=SCHEMA
     )
@@ -217,9 +230,9 @@ def upgrade():
     sa.Column('to_value', sa.String(length=120), nullable=True),
     sa.Column('note', sa.String(length=500), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['actor_id'], ['resolve.users.id'], name=op.f('fk_complaint_events_actor_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['complaint_id'], ['resolve.complaints.id'], name=op.f('fk_complaint_events_complaint_id_complaints'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_complaint_events_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['actor_id'], [_fk('users.id')], name=op.f('fk_complaint_events_actor_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['complaint_id'], [_fk('complaints.id')], name=op.f('fk_complaint_events_complaint_id_complaints'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_complaint_events_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_complaint_events')),
     schema=SCHEMA
     )
@@ -238,9 +251,9 @@ def upgrade():
     sa.Column('is_read', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['complaint_id'], ['resolve.complaints.id'], name=op.f('fk_notifications_complaint_id_complaints'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_notifications_institution_id_institutions'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['resolve.users.id'], name=op.f('fk_notifications_user_id_users'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['complaint_id'], [_fk('complaints.id')], name=op.f('fk_notifications_complaint_id_complaints'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_notifications_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], [_fk('users.id')], name=op.f('fk_notifications_user_id_users'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_notifications')),
     schema=SCHEMA
     )
@@ -264,9 +277,9 @@ def upgrade():
     sa.Column('error', sa.String(length=500), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['complaint_id'], ['resolve.complaints.id'], name=op.f('fk_outbound_messages_complaint_id_complaints'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_outbound_messages_institution_id_institutions'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['user_id'], ['resolve.users.id'], name=op.f('fk_outbound_messages_user_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['complaint_id'], [_fk('complaints.id')], name=op.f('fk_outbound_messages_complaint_id_complaints'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_outbound_messages_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['user_id'], [_fk('users.id')], name=op.f('fk_outbound_messages_user_id_users'), ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_outbound_messages')),
     schema=SCHEMA
     )
@@ -283,9 +296,9 @@ def upgrade():
     sa.Column('is_internal', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['author_id'], ['resolve.users.id'], name=op.f('fk_responses_author_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['complaint_id'], ['resolve.complaints.id'], name=op.f('fk_responses_complaint_id_complaints'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_responses_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['author_id'], [_fk('users.id')], name=op.f('fk_responses_author_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['complaint_id'], [_fk('complaints.id')], name=op.f('fk_responses_complaint_id_complaints'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_responses_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_responses')),
     schema=SCHEMA
     )
@@ -308,10 +321,10 @@ def upgrade():
     sa.Column('thumbnail_name', sa.String(length=120), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['complaint_id'], ['resolve.complaints.id'], name=op.f('fk_attachments_complaint_id_complaints'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_attachments_institution_id_institutions'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['response_id'], ['resolve.responses.id'], name=op.f('fk_attachments_response_id_responses'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['uploaded_by_id'], ['resolve.users.id'], name=op.f('fk_attachments_uploaded_by_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['complaint_id'], [_fk('complaints.id')], name=op.f('fk_attachments_complaint_id_complaints'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_attachments_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['response_id'], [_fk('responses.id')], name=op.f('fk_attachments_response_id_responses'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['uploaded_by_id'], [_fk('users.id')], name=op.f('fk_attachments_uploaded_by_id_users'), ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_attachments')),
     sa.UniqueConstraint('stored_name', name=op.f('uq_attachments_stored_name')),
     schema=SCHEMA
@@ -326,15 +339,22 @@ def upgrade():
 def downgrade():
     SCHEMA = _schema()
 
-    # Reverse dependency order so foreign keys do not block the drops.
-    op.drop_table('access_logs', schema=SCHEMA)
-    op.drop_table('attachments', schema=SCHEMA)
-    op.drop_table('complaint_events', schema=SCHEMA)
-    op.drop_table('complaints', schema=SCHEMA)
-    op.drop_table('departments', schema=SCHEMA)
-    op.drop_table('institutions', schema=SCHEMA)
-    op.drop_table('notifications', schema=SCHEMA)
-    op.drop_table('outbound_messages', schema=SCHEMA)
-    op.drop_table('password_resets', schema=SCHEMA)
-    op.drop_table('responses', schema=SCHEMA)
-    op.drop_table('users', schema=SCHEMA)
+    # Reverse dependency order, not the alphabetical order autogenerate
+    # produces. PostgreSQL refuses to drop a table another still
+    # references, so the generated order failed with
+    # DependentObjectsStillExist at `complaints`. SQLite does not enforce
+    # foreign keys by default, which is why this was never noticed.
+    for table in (
+        "access_logs",
+        "attachments",
+        "complaint_events",
+        "notifications",
+        "outbound_messages",
+        "password_resets",
+        "responses",
+        "complaints",
+        "users",
+        "departments",
+        "institutions",
+    ):
+        op.drop_table(table, schema=SCHEMA)

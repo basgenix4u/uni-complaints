@@ -8,13 +8,13 @@ from collections import OrderedDict
 from datetime import timedelta
 
 from flask import Blueprint, Response, g, request
-from sqlalchemy import case, func
+from sqlalchemy import Integer, case, extract, func
 
 from app.extensions import db
 from app.models.base import as_aware, utcnow
 from app.models.complaint import Complaint
 from app.models.user import User
-from app.routes.auth import ok
+from app.routes.auth import fail, ok
 from app.security import auth_required, staff_required, tenant_query, visible_complaints
 
 bp = Blueprint("dashboard", __name__, url_prefix="/api/dashboard")
@@ -39,21 +39,30 @@ def _avg_resolution_hours(base) -> float:
     database rather than being pulled into the process, which matters once
     an institution has a large history.
     """
-    dialect = db.session.bind.dialect.name if db.session.bind else "sqlite"
+    # db.session.bind is None under Flask-SQLAlchemy 3, so the previous
+    # check silently fell through to the SQLite branch on every database.
+    # That was invisible while SQLite was the only one ever tested, and
+    # raised UndefinedFunction on the deployed PostgreSQL.
+    dialect = db.engine.dialect.name
     resolved = base.filter(Complaint.resolved_at.isnot(None))
 
+    # PostgreSQL returns NUMERIC from avg(extract(...)), which psycopg2
+    # hands back as Decimal. round() on a Decimal returns a Decimal, and
+    # jsonify renders that as a JSON string, so the endpoint quietly
+    # changed type between databases: 4.0 on SQLite, "4.0" on PostgreSQL.
+    # Anything doing arithmetic or charting on the value then breaks.
     if dialect == "postgresql":
         seconds = func.avg(
             func.extract("epoch", Complaint.resolved_at - Complaint.created_at)
         )
         value = resolved.with_entities(seconds).scalar()
-        return round((value or 0) / 3600, 1)
+        return round(float(value or 0) / 3600, 1)
 
     days = func.avg(
         func.julianday(Complaint.resolved_at) - func.julianday(Complaint.created_at)
     )
     value = resolved.with_entities(days).scalar()
-    return round((value or 0) * 24, 1)
+    return round(float(value or 0) * 24, 1)
 
 
 @bp.get("/overview")
@@ -179,7 +188,12 @@ def trend_chart():
         .group_by("day")
         .all()
     )
-    by_day = {str(day): (created, resolved or 0) for day, created, resolved in rows}
+    # count() is an integer on both, but sum() is NUMERIC on PostgreSQL
+    # and arrives as a Decimal, which would serialise as a string.
+    by_day = {
+        str(day): (int(created or 0), int(resolved or 0))
+        for day, created, resolved in rows
+    }
 
     # Days with no activity are emitted as zero so the chart has no gaps.
     series = []
@@ -194,15 +208,43 @@ def trend_chart():
 @bp.get("/charts/monthly")
 @staff_required("officer")
 def monthly_chart():
+    """Complaints per month for one year.
+
+    Grouped by a date range rather than by a formatting function.
+    `strftime` is SQLite only and raises UndefinedFunction on
+    PostgreSQL, so this endpoint returned a 500 on every deployment
+    while passing its test on SQLite.
+
+    A half-open range on the indexed created_at column is also the
+    faster shape: extracting a part of every row's timestamp cannot use
+    the index.
+    """
+    from datetime import datetime, timezone
+
     year = request.args.get("year", utcnow().year, type=int)
+    if not 2000 <= year <= 2200:
+        return fail("Choose a realistic year.", 422)
+
+    # A half-open range on the indexed column, so the filter can use the
+    # index instead of computing a value for every row.
+    start = datetime(year, 1, 1, tzinfo=timezone.utc)
+    end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+
+    # extract() is compiled per dialect by SQLAlchemy, so the grouping
+    # stays in the database on both. The counting itself must not come
+    # back to Python: an institution with a large history would ship
+    # every row of the year to do it.
+    month = func.cast(extract("month", Complaint.created_at), Integer).label("month")
+
     rows = (
         visible_complaints()
-        .filter(func.strftime("%Y", Complaint.created_at) == str(year))
-        .with_entities(func.strftime("%m", Complaint.created_at).label("month"), func.count(Complaint.id))
-        .group_by("month")
+        .filter(Complaint.created_at >= start, Complaint.created_at < end)
+        .with_entities(month, func.count(Complaint.id))
+        .group_by(month)
         .all()
     )
-    counts = {int(month): count for month, count in rows}
+
+    counts = {int(value): count for value, count in rows}
     names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
     return ok(
@@ -242,7 +284,9 @@ def summary_report():
                 "declined": counts.get("declined", 0),
                 "open": sum(counts.get(s, 0) for s in OPEN_STATUSES),
                 "avg_resolution_time_hours": _avg_resolution_hours(base),
-                "avg_satisfaction": round(ratings[0], 2) if ratings and ratings[0] else None,
+                "avg_satisfaction": (
+                    round(float(ratings[0]), 2) if ratings and ratings[0] else None
+                ),
                 "rated_count": ratings[1] if ratings else 0,
             },
             "by_category": [

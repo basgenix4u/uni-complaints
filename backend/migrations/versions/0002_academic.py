@@ -38,6 +38,19 @@ def _schema():
     return _CONFIGURED_SCHEMA if op.get_bind().dialect.name == "postgresql" else None
 
 
+def _fk(target: str) -> str:
+    """Qualify a foreign key target with the schema in force.
+
+    Autogenerate writes these as literals, baking in whichever schema was
+    configured when the revision was produced. That made the revision
+    work only for that one deployment: with DB_SCHEMA unset the migration
+    demanded a schema that had never been created, and the first upgrade
+    against a database of our own failed outright.
+    """
+    schema = _schema()
+    return f"{schema}.{target}" if schema else target
+
+
 def upgrade():
     SCHEMA = _schema()
 
@@ -50,7 +63,7 @@ def upgrade():
     sa.Column('is_current', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_academic_sessions_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_academic_sessions_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_academic_sessions')),
     sa.UniqueConstraint('institution_id', 'name', name='uq_session_name_per_institution'),
     schema=SCHEMA
@@ -67,7 +80,7 @@ def upgrade():
     sa.Column('notified_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_institution_interest_institution_id_institutions'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_institution_interest_institution_id_institutions'), ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_institution_interest')),
     sa.UniqueConstraint('email', 'institution_name', name='uq_interest_email_institution'),
     schema=SCHEMA
@@ -86,9 +99,9 @@ def upgrade():
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['department_id'], ['resolve.departments.id'], name=op.f('fk_routing_rules_department_id_departments'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['escalates_to_department_id'], ['resolve.departments.id'], name=op.f('fk_routing_rules_escalates_to_department_id_departments'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_routing_rules_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['department_id'], [_fk('departments.id')], name=op.f('fk_routing_rules_department_id_departments'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['escalates_to_department_id'], [_fk('departments.id')], name=op.f('fk_routing_rules_escalates_to_department_id_departments'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_routing_rules_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_routing_rules')),
     sa.UniqueConstraint('institution_id', 'category', name='uq_routing_category'),
     schema=SCHEMA
@@ -106,8 +119,8 @@ def upgrade():
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['dean_user_id'], ['resolve.users.id'], name=op.f('fk_faculties_dean_user_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_faculties_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['dean_user_id'], [_fk('users.id')], name=op.f('fk_faculties_dean_user_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_faculties_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_faculties')),
     sa.UniqueConstraint('institution_id', 'slug', name='uq_faculty_slug_per_institution'),
     schema=SCHEMA
@@ -125,9 +138,9 @@ def upgrade():
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['faculty_id'], ['resolve.faculties.id'], name=op.f('fk_academic_departments_faculty_id_faculties'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['head_user_id'], ['resolve.users.id'], name=op.f('fk_academic_departments_head_user_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_academic_departments_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['faculty_id'], [_fk('faculties.id')], name=op.f('fk_academic_departments_faculty_id_faculties'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['head_user_id'], [_fk('users.id')], name=op.f('fk_academic_departments_head_user_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_academic_departments_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_academic_departments')),
     sa.UniqueConstraint('institution_id', 'slug', name='uq_acaddept_slug_per_institution'),
     schema=SCHEMA
@@ -151,11 +164,11 @@ def upgrade():
     sa.Column('claimed_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['academic_department_id'], ['resolve.academic_departments.id'], name=op.f('fk_student_records_academic_department_id_academic_departments'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['admitted_session_id'], ['resolve.academic_sessions.id'], name=op.f('fk_student_records_admitted_session_id_academic_sessions'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['claimed_by_user_id'], ['resolve.users.id'], name=op.f('fk_student_records_claimed_by_user_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['faculty_id'], ['resolve.faculties.id'], name=op.f('fk_student_records_faculty_id_faculties'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_student_records_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['academic_department_id'], [_fk('academic_departments.id')], name=op.f('fk_student_records_academic_department_id_academic_departments'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['admitted_session_id'], [_fk('academic_sessions.id')], name=op.f('fk_student_records_admitted_session_id_academic_sessions'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['claimed_by_user_id'], [_fk('users.id')], name=op.f('fk_student_records_claimed_by_user_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['faculty_id'], [_fk('faculties.id')], name=op.f('fk_student_records_faculty_id_faculties'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_student_records_institution_id_institutions'), ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_student_records')),
     sa.UniqueConstraint('claimed_by_user_id', name=op.f('uq_student_records_claimed_by_user_id')),
     sa.UniqueConstraint('institution_id', 'matric_number', name='uq_student_matric_per_institution'),

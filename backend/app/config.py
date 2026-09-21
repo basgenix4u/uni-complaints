@@ -165,9 +165,27 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
     TESTING = True
     UPLOAD_DIR = os.path.join(BASE_DIR, "uploads_test")
-    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+
+    # In-memory SQLite by default, because the suite has to be runnable
+    # with no infrastructure. TEST_DATABASE_URL points it at a real
+    # PostgreSQL instead, which is how CI runs it.
+    #
+    # This is not a nicety. SQLite serialises writes, so it cannot show a
+    # lost update: two concurrency defects reached main because the suite
+    # could not express the failure. Anything about locking, isolation or
+    # server-side defaults is only meaningfully tested on PostgreSQL.
+    SQLALCHEMY_DATABASE_URI = os.getenv("TEST_DATABASE_URL") or "sqlite:///:memory:"
+
     RATELIMIT_ENABLED = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=5)
+
+    # A pool per test would exhaust PostgreSQL's connection limit long
+    # before the suite finished.
+    SQLALCHEMY_ENGINE_OPTIONS = (
+        {"pool_pre_ping": True}
+        if (os.getenv("TEST_DATABASE_URL") or "sqlite").startswith("sqlite")
+        else {"pool_pre_ping": True, "pool_size": 2, "max_overflow": 3}
+    )
 
 
 class ProductionConfig(Config):
