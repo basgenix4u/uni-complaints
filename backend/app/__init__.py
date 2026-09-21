@@ -39,6 +39,7 @@ def create_app(config_name: str | None = None) -> Flask:
     from app.routes.notifications import bp as notifications_bp
     from app.routes.platform import bp as platform_bp
     from app.routes.invitations import bp as invitations_bp, public_bp as invitation_public_bp
+    from app.routes.directory import bp as directory_bp, platform_bp as directory_platform_bp
     from app.routes.privacy import bp as privacy_bp
     from app.routes.routing import bp as routing_bp, platform_bp as routing_platform_bp
     from app.routes.tasks import bp as tasks_bp
@@ -53,6 +54,8 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(platform_bp)
     app.register_blueprint(invitations_bp)
     app.register_blueprint(invitation_public_bp)
+    app.register_blueprint(directory_bp)
+    app.register_blueprint(directory_platform_bp)
     app.register_blueprint(privacy_bp)
     app.register_blueprint(routing_bp)
     app.register_blueprint(routing_platform_bp)
@@ -229,6 +232,7 @@ def register_cli(app: Flask) -> None:
         """
         import os
 
+        from app.models.base import utcnow
         from app.models.institution import Institution
         from app.models.user import User
 
@@ -238,7 +242,10 @@ def register_cli(app: Flask) -> None:
         password = os.getenv("PLATFORM_ADMIN_PASSWORD", "ChangeMe123")
 
         if not User.query.filter_by(email=email, role="platform_admin").first():
-            admin = User(full_name="Platform Administrator", email=email, role="platform_admin")
+            admin = User(
+                full_name="Platform Administrator", email=email,
+                role="platform_admin", email_verified_at=utcnow(),
+            )
             admin.set_password(password)
             db.session.add(admin)
             click.echo(f"Created platform administrator: {email}")
@@ -252,6 +259,9 @@ def register_cli(app: Flask) -> None:
                     slug="demo-university",
                     state="FCT",
                     contact_email="support@demo.edu.ng",
+                    # Onboarded, or nobody could register against it.
+                    is_onboarded=True,
+                    verification_mode="open",
                 )
                 db.session.add(institution)
                 db.session.flush()
@@ -271,6 +281,7 @@ def register_cli(app: Flask) -> None:
                     full_name="Institution Admin",
                     email="admin@demo.edu.ng",
                     role="institution_admin",
+                    email_verified_at=utcnow(),
                 )
                 staff.set_password("Password123")
                 db.session.add(staff)
@@ -282,6 +293,7 @@ def register_cli(app: Flask) -> None:
                     matric_number="ENG/COE/21/013",
                     faculty="Engineering",
                     role="student",
+                    email_verified_at=utcnow(),
                 )
                 student.set_password("Password123")
                 db.session.add(student)

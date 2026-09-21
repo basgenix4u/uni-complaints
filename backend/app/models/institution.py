@@ -110,6 +110,27 @@ class Institution(TimestampMixin, db.Model):
             )
         return data
 
+    def to_directory_dict(self) -> dict:
+        """The public listing, for someone choosing where they study.
+
+        Deliberately thin. This is served without authentication, so it
+        carries only what a person needs to recognise their own
+        institution and see whether it is using the service.
+        """
+        return {
+            "id": self.id,
+            "name": self.name,
+            "slug": self.slug,
+            "type": self.type,
+            "state": self.state,
+            "logo_url": self.logo_url,
+            "is_onboarded": self.is_onboarded and self.is_active,
+            # Tells the sign-up form what to ask for, so a student is not
+            # made to type a matriculation number that will not be checked.
+            "verification_mode": self.verification_mode if self.is_onboarded else None,
+            "matric_example": self.matric_example,
+        }
+
     def __repr__(self) -> str:
         return f"<Institution {self.code}>"
 

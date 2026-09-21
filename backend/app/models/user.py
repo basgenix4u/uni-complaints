@@ -85,6 +85,16 @@ class User(TimestampMixin, db.Model):
 
     role = db.Column(db.String(30), default="student", nullable=False, index=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    # Null until the address is confirmed. Staff arrive through an
+    # invitation sent to the address itself, which already proves it, so
+    # only self-registration leaves this unset.
+    email_verified_at = db.Column(db.DateTime(timezone=True))
+
+    # Set where an institution vets each registration by hand, and where
+    # a student registered against a register entry that did not match.
+    # Such an account can sign in and see its own state, but cannot file.
+    approval_status = db.Column(db.String(20), default="approved", nullable=False)
     last_login_at = db.Column(db.DateTime(timezone=True))
     # Set when the account has been through erasure. The row survives so
     # foreign keys stay intact, but it identifies nobody.
@@ -113,6 +123,33 @@ class User(TimestampMixin, db.Model):
     def is_staff(self) -> bool:
         return self.role in STAFF_ROLES
 
+    @property
+    def is_verified(self) -> bool:
+        return self.email_verified_at is not None
+
+    @property
+    def can_file_complaints(self) -> tuple[bool, str | None]:
+        """Whether this account may raise a complaint, and why not.
+
+        Verification and approval gate filing rather than signing in. An
+        unverified student can still get in, see where they stand and
+        finish the step; locking them out would leave them with an error
+        screen and no way forward.
+        """
+        if not self.is_verified:
+            return False, "Confirm your email address first. We sent you a link."
+        if self.approval_status == "pending":
+            return False, (
+                "Your institution is still checking your registration. "
+                "You will get an email once it is approved."
+            )
+        if self.approval_status == "rejected":
+            return False, (
+                "Your institution could not confirm you are a student there. "
+                "Contact them if you think this is wrong."
+            )
+        return True, None
+
     def has_role_at_least(self, role: str) -> bool:
         return ROLE_RANK.get(self.role, -1) >= ROLE_RANK.get(role, 99)
 
@@ -131,6 +168,8 @@ class User(TimestampMixin, db.Model):
             "matric_number": self.matric_number,
             "faculty": self.faculty,
             "department_name": self.department_name,
+            "is_verified": self.is_verified,
+            "approval_status": self.approval_status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
         if include_contact:

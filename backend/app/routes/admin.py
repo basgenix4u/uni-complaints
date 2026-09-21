@@ -34,6 +34,10 @@ def list_users():
     if request.args.get("staff") in ("1", "true"):
         query = query.filter(User.role.in_(STAFF_ROLES))
 
+    approval = request.args.get("approval")
+    if approval:
+        query = query.filter(User.approval_status == approval)
+
     search = (request.args.get("search") or "").strip()
     if search:
         like = f"%{search}%"
@@ -168,6 +172,115 @@ def change_role(user_id):
     user.role = role
     db.session.commit()
     return ok({"user": user.to_dict()}, "Role updated.")
+
+
+# -- registrations awaiting review ------------------------------------
+
+
+@bp.get("/registrations")
+@staff_required("institution_admin")
+def pending_registrations():
+    """Students waiting to be confirmed as students.
+
+    These are people the register could not vouch for, or everyone, at an
+    institution that reviews each registration by hand. Each one is
+    somebody locked out until a person looks, so the list carries what is
+    needed to decide rather than making the administrator go and find it.
+    """
+    from app.models.academic import StudentRecord
+    from app.services.register import normalise_matric
+
+    rows = (
+        tenant_query(User)
+        .filter(User.approval_status == "pending", User.role == "student")
+        .order_by(User.created_at)
+        .limit(500)
+        .all()
+    )
+
+    payload = []
+    for person in rows:
+        entry = person.to_dict()
+
+        # Why the automatic check did not settle it, so the administrator
+        # is not left guessing.
+        if not person.matric_number:
+            entry["reason"] = "No matric number given."
+        else:
+            match = StudentRecord.query.filter_by(
+                institution_id=person.institution_id,
+                matric_number=normalise_matric(person.matric_number),
+            ).first()
+            if match is None:
+                entry["reason"] = "Not found in the student register."
+            elif match.claimed_by_user_id and match.claimed_by_user_id != person.id:
+                entry["reason"] = "That register entry is already claimed."
+            elif match.status != "active":
+                entry["reason"] = f"The register lists them as {match.status}."
+            else:
+                entry["reason"] = "Your institution reviews every registration."
+            entry["register_match"] = match.to_dict() if match else None
+
+        payload.append(entry)
+
+    return ok({"registrations": payload, "count": len(payload)})
+
+
+@bp.put("/registrations/<user_id>")
+@staff_required("institution_admin")
+def decide_registration_route(user_id):
+    """Approve or reject a registration.
+
+    Approving links the account to its register entry where there is one,
+    so the student inherits their faculty and department rather than
+    keeping whatever they typed.
+    """
+    person = tenant_query(User).filter_by(id=user_id).first()
+    if not person or person.role != "student":
+        return fail("We could not find that registration.", 404)
+
+    decision = ((request.get_json(silent=True) or {}).get("decision") or "").strip()
+    if decision not in ("approved", "rejected"):
+        return fail("Choose whether to approve or reject.", 422)
+
+    from app.models.academic import StudentRecord
+    from app.services.delivery import queue_email
+    from app.services.register import normalise_matric
+
+    person.approval_status = decision
+
+    if decision == "approved" and person.matric_number:
+        match = StudentRecord.query.filter_by(
+            institution_id=person.institution_id,
+            matric_number=normalise_matric(person.matric_number),
+        ).first()
+        if match and match.can_register:
+            match.claim(person)
+            person.faculty_id = match.faculty_id
+            if match.academic_department:
+                person.department_name = match.academic_department.name
+
+    institution = db.session.get(Institution, person.institution_id)
+    if decision == "approved":
+        subject = "Your account has been approved"
+        body = (
+            f"Hello {person.full_name},\n\n"
+            f"{institution.name if institution else 'Your institution'} has confirmed your "
+            "registration. You can sign in and file a complaint now."
+        )
+    else:
+        subject = "We could not confirm your registration"
+        body = (
+            f"Hello {person.full_name},\n\n"
+            f"{institution.name if institution else 'Your institution'} could not confirm "
+            "you are a student there. If you believe this is a mistake, contact the "
+            "registry with your matric number."
+        )
+
+    queue_email(person.institution_id, person.email, subject, body, user_id=person.id)
+    db.session.commit()
+
+    return ok({"user": person.to_dict()}, f"Registration {decision}.")
 
 
 # -- departments ------------------------------------------------------

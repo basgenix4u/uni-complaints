@@ -1,7 +1,7 @@
 # From demo to product: what the real thing needs
 
-**Status:** stages 1 to 3 of section 7 are built and merged. The rest is
-still design. Section 7 records which is which.
+**Status:** stages 1 to 5 of section 7 are built and merged, and stage 6
+in part. The rest is still design. Section 7 records which is which.
 
 You are right that the current build is a working demo rather than a
 product. It assumes one institution with a flat list of departments, and
@@ -18,19 +18,20 @@ I checked the code rather than guessing.
 | Your observation | What the code does now |
 |---|---|
 | Staff must be insiders | ✓ correct — staff are created by an admin, never self-registered |
-| Students from different universities | ✗ registration silently accepts any institution slug, and the form does not even ask |
+| Students from different universities | ✓ **fixed in stage 4.** A searchable directory, and the form asks |
 | Different complaints go to different units | ✓ **fixed in stage 3.** Routing rules, owned by the institution, applied at filing |
 | Faculties differ per university | ✓ **fixed in stage 1.** Faculties and departments are per-institution tables |
 | Students belong to departments | ✓ **fixed in stage 1.** The student register carries faculty, department and level |
-| Non-onboarded schools should be blocked | ◑ partially — it checks the institution exists, but there is no request-to-join path |
+| Non-onboarded schools should be blocked | ✓ **fixed in stage 4.** Refused, and the interest is recorded instead |
 | Should not require a university email | ✓ correct today, any email works |
 | Google sign-in | ✗ not implemented |
-| Email verification | ✗ **none.** Anyone can register claiming any email |
+| Email verification | ✓ **fixed in stage 5.** Confirmed before an account may file |
 
-Two of these were serious. **No routing** meant every complaint landed
-in one undifferentiated pile; that is fixed. **No email verification**
-still means nothing stops someone registering as a student who is not
-one, and it is the next thing worth doing.
+Both of the serious ones are now fixed. **No routing** meant every
+complaint landed in one undifferentiated pile. **No email verification**
+meant nothing stopped someone registering as a student who was not one.
+Google sign-in remains the notable gap, and it is an accelerator on top
+of verification rather than a replacement for it.
 
 ---
 
@@ -304,11 +305,34 @@ Each stage leaves the system working.
 | **1** | Faculties, departments, units as real tables. Student linked to them | Nothing else can be built on free text | **Built** |
 | **2** | Invitations and bulk import for staff | Removes the hand-typing problem | **Built** |
 | **3** | Routing rules, and escalation up the real hierarchy | The core product gap | **Built** |
-| **4** | Institution directory, request-to-join, interest signal | Makes registration honest and captures demand | To do |
-| **5** | Email verification, then Google sign-in | Verification first; Google is an accelerator on top | To do |
-| **6** | Student register import and matric verification | Depends on 1 and 5 | Import built in 1; registration not yet wired to it |
+| **4** | Institution directory, request-to-join, interest signal | Makes registration honest and captures demand | **Built** |
+| **5** | Email verification, then Google sign-in | Verification first; Google is an accelerator on top | **Verification built.** Google sign-in still to do |
+| **6** | Student register import and matric verification | Depends on 1 and 5 | **Built.** Registration now matches against the register |
 | **7** | Onboarding wizard for institution admins | Packages 1 to 6 into something self-service | To do |
 | **8** | Confidential queues, Dean role, appeals | Refinement once the shape is proven | Queues and the Dean built in 2 and 3; appeals to do |
+
+### What stages 4 to 6 actually changed
+
+- A public, searchable institution directory. Universities that have not
+  signed up are listed and flagged, because "we know them, not yet" leads
+  somewhere and "not found" does not.
+- Registering against an institution that has not been onboarded is
+  refused; the student is offered the interest list instead, and the
+  count of who is asking decides who to approach next.
+- The registration form searched a directory rather than asking for a
+  slug nobody outside the project knows. It also previously sent no
+  institution at all, so it could not have worked against the real API.
+- The ten hardcoded faculties shown to every university are gone.
+  Faculty and department come from the institution's own register.
+- Self-registration must confirm its email before filing. Staff who
+  accept an invitation are exempt: the link only ever went there.
+- Verification gates filing rather than signing in, so somebody who has
+  not confirmed can still get in and finish the step.
+- `verification_mode` is now enforced rather than merely stored. A
+  register match is approved outright and inherits faculty and
+  department; no match waits for an administrator rather than being
+  refused, because registers are never complete.
+- A matriculation number is only demanded where it will be checked.
 
 ### What stage 3 actually changed
 

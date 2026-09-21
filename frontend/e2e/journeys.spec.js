@@ -195,6 +195,89 @@ test.describe('staff journey', () => {
   });
 });
 
+test.describe('finding your institution', () => {
+  test('the sign up form searches the directory rather than asking for a slug', async ({
+    page,
+  }) => {
+    await page.goto('/register');
+    await ready(page);
+
+    await page.getByLabel(/your institution/i).fill('Demo');
+
+    await expect(page.getByRole('button', { name: /Demo University/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText('Available').first()).toBeVisible();
+  });
+
+  test('choosing an institution reveals the rest of the form', async ({ page }) => {
+    await page.goto('/register');
+    await ready(page);
+
+    // Nothing personal is asked for until we know where it is going.
+    await expect(page.getByLabel(/^full name/i)).toBeHidden();
+
+    await page.getByLabel(/your institution/i).fill('Demo');
+    await page.getByRole('button', { name: /Demo University/i }).click();
+
+    await expect(page.getByLabel(/^full name/i)).toBeVisible();
+  });
+
+  test('an unknown institution offers to record the request', async ({ page }) => {
+    await page.goto('/register');
+    await ready(page);
+
+    await page.getByLabel(/your institution/i).fill('Nowhere Polytechnic');
+
+    await expect(page.getByRole('button', { name: /ask us to add it/i })).toBeVisible({
+      timeout: 15_000,
+    });
+  });
+
+  test('a request for a new institution is accepted', async ({ page }) => {
+    await page.goto('/register');
+    await ready(page);
+
+    await page.getByLabel(/your institution/i).fill('Nowhere Polytechnic');
+    await page.getByRole('button', { name: /ask us to add it/i }).click();
+
+    await page.getByLabel(/your email/i).fill('hopeful@test.ng');
+    await page.getByRole('button', { name: /tell me when it is ready/i }).click();
+
+    await expect(page.getByText(/we have noted it/i)).toBeVisible({ timeout: 15_000 });
+  });
+});
+
+test.describe('email verification', () => {
+  test('a broken confirmation link explains itself and offers a new one', async ({ page }) => {
+    await page.goto('/verify-email?token=not-a-real-token');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /did not work/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByRole('button', { name: /send me a new link/i })).toBeVisible();
+  });
+
+  test('a confirmation link with no token still offers a way forward', async ({ page }) => {
+    await page.goto('/verify-email');
+    await ready(page);
+
+    await expect(page.getByText(/link is incomplete/i)).toBeVisible();
+    await expect(page.getByLabel(/your email/i)).toBeVisible();
+  });
+
+  test('asking for a new link does not reveal whether an account exists', async ({ page }) => {
+    await page.goto('/verify-email');
+    await ready(page);
+
+    await page.getByLabel(/your email/i).fill('nobody-at-all@test.ng');
+    await page.getByRole('button', { name: /send me a new link/i }).click();
+
+    await expect(page.getByText(/if that address/i)).toBeVisible({ timeout: 15_000 });
+  });
+});
+
 test.describe('routing', () => {
   test('a filed complaint arrives at a named unit without the student choosing one', async ({
     page,
@@ -257,6 +340,14 @@ test.describe('routing', () => {
     await page.goto('/admin/routing');
 
     await expect(page).toHaveURL(/\/student\/dashboard/, { timeout: 15_000 });
+  });
+
+  test('an administrator can reach the registrations queue', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/registrations');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /registrations to check/i })).toBeVisible();
   });
 });
 

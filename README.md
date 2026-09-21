@@ -31,6 +31,43 @@ It is **multi-tenant**: one deployment serves many institutions, each with its o
 | Institution admin | Manages staff, departments, service levels and settings |
 | Platform admin | Provisions institutions across the deployment |
 
+## Signing up
+
+**Finding your institution.** The directory is public and searchable by
+name or by the short form students actually say — UNILAG, BUK. Universities
+that have not signed up are listed too, and flagged: "we know them, they
+are not using this yet" is a different answer from "not found", and it
+leads somewhere. A student can ask for theirs to be added, and the count
+of who is asking is what decides who to approach next.
+
+Registering against an institution that has not been onboarded is
+refused. There would be nobody on the other end to answer the complaint.
+
+**Proving the address.** Every self-registration has to confirm its email
+before it can file. Nothing else stopped somebody opening an account on an
+address that was not theirs, which for a complaints system means a
+grievance carrying a name and a matriculation number landing in a
+stranger's inbox. Staff are exempt: an invitation link only ever went to
+the address it was sent to.
+
+Verification gates **filing**, not signing in. Someone who has not
+confirmed can still get in, see exactly where they stand and finish the
+step, rather than meeting a locked door.
+
+**Proving you study there.** How depends on what the institution can
+support:
+
+| Mode | How a student is confirmed |
+| --- | --- |
+| `register` | Matched against the uploaded student register. A match is approved outright and inherits faculty and department from the institution's own data. No match waits for an administrator rather than being refused — registers are never complete, and a real student should not be turned away by a spreadsheet a week out of date |
+| `manual` | Every registration is reviewed by an administrator |
+| `open` | Anybody with a confirmed address. For institutions with no usable register |
+
+A matriculation number is only asked for where it will actually be
+checked. Requiring one an institution cannot verify is an obstacle that
+proves nothing. A university email is never required: many students never
+get one.
+
 ## Where a complaint goes
 
 A student should not have to work out which office owns their problem;
@@ -109,13 +146,13 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 292 tests
+cd backend && pytest                    # 340 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
 cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
   RATELIMIT_ENABLED=false python run.py &
-cd frontend && npm run test:e2e         # 60 journeys
+cd frontend && npm run test:e2e         # 76 journeys
 ```
 
 The browser suite signs in once per role through the API and replays the
@@ -152,6 +189,8 @@ not produce a weekly email daily.
 | Reset tokens | Only a hash is stored, they expire after an hour, are single use, and requesting a new one retires the old |
 | Uploads | Allow-list of types, file signatures verified against the declared type, generated filenames, stored outside the served tree |
 | File access | Served only through an authorised endpoint, so a guessed URL reveals nothing |
+| Email verification | Self-registration cannot file until the address is confirmed. Only a hash of the token is stored, it expires after three days, is single use, and issuing a new one retires the old |
+| Registration | An institution that has not been onboarded cannot be registered against. Where a register exists, an unmatched registration waits for a person rather than being granted |
 | Private notes | Filtered for students in the API, and students cannot set the flag |
 | Confidential complaints | A report naming a member of staff is kept from that person's own unit. Filtered out of every list, count, chart and export for anyone outside the handling unit, and it cannot be assigned to them or widened by escalation |
 | Spreadsheet exports | Values beginning with an equals sign are prefixed, so a title cannot execute when the file is opened |
@@ -327,17 +366,18 @@ All text meets WCAG 2.2 AA. The primary action measures 6.45:1.
 backend/
   app/
     models/       institution, user, complaint, attachment, message,
-                  academic, routing, invitation
+                  academic, routing, invitation, verification
     routes/       auth, complaints, attachments, dashboard,
                   notifications, admin, platform, invitations,
-                  routing, privacy, tasks
+                  routing, directory, privacy, tasks
     services/     tickets, sla, storage, delivery, notifications,
                   sms, export, thumbnails, privacy, register,
-                  routing, cloudinary_storage, object_storage
+                  routing, directory, verification,
+                  cloudinary_storage, object_storage
     security.py   role checks and tenant scoping
-  tests/          292 tests
+  tests/          340 tests
 frontend/
-  e2e/            60 browser journeys
+  e2e/            76 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin

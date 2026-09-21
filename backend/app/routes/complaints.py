@@ -50,6 +50,14 @@ def paginate(query, page: int, per_page: int):
 @limiter.limit("20 per hour")
 def create_complaint():
     user = g.current_user
+
+    # Verification gates filing rather than signing in, so an unconfirmed
+    # student can still get in and finish the step instead of being left
+    # at an error screen with nowhere to go.
+    allowed, reason = user.can_file_complaints
+    if not allowed:
+        return fail(reason, 403, {"verification_required": True})
+
     payload = request.get_json(silent=True) or {}
     errors = {}
 

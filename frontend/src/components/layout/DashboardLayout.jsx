@@ -3,6 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import VerificationBanner from '../shared/VerificationBanner';
 import useAuthStore from '../../stores/authStore';
 
 const pageVariants = {
@@ -67,6 +68,8 @@ const DashboardLayout = () => {
           onMenuClick={() => setSidebarOpen(true)} 
           title={pageTitle}
         />
+
+        <VerificationBanner />
 
         {/* Page Content */}
         <main className="p-4 sm:p-6 lg:p-8">

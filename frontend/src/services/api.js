@@ -109,11 +109,22 @@ export const authService = {
   forgotPassword: (email) => api.post('/auth/forgot-password', { email }).then(unwrap),
   resetPassword: (token, password) =>
     api.post('/auth/reset-password', { token, password }).then(unwrap),
+  verifyEmail: (token) => api.post('/auth/verify-email', { token }).then(unwrap),
+  resendVerification: (email) =>
+    api.post('/auth/resend-verification', { email }).then(unwrap),
+  verificationStatus: () => api.get('/auth/verification-status').then(unwrap),
 };
 
 export const publicService = {
   institutions: () => api.get('/public/institutions').then(unwrap),
   track: (ticket) => api.get(`/public/track/${encodeURIComponent(ticket)}`).then(unwrap),
+};
+
+export const directoryService = {
+  search: (params) => api.get('/directory/institutions', { params }).then(unwrap),
+  get: (slug) => api.get(`/directory/institutions/${slug}`).then(unwrap),
+  states: () => api.get('/directory/states').then(unwrap),
+  registerInterest: (data) => api.post('/directory/interest', data).then(unwrap),
 };
 
 export const complaintService = {
@@ -244,6 +255,9 @@ export const adminService = {
   departments: () => api.get('/admin/departments').then(unwrap),
   createDepartment: (data) => api.post('/admin/departments', data).then(unwrap),
   updateDepartment: (id, data) => api.put(`/admin/departments/${id}`, data).then(unwrap),
+  registrations: () => api.get('/admin/registrations').then(unwrap),
+  decideRegistration: (id, decision) =>
+    api.put(`/admin/registrations/${id}`, { decision }).then(unwrap),
   settings: () => api.get('/admin/settings').then(unwrap),
   updateSettings: (data) => api.put('/admin/settings', data).then(unwrap),
 };
@@ -262,6 +276,7 @@ export const platformService = {
   toggleInstitution: (id) => api.put(`/platform/institutions/${id}/toggle-active`).then(unwrap),
   stats: () => api.get('/platform/stats').then(unwrap),
   ignored: (days) => api.get('/platform/ignored', { params: { days } }).then(unwrap),
+  demand: () => api.get('/platform/demand').then(unwrap),
 };
 
 export default api;

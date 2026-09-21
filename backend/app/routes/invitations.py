@@ -8,6 +8,7 @@ from flask import Blueprint, current_app, g, request
 from app.extensions import db, limiter
 from app.models.academic import Faculty
 from app.models.institution import Department, Institution
+from app.models.base import utcnow
 from app.models.invitation import Invitation, hash_token
 from app.models.user import INVITABLE_ROLES, ROLE_RANK, User
 from app.routes.auth import EMAIL_RE, fail, ok, validate_password
@@ -397,6 +398,10 @@ def accept():
         full_name=name[:150],
         email=invitation.email,
         role=invitation.role,
+        # Accepting an invitation proves the address: the link only ever
+        # went there. Sending a second email to confirm what has just
+        # been demonstrated would be theatre.
+        email_verified_at=utcnow(),
     )
     user.set_password(password)
     db.session.add(user)

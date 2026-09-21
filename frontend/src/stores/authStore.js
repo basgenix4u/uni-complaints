@@ -62,9 +62,11 @@ const useAuthStore = create(
           
           return { success: true, user };
         } catch (err) {
-          const errorMessage = err.response?.data?.message || 'Registration failed';
-          set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
+          const message = err.response?.data?.message || 'Registration failed';
+          set({ isLoading: false, error: message });
+          // Field errors are passed through so the form can mark the
+          // offending input rather than only showing a toast.
+          return { success: false, error: message, errors: err.response?.data?.errors || {} };
         }
       },
 
