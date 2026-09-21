@@ -37,6 +37,7 @@ const DESTINATIONS = [
   { name: 'Institution settings', to: '/admin/institution', icon: HomeIcon, roles: ['institution_admin', 'platform_admin'] },
   { name: 'Routing: who answers what', to: '/admin/routing', icon: ArrowsRightLeftIcon, roles: ['institution_admin', 'platform_admin'] },
   { name: 'Still waiting: ignored complaints', to: '/admin/ignored', icon: ExclamationTriangleIcon, roles: ['institution_admin', 'platform_admin'] },
+  { name: 'Registrations to check', to: '/admin/registrations', icon: UsersIcon, roles: ['institution_admin', 'platform_admin'] },
   { name: 'Institutions', to: '/platform/institutions', icon: HomeIcon, roles: ['platform_admin'] },
   { name: 'My complaints', to: '/student/complaints', icon: DocumentTextIcon, roles: ['student'] },
   { name: 'File a complaint', to: '/student/complaints/new', icon: DocumentTextIcon, roles: ['student'] },

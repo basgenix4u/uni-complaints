@@ -1,280 +1,256 @@
-import React from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import {
-  EnvelopeIcon,
-  LockClosedIcon,
-  UserIcon,
-  IdentificationIcon,
-  BuildingOfficeIcon,
-  PhoneIcon,
-} from '@heroicons/react/24/outline';
-import { Button, Input, Select } from '../../components/ui';
+import { EnvelopeIcon } from '@heroicons/react/24/outline';
+
+import Button from '../../components/ui/Button';
+import { Input } from '../../components/ui/Field';
+import InstitutionPicker from '../../components/auth/InstitutionPicker';
 import useAuthStore from '../../stores/authStore';
 
-// Validation Schema
-const registerSchema = z.object({
-  full_name: z
-    .string()
-    .min(1, 'Full name is required')
-    .min(3, 'Name must be at least 3 characters'),
-  email: z
-    .string()
-    .min(1, 'Email is required')
-    .email('Please enter a valid email'),
-  // UPDATED: New Regex to support ENG/COE/21/013 format
-  matric_number: z
-    .string()
-    .min(1, 'Matric number is required')
-    .regex(
-      /^[A-Za-z]{2,5}\/[A-Za-z]{2,5}\/\d{2,4}\/\d{3,6}$/, 
-      'Format example: ENG/COE/21/013'
-    ),
-  department: z
-    .string()
-    .min(1, 'Department is required'),
-  faculty: z
-    .string()
-    .min(1, 'Faculty is required'),
-  phone: z
-    .string()
-    .optional(),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-  confirm_password: z
-    .string()
-    .min(1, 'Please confirm your password'),
-}).refine((data) => data.password === data.confirm_password, {
-  message: 'Passwords do not match',
-  path: ['confirm_password'],
-});
-
-const faculties = [
-  { value: 'science', label: 'Science' },
-  { value: 'engineering', label: 'Engineering' },
-  { value: 'arts', label: 'Arts' },
-  { value: 'social_sciences', label: 'Social Sciences' },
-  { value: 'management_sciences', label: 'Management Sciences' },
-  { value: 'law', label: 'Law' },
-  { value: 'medicine', label: 'Medicine & Health Sciences' },
-  { value: 'education', label: 'Education' },
-  { value: 'agriculture', label: 'Agriculture' },
-  { value: 'environmental_sciences', label: 'Environmental Sciences' },
-];
-
-const RegisterPage = () => {
+/**
+ * Registering as a student.
+ *
+ * Three changes from the form this replaces, all of which were lies the
+ * old one told:
+ *
+ * 1. It never sent an institution at all, so registration could not
+ *    succeed against the real API.
+ * 2. It offered ten hardcoded faculties to every university. Faculty and
+ *    department now come from the institution's own register, or are
+ *    left out, rather than being guessed from a fixed list.
+ * 3. A matriculation number is asked for only where it will actually be
+ *    checked. Demanding one an institution cannot verify is an obstacle
+ *    that proves nothing.
+ */
+export default function RegisterPage() {
   const navigate = useNavigate();
   const { register: registerUser, isLoading } = useAuthStore();
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(registerSchema),
-    mode: 'onSubmit', // <--- FIXED: Prevents crash while typing
-    defaultValues: {
-      full_name: '',
-      email: '',
-      matric_number: '',
-      department: '',
-      faculty: '',
-      phone: '',
-      password: '',
-      confirm_password: '',
-    },
+  const [institution, setInstitution] = useState(null);
+  const [form, setForm] = useState({
+    full_name: '',
+    email: '',
+    matric_number: '',
+    phone: '',
+    password: '',
+    confirm_password: '',
   });
+  const [errors, setErrors] = useState({});
+  const [done, setDone] = useState(null);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
-  const watchFaculty = watch('faculty');
-
-  const onSubmit = async (data) => {
-    try {
-      // Remove confirm_password before sending
-      const { confirm_password, ...registerData } = data;
-      
-      const result = await registerUser(registerData);
-      
-      if (result.success) {
-        toast.success('Account created successfully!');
-        navigate('/student/dashboard');
-      } else {
-        toast.error(result.error || 'Registration failed');
-      }
-    } catch (error) {
-      console.error("Registration Error:", error);
-      toast.error("An unexpected error occurred.");
-    }
+  const set = (field) => (event) => {
+    setForm({ ...form, [field]: event.target.value });
+    setErrors((current) => ({ ...current, [field]: undefined }));
   };
+
+  const needsMatric = institution?.verification_mode === 'register';
+
+  const validate = () => {
+    const found = {};
+
+    if (form.full_name.trim().length < 3) found.full_name = 'Enter your full name.';
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email)) {
+      found.email = 'Enter a valid email address.';
+    }
+    if (needsMatric && !form.matric_number.trim()) {
+      found.matric_number = 'Enter your matric number so we can check the student register.';
+    }
+    if (form.matric_number.trim() &&
+        !/^[A-Za-z]{2,5}[\s\-_/]+[A-Za-z]{2,5}[\s\-_/]+\d{2,4}[\s\-_/]+\d{3,6}$/.test(
+          form.matric_number.trim(),
+        )) {
+      found.matric_number = `Check the format, for example ${
+        institution?.matric_example || 'ENG/COE/21/013'
+      }.`;
+    }
+    if (form.password.length < 8) found.password = 'Use at least 8 characters.';
+    else if (!/[A-Z]/.test(form.password)) found.password = 'Include a capital letter.';
+    else if (!/[a-z]/.test(form.password)) found.password = 'Include a small letter.';
+    else if (!/\d/.test(form.password)) found.password = 'Include a number.';
+    if (form.password !== form.confirm_password) {
+      found.confirm_password = 'Those two do not match.';
+    }
+
+    setErrors(found);
+    return Object.keys(found).length === 0;
+  };
+
+  const onSubmit = async (event) => {
+    event.preventDefault();
+
+    if (!institution) {
+      setErrors({ institution: 'Choose your institution first.' });
+      return;
+    }
+    if (!validate()) return;
+
+    const { confirm_password: _ignored, ...rest } = form;
+    const result = await registerUser({
+      ...rest,
+      matric_number: rest.matric_number.trim() || undefined,
+      institution: institution.slug,
+    });
+
+    if (result.success) {
+      // Straight to the confirmation step rather than the dashboard: the
+      // account cannot do anything until the address is verified, and
+      // dropping them somewhere they are blocked would be confusing.
+      setDone(form.email);
+      return;
+    }
+
+    setErrors(result.errors || {});
+    toast.error(result.error || 'We could not create the account.');
+  };
+
+  if (done) {
+    return (
+      <div className="text-center">
+        <EnvelopeIcon className="mx-auto h-12 w-12 text-brand-700" aria-hidden="true" />
+        <h1 className="mt-3 font-display text-2xl font-bold text-ink-900">Check your email.</h1>
+        <p className="mx-auto mt-2 max-w-sm text-ink-600">
+          We sent a confirmation link to <strong>{done}</strong>. Open it to finish setting up your
+          account. It may take a minute, and it is worth checking the spam folder.
+        </p>
+        <Link to="/login" className="mt-6 inline-block">
+          <Button variant="secondary">Back to sign in</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>
-      {/* Header */}
-      <div className="text-center mb-8">
+      <div className="mb-8 text-center">
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-neutral-900 mb-2"
+          className="mb-2 font-display text-3xl font-bold text-ink-900"
         >
-          Create Account
+          Create an account
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-neutral-500"
+          className="text-ink-600"
         >
-          Register to start submitting complaints
+          So your complaint reaches someone who can act on it.
         </motion.p>
       </div>
 
-      {/* Form */}
       <motion.form
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={onSubmit}
         className="space-y-4"
       >
-        {/* Full Name */}
-        <Input
-          label="Full Name"
-          placeholder="Enter your full name"
-          leftIcon={<UserIcon className="w-5 h-5" />}
-          error={errors.full_name?.message}
-          {...register('full_name')}
-        />
+        <InstitutionPicker value={institution} onChange={setInstitution} />
+        {errors.institution && (
+          <p role="alert" className="text-caption font-medium text-[#B91C1C]">
+            {errors.institution}
+          </p>
+        )}
 
-        {/* Email */}
-        <Input
-          label="Email Address"
-          type="email"
-          placeholder="your.email@university.edu.ng"
-          leftIcon={<EnvelopeIcon className="w-5 h-5" />}
-          error={errors.email?.message}
-          {...register('email')}
-        />
+        {institution && (
+          <>
+            <Input
+              label="Full name"
+              placeholder="As it appears on your student record"
+              value={form.full_name}
+              onChange={set('full_name')}
+              error={errors.full_name}
+              required
+            />
 
-        {/* Matric Number - UPDATED */}
-        <Input
-          label="Matric Number"
-          // Placeholder removed as requested
-          leftIcon={<IdentificationIcon className="w-5 h-5" />}
-          error={errors.matric_number?.message}
-          hint="Format: ENG/COE/21/013"
-          {...register('matric_number')}
-        />
+            <Input
+              label="Email address"
+              type="email"
+              placeholder="you@example.com"
+              hint="Any address you actually read. It does not have to be a university one."
+              value={form.email}
+              onChange={set('email')}
+              error={errors.email}
+              required
+            />
 
-        {/* Faculty & Department */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Select
-            label="Faculty"
-            placeholder="Select faculty"
-            options={faculties}
-            value={watchFaculty}
-            onChange={(value) => setValue('faculty', value)}
-            error={errors.faculty?.message}
-          />
+            {needsMatric && (
+              <Input
+                label="Matric number"
+                placeholder={institution.matric_example || 'ENG/COE/21/013'}
+                hint="We check this against your institution's student register."
+                value={form.matric_number}
+                onChange={set('matric_number')}
+                error={errors.matric_number}
+                required
+              />
+            )}
 
-          <Input
-            label="Department"
-            placeholder="e.g., Computer Science"
-            leftIcon={<BuildingOfficeIcon className="w-5 h-5" />}
-            error={errors.department?.message}
-            {...register('department')}
-          />
-        </div>
+            <Input
+              label="Phone number"
+              type="tel"
+              placeholder="08012345678"
+              hint="Optional. Used only to text you if a complaint is escalated."
+              value={form.phone}
+              onChange={set('phone')}
+              error={errors.phone}
+            />
 
-        {/* Phone */}
-        <Input
-          label="Phone Number (Optional)"
-          type="tel"
-          placeholder="e.g., 08012345678"
-          leftIcon={<PhoneIcon className="w-5 h-5" />}
-          error={errors.phone?.message}
-          {...register('phone')}
-        />
+            <Input
+              label="Password"
+              type="password"
+              hint="At least 8 characters, with a capital, a small letter and a number."
+              value={form.password}
+              onChange={set('password')}
+              error={errors.password}
+              required
+            />
 
-        {/* Password */}
-        <Input
-          label="Password"
-          type="password"
-          placeholder="Create a strong password"
-          leftIcon={<LockClosedIcon className="w-5 h-5" />}
-          error={errors.password?.message}
-          hint="Min 8 chars, 1 uppercase, 1 lowercase, 1 number"
-          {...register('password')}
-        />
+            <Input
+              label="Confirm password"
+              type="password"
+              value={form.confirm_password}
+              onChange={set('confirm_password')}
+              error={errors.confirm_password}
+              required
+            />
 
-        {/* Confirm Password */}
-        <Input
-          label="Confirm Password"
-          type="password"
-          placeholder="Confirm your password"
-          leftIcon={<LockClosedIcon className="w-5 h-5" />}
-          error={errors.confirm_password?.message}
-          {...register('confirm_password')}
-        />
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                required
+                className="mt-1 h-4 w-4 rounded border-line text-brand-700 focus:outline-2 focus:outline-offset-2 focus:outline-brand-700"
+              />
+              <span className="text-sm text-ink-600">
+                I agree to the{' '}
+                <Link to="/privacy" className="font-medium text-brand-700 hover:underline">
+                  privacy policy
+                </Link>
+                .
+              </span>
+            </label>
 
-        {/* Terms */}
-        <label className="flex items-start gap-3 cursor-pointer">
-          <input
-            type="checkbox"
-            required
-            className="w-4 h-4 mt-0.5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
-          />
-          <span className="text-sm text-neutral-600">
-            I agree to the{' '}
-            <Link to="/terms" className="text-primary-600 hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link to="/privacy" className="text-primary-600 hover:underline">
-              Privacy Policy
-            </Link>
-          </span>
-        </label>
-
-        {/* Submit Button */}
-        <Button
-          type="submit"
-          size="lg"
-          fullWidth
-          loading={isLoading}
-          className="mt-6"
-        >
-          Create Account
-        </Button>
+            <Button type="submit" size="lg" loading={isLoading} className="mt-2 w-full">
+              Create account
+            </Button>
+          </>
+        )}
       </motion.form>
 
-      {/* Login Link */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="text-center mt-6 text-neutral-600"
+        className="mt-6 text-center text-ink-600"
       >
         Already have an account?{' '}
-        <Link
-          to="/login"
-          className="text-primary-600 hover:text-primary-700 font-semibold"
-        >
+        <Link to="/login" className="font-semibold text-brand-700 hover:underline">
           Sign in
         </Link>
       </motion.p>
     </div>
   );
-};
-
-export default RegisterPage;
+}

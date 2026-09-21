@@ -13,6 +13,7 @@ const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const TrackPage = lazy(() => import('./pages/public/TrackPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
 const PrivacyPage = lazy(() => import('./pages/account/PrivacyPage'));
 
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
@@ -31,6 +32,7 @@ const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const InstitutionSettings = lazy(() => import('./pages/admin/InstitutionSettings'));
 const RoutingRules = lazy(() => import('./pages/admin/RoutingRules'));
 const IgnoredComplaints = lazy(() => import('./pages/admin/IgnoredComplaints'));
+const PendingRegistrations = lazy(() => import('./pages/admin/PendingRegistrations'));
 const PlatformInstitutions = lazy(() => import('./pages/platform/PlatformInstitutions'));
 
 // Shared
@@ -94,6 +96,7 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
             </Route>
 
             {/* Student Routes */}
@@ -142,6 +145,7 @@ function App() {
               <Route path="/admin/institution" element={<InstitutionSettings />} />
               <Route path="/admin/routing" element={<RoutingRules />} />
               <Route path="/admin/ignored" element={<IgnoredComplaints />} />
+              <Route path="/admin/registrations" element={<PendingRegistrations />} />
             </Route>
 
             {/* Platform owner */}

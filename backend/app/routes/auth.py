@@ -12,6 +12,13 @@ from app.models.reset import PasswordReset, hash_token
 from app.models.user import User, normalise_matric, normalise_phone
 from app.security import auth_required, load_current_user
 from app.services.delivery import queue_email
+from app.services.register import find_for_registration
+from app.services.verification import (
+    decide_registration,
+    resend_verification,
+    send_verification,
+    verify_token,
+)
 
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
@@ -74,7 +81,23 @@ def register():
     institution = Institution.query.filter_by(slug=institution_slug, is_active=True).first()
     if not institution:
         errors["institution"] = "We could not find that institution."
+    elif not institution.is_onboarded:
+        # A student from a university that has not signed up cannot be
+        # given an account: there would be nobody on the other end to
+        # answer them. Their interest is worth recording instead.
+        return fail(
+            f"{institution.name} is not using Resolve yet. Ask us to invite them, "
+            "and we will tell you when they are.",
+            409,
+            {"institution": "Not using Resolve yet.", "can_register_interest": True},
+        )
 
+    # A matriculation number is only demanded where it will actually be
+    # checked. Requiring one an institution cannot verify is an obstacle
+    # that proves nothing.
+    needs_matric = bool(institution and institution.verification_mode == "register")
+    if needs_matric and not matric:
+        errors["matric_number"] = "Enter your matric number so we can check the student register."
     if matric and not MATRIC_RE.match(matric):
         errors["matric_number"] = "Check the format, for example ENG/COE/21/013."
 
@@ -86,6 +109,17 @@ def register():
 
     if matric and User.query.filter_by(institution_id=institution.id, matric_number=matric).first():
         return fail("That matric number is already registered.", 409)
+
+    record = find_for_registration(institution, matric) if matric else None
+    if record and record.claimed_by_user_id:
+        # Somebody has already registered against this entry. Refused
+        # rather than queued, because one of the two is not who they say
+        # they are and an administrator cannot tell which from a form.
+        return fail(
+            "That matric number is already registered. If this is yours, contact your "
+            "institution.",
+            409,
+        )
 
     user = User(
         institution_id=institution.id,
@@ -99,7 +133,19 @@ def register():
     )
     user.set_password(password)
     db.session.add(user)
+    db.session.flush()
+
+    user.approval_status = decide_registration(institution, user, record)
+    send_verification(user, institution)
     db.session.commit()
+
+    if user.approval_status == "pending":
+        message = (
+            "Account created. Confirm your email, and your institution will check your "
+            "registration before you can file a complaint."
+        )
+    else:
+        message = "Account created. Confirm your email to start filing complaints."
 
     access, refresh = issue_tokens(user)
     return ok(
@@ -108,8 +154,9 @@ def register():
             "institution": institution.to_dict(),
             "access_token": access,
             "refresh_token": refresh,
+            "verification_required": True,
         },
-        "Account created.",
+        message,
         201,
     )
 
@@ -317,3 +364,76 @@ def reset_password():
     db.session.commit()
 
     return ok(message="Your password has been changed. You can sign in with it now.")
+
+
+@bp.post("/verify-email")
+@limiter.limit("20 per hour")
+def verify_email():
+    """Confirm an address from the emailed link."""
+    payload = request.get_json(silent=True) or {}
+    token = (payload.get("token") or "").strip()
+
+    if not token:
+        return fail("That link is incomplete. Use the one from the email.", 400)
+
+    user, error = verify_token(token)
+    if error:
+        return fail(error, 400)
+
+    if user.approval_status == "pending":
+        return ok(
+            {"user": user.to_dict(), "approval_status": "pending"},
+            "Email confirmed. Your institution is now checking your registration.",
+        )
+
+    return ok(
+        {"user": user.to_dict(), "approval_status": user.approval_status},
+        "Email confirmed. You can file a complaint now.",
+    )
+
+
+@bp.post("/resend-verification")
+@limiter.limit("5 per hour")
+def resend_verification_email():
+    """Send the confirmation link again.
+
+    Answers the same way whether or not the address is on file, so it
+    cannot be used to discover who holds an account.
+    """
+    payload = request.get_json(silent=True) or {}
+    email = (payload.get("email") or "").strip().lower()
+
+    confirmation = (
+        "If that address needs confirming, a new link is on its way. "
+        "Check the spam folder too."
+    )
+
+    if not EMAIL_RE.match(email):
+        return ok(message=confirmation)
+
+    user = User.query.filter_by(email=email, is_active=True).first()
+    if not user:
+        return ok(message=confirmation)
+
+    sent, detail = resend_verification(user, user.institution)
+    # A genuine rate limit is worth saying out loud: it tells the person
+    # to wait rather than to keep pressing.
+    return ok(message=detail if not sent else confirmation)
+
+
+@bp.get("/verification-status")
+@auth_required()
+def verification_status():
+    """Where this account stands, for the banner in the interface."""
+    user = g.current_user
+    allowed, reason = user.can_file_complaints
+
+    return ok(
+        {
+            "email": user.email,
+            "is_verified": user.is_verified,
+            "approval_status": user.approval_status,
+            "can_file": allowed,
+            "reason": reason,
+        }
+    )

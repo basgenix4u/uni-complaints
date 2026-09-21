@@ -32,6 +32,7 @@ from app.models.invitation import Invitation  # noqa: F401
 from app.models.message import OutboundMessage  # noqa: F401
 from app.models.reset import PasswordReset  # noqa: F401
 from app.models.routing import DEFAULT_ROUTING, DEFAULT_UNITS, RoutingRule  # noqa: F401
+from app.models.verification import EmailVerification  # noqa: F401
 from app.models.user import (  # noqa: F401
     INVITABLE_ROLES,
     ROLES,
@@ -54,6 +55,7 @@ __all__ = [
     "Department",
     "OutboundMessage",
     "PasswordReset",
+    "EmailVerification",
     "User",
     "Complaint",
     "Response",
