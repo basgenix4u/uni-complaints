@@ -59,6 +59,40 @@ is right for a database of its own.
 
 ---
 
+## Status: applied to the ALIMS project
+
+The schema is live. Recorded here so the state is not guesswork.
+
+| | |
+|---|---|
+| Project | ALIMS Project, `eu-central-1` |
+| Schema | `resolve` |
+| Tables | 12, including the Alembic version table |
+| Revision | `0001_initial` |
+| Row level security | Enabled on all 12 tables |
+| PostgREST exposure | Not exposed. `public, graphql_public` only |
+| Grants | Revoked from `anon` and `authenticated` |
+
+The existing application was unaffected: `public` held 38 tables before
+and 38 after. Three `users` tables now coexist without interfering, which
+is the whole point of the arrangement:
+
+```
+auth.users       35 columns   Supabase's own
+public.users      4 columns   the existing application
+resolve.users    16 columns   this one
+```
+
+### Why row level security is on
+
+The application connects as the database owner over Postgres directly,
+which bypasses RLS entirely, so it changes nothing about how this runs.
+It is enabled because if the schema is ever exposed over PostgREST by
+mistake, the `anon` and `authenticated` roles then get nothing rather
+than everything. The grants are revoked for the same reason.
+
+---
+
 ## What you need to give me, or run yourself
 
 The key in the shared document is `sb_secret_…`, which is a **project API
