@@ -35,6 +35,7 @@ const RoutingRules = lazy(() => import('./pages/admin/RoutingRules'));
 const IgnoredComplaints = lazy(() => import('./pages/admin/IgnoredComplaints'));
 const PendingRegistrations = lazy(() => import('./pages/admin/PendingRegistrations'));
 const StaffInvitations = lazy(() => import('./pages/admin/StaffInvitations'));
+const AcademicStructure = lazy(() => import('./pages/admin/AcademicStructure'));
 const PlatformInstitutions = lazy(() => import('./pages/platform/PlatformInstitutions'));
 
 // Shared
@@ -151,6 +152,7 @@ function App() {
               <Route path="/admin/routing" element={<RoutingRules />} />
               <Route path="/admin/ignored" element={<IgnoredComplaints />} />
               <Route path="/admin/registrations" element={<PendingRegistrations />} />
+              <Route path="/admin/academic" element={<AcademicStructure />} />
             </Route>
 
             {/* Platform owner */}

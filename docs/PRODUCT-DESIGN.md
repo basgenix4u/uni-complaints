@@ -307,7 +307,7 @@ Each stage leaves the system working.
 | **3** | Routing rules, and escalation up the real hierarchy | The core product gap | **Built** |
 | **4** | Institution directory, request-to-join, interest signal | Makes registration honest and captures demand | **Built** |
 | **5** | Email verification, then Google sign-in | Verification first; Google is an accelerator on top | **Verification built.** Google sign-in still to do |
-| **6** | Student register import and matric verification | Depends on 1 and 5 | **Built.** Registration now matches against the register |
+| **6** | Student register import and matric verification | Depends on 1 and 5 | **Built.** Structure and register are managed from the interface |
 | **7** | Onboarding wizard for institution admins | Packages 1 to 6 into something self-service | To do |
 | **8** | Confidential queues, Dean role, appeals | Refinement once the shape is proven | Queues and the Dean built in 2 and 3; appeals to do |
 
@@ -334,6 +334,37 @@ Seven invitation endpoints had shipped with no screen at all, so the only
 way to create an officer was a curl request. Routing complaints to units
 with nobody in them is not much use, which made this a prerequisite for
 stage 3 working in practice rather than only in tests.
+
+### Closing the gap that made stage 6 a claim rather than a feature
+
+An audit against the running application found the academic tables and
+the import logic had no HTTP route at all. `verification_mode="register"`
+— the documented default and the strongest way to verify a student —
+therefore degraded in silence: every registration at every institution
+fell through to manual approval, because the register could never be
+populated. The trace showed `POST /api/admin/sessions`,
+`/faculties` and `/register/import` all returning 404.
+
+Now reachable, and covered end to end:
+
+- Sessions, faculties and academic departments, individually or from a
+  pasted tree.
+- Register import with a dry run that is not skippable, because the file
+  decides who may sign up.
+- A searchable register that tolerates how a matriculation number is
+  actually typed.
+- Correcting one row, and releasing a wrongly claimed one — without
+  which the real student is locked out permanently.
+
+Two concurrency defects were found by the same audit and fixed. The
+ticket counter was a read-modify-write in Python, so two students filing
+at the same moment both read the same value; the unique constraint then
+turned the collision into a server error. Status transitions were checked
+in Python and written later, so two officers could both pass the check
+and the second silently overwrote the first — a complaint resolved by one
+and declined by the other ended as whichever committed last. Both are now
+single atomic statements, and the losing writer is told rather than
+ignored.
 
 ### What stages 4 to 6 actually changed
 

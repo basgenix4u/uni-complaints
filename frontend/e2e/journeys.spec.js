@@ -278,6 +278,69 @@ test.describe('email verification', () => {
   });
 });
 
+test.describe('academic structure', () => {
+  test('an administrator can reach the structure screen', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/academic');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /academic structure/i })).toBeVisible();
+    await expect(page.getByLabel(/add a faculty/i)).toBeVisible();
+  });
+
+  test('a faculty can be added and appears immediately', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/academic');
+    await ready(page);
+
+    const name = `Faculty of Testing ${Date.now()}`;
+    await page.getByLabel(/add a faculty/i).fill(name);
+    await page.getByRole('button', { name: /^add$/i }).click();
+
+    await expect(page.getByText(name)).toBeVisible({ timeout: 15_000 });
+  });
+
+  test('the register tab shows what state the register is in', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/academic');
+    await ready(page);
+
+    await page.getByRole('tab', { name: /student register/i }).click();
+
+    await expect(page.getByText(/in the register/i)).toBeVisible();
+    await expect(page.getByLabel(/the register, as a csv/i)).toBeVisible();
+  });
+
+  test('importing is blocked until the file has been checked', async ({ page }) => {
+    // This decides who may sign up, so it is not an action to take blind.
+    await signIn(page, ADMIN);
+    await page.goto('/admin/academic');
+    await ready(page);
+
+    await page.getByRole('tab', { name: /student register/i }).click();
+
+    await expect(page.getByRole('button', { name: /^import/i })).toBeDisabled();
+    await expect(page.getByRole('button', { name: /check the file/i })).toBeDisabled();
+  });
+
+  test('sessions can be opened and one is marked current', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/academic');
+    await ready(page);
+
+    await page.getByRole('tab', { name: /sessions/i }).click();
+
+    await expect(page.getByLabel(/open a session/i)).toBeVisible();
+  });
+
+  test('a student cannot reach the academic structure', async ({ page }) => {
+    await signIn(page, STUDENT);
+    await page.goto('/admin/academic');
+
+    await expect(page).toHaveURL(/\/student\/dashboard/, { timeout: 15_000 });
+  });
+});
+
 test.describe('getting staff in', () => {
   test('an administrator can reach the invitation screen', async ({ page }) => {
     await signIn(page, ADMIN);

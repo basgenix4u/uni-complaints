@@ -1,6 +1,7 @@
 """Complaint endpoints for students and staff."""
 
 from flask import Blueprint, g, jsonify, request
+from sqlalchemy.orm import joinedload
 
 from app.extensions import db, limiter
 from app.models.complaint import (
@@ -175,7 +176,15 @@ def list_complaints():
             Complaint.status.notin_(("resolved", "closed", "declined")),
         )
 
-    query = query.order_by(Complaint.created_at.desc())
+    # to_dict() reads the department, the student and the assignee for
+    # every row, which is three extra queries per complaint on a list of
+    # fifty. Loading them alongside turns fifty-one round trips into one.
+    query = query.options(
+        joinedload(Complaint.department),
+        joinedload(Complaint.student),
+        joinedload(Complaint.assigned_to),
+    ).order_by(Complaint.created_at.desc())
+
     result, meta = paginate(
         query, request.args.get("page", 1, type=int), request.args.get("per_page", 10, type=int)
     )
@@ -295,8 +304,30 @@ def update_status(complaint_id):
                     {"note": "Explain how it was resolved."})
 
     previous = complaint.status
-    complaint.status = new_status
     now = utcnow()
+
+    # The check above ran against a value read moments ago. Two officers
+    # working the same queue can both pass it and both write, and the
+    # second silently overwrites the first — a complaint resolved by one
+    # and declined by the other ends as whichever committed last.
+    #
+    # Re-asserting the old status inside the UPDATE closes that window:
+    # the database matches zero rows if anything moved in between, and
+    # the loser is told rather than ignored.
+    changed = (
+        db.session.query(Complaint)
+        .filter(Complaint.id == complaint.id, Complaint.status == previous)
+        .update({Complaint.status: new_status}, synchronize_session=False)
+    )
+
+    if not changed:
+        db.session.rollback()
+        return fail(
+            "Somebody else updated this complaint a moment ago. Reload it and try again.",
+            409,
+        )
+
+    complaint.status = new_status
 
     if new_status == "acknowledged":
         complaint.acknowledged_at = now
