@@ -21,11 +21,33 @@ def _random_block(length: int = 4) -> str:
 def generate_ticket_number(institution) -> str:
     """Allocate the next ticket number for an institution.
 
-    The sequence is incremented in the database so concurrent submissions
-    cannot receive the same number.
+    The increment is an UPDATE ... SET n = n + 1 evaluated by the
+    database, not a read in Python followed by a write. Two students
+    filing at the same moment previously both read the same value and
+    both wrote value + 1, so the sequence advanced once for two
+    complaints; the unique constraint then rejected the second, and the
+    student saw a server error instead of a receipt.
+
+    RETURNING gives the post-increment value in the same statement on
+    PostgreSQL. SQLite has no RETURNING in this path, so the row is read
+    back afterwards — safe there because its writes are serialised.
     """
-    institution.ticket_sequence = (institution.ticket_sequence or 0) + 1
-    db.session.flush()
+    from app.models.institution import Institution
+
+    updated = (
+        db.session.query(Institution)
+        .filter(Institution.id == institution.id)
+        .update(
+            {Institution.ticket_sequence: Institution.ticket_sequence + 1},
+            synchronize_session=False,
+        )
+    )
+    if not updated:
+        raise RuntimeError(f"institution {institution.id} disappeared while filing")
+
+    # The in-memory object still holds the pre-update value.
+    db.session.refresh(institution, ["ticket_sequence"])
+
     sequence = institution.ticket_sequence % 10000
     return f"{institution.code}-{_random_block()}-{sequence:04d}"
 

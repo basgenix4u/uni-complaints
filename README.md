@@ -62,7 +62,7 @@ support:
 
 | Mode | How a student is confirmed |
 | --- | --- |
-| `register` | Matched against the uploaded student register. A match is approved outright and inherits faculty and department from the institution's own data. No match waits for an administrator rather than being refused — registers are never complete, and a real student should not be turned away by a spreadsheet a week out of date |
+| `register` | Matched against the student register uploaded under **Academic structure**. A match is approved outright and inherits faculty and department from the institution's own data. No match waits for an administrator rather than being refused — registers are never complete, and a real student should not be turned away by a spreadsheet a week out of date |
 | `manual` | Every registration is reviewed by an administrator |
 | `open` | Anybody with a confirmed address. For institutions with no usable register |
 
@@ -149,13 +149,13 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 353 tests
+cd backend && pytest                    # 390 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
 cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
   RATELIMIT_ENABLED=false python run.py &
-cd frontend && npm run test:e2e         # 88 journeys
+cd frontend && npm run test:e2e         # 100 journeys
 ```
 
 The browser suite signs in once per role through the API and replays the
@@ -372,15 +372,15 @@ backend/
                   academic, routing, invitation, verification
     routes/       auth, complaints, attachments, dashboard,
                   notifications, admin, platform, invitations,
-                  routing, directory, privacy, tasks
+                  routing, directory, academic, privacy, tasks
     services/     tickets, sla, storage, delivery, notifications,
                   sms, export, thumbnails, privacy, register,
                   routing, directory, verification,
                   cloudinary_storage, object_storage
     security.py   role checks and tenant scoping
-  tests/          353 tests
+  tests/          390 tests
 frontend/
-  e2e/            88 browser journeys
+  e2e/            100 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin

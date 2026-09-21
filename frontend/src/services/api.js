@@ -264,6 +264,42 @@ export const adminService = {
   updateSettings: (data) => api.put('/admin/settings', data).then(unwrap),
 };
 
+export const academicService = {
+  sessions: () => api.get('/academic/sessions').then(unwrap),
+  createSession: (data) => api.post('/academic/sessions', data).then(unwrap),
+  setCurrentSession: (id) => api.put(`/academic/sessions/${id}/current`).then(unwrap),
+
+  faculties: () => api.get('/academic/faculties').then(unwrap),
+  createFaculty: (data) => api.post('/academic/faculties', data).then(unwrap),
+  updateFaculty: (id, data) => api.put(`/academic/faculties/${id}`, data).then(unwrap),
+  createDepartment: (facultyId, data) =>
+    api.post(`/academic/faculties/${facultyId}/departments`, data).then(unwrap),
+
+  /** Both imports take a spreadsheet, so pasted text becomes one. */
+  importStructure: ({ csv, dry_run }) => {
+    const form = new FormData();
+    form.append('file', new Blob([csv], { type: 'text/csv' }), 'structure.csv');
+    form.append('dry_run', dry_run ? 'true' : 'false');
+    return api
+      .post('/academic/structure/bulk', form, { headers: { 'Content-Type': undefined } })
+      .then(unwrap);
+  },
+
+  registerSummary: () => api.get('/academic/register/summary').then(unwrap),
+  register: (params) => api.get('/academic/register', { params }).then(unwrap),
+  importRegister: ({ file, sessionId, dry_run }) => {
+    const form = new FormData();
+    form.append('file', file);
+    if (sessionId) form.append('session_id', sessionId);
+    form.append('dry_run', dry_run ? 'true' : 'false');
+    return api
+      .post('/academic/register/import', form, { headers: { 'Content-Type': undefined } })
+      .then(unwrap);
+  },
+  updateRecord: (id, data) => api.put(`/academic/register/${id}`, data).then(unwrap),
+  releaseRecord: (id) => api.delete(`/academic/register/${id}`).then(unwrap),
+};
+
 export const invitationService = {
   list: (params) => api.get('/invitations', { params }).then(unwrap),
   create: (data) => api.post('/invitations', data).then(unwrap),
