@@ -1,0 +1,69 @@
+name: Scheduled tasks
+
+# Drives the work a hosting scheduler would normally run: escalating
+# complaints past their deadline, delivering queued email and texts, and
+# applying each institution's retention period.
+#
+# Scheduled workflows are free on public repositories, so this keeps a
+# small deployment at no cost. The request also wakes a sleeping free
+# service, so waking and working are the same call.
+
+on:
+  schedule:
+    # Every fifteen minutes. GitHub queues scheduled runs and may delay
+    # them under load, so treat this as approximate. Escalation only
+    # needs to be timely to the hour, and every job is idempotent.
+    - cron: "*/15 * * * *"
+
+  # Lets the jobs be run by hand from the Actions tab, which is the
+  # quickest way to confirm the setup works.
+  workflow_dispatch:
+
+concurrency:
+  # A delayed run must not overlap the next one.
+  group: scheduled-tasks
+  cancel-in-progress: false
+
+jobs:
+  run:
+    name: Run due work
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Wake the service and run every job
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          TASK_TOKEN: ${{ secrets.TASK_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${API_URL:-}" ] || [ -z "${TASK_TOKEN:-}" ]; then
+            echo "API_URL and TASK_TOKEN must be set as repository secrets."
+            exit 1
+          fi
+
+          # A sleeping free service takes around fifty seconds to start,
+          # so the first attempt is expected to fail. Retry rather than
+          # treating a cold start as an error.
+          echo "Waking the service"
+          for attempt in $(seq 1 12); do
+            if curl -fsS --max-time 20 "${API_URL}/api/health" > /dev/null 2>&1; then
+              echo "Awake after ${attempt} attempt(s)"
+              break
+            fi
+            if [ "${attempt}" -eq 12 ]; then
+              echo "Service did not wake within the allowed time."
+              exit 1
+            fi
+            sleep 10
+          done
+
+          # One request runs everything. On a sleeping host separate
+          # calls would each pay the wake-up cost again.
+          echo "Running scheduled work"
+          response=$(curl -fsS --max-time 120 -X POST \
+            -H "X-Task-Token: ${TASK_TOKEN}" \
+            "${API_URL}/api/tasks/all")
+
+          echo "${response}" | python3 -m json.tool
