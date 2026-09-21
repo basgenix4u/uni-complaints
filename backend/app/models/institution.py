@@ -40,6 +40,28 @@ class Institution(TimestampMixin, db.Model):
     # Zero disables the purge, which is a deliberate choice an institution
     # has to make rather than a default that quietly keeps data forever.
     retention_months = db.Column(db.Integer, default=0, nullable=False)
+
+    # How a person proves they are a student here.
+    #
+    #   register  matched against the uploaded student register. The
+    #             strongest option, and the default, because it also
+    #             fills in faculty, department and level.
+    #   open      any email, confirmed by a link. For institutions
+    #             without a usable register.
+    #   manual    an administrator approves each registration.
+    #
+    # Requiring a university email is deliberately not an option on its
+    # own: many students never receive one.
+    verification_mode = db.Column(db.String(20), default="register", nullable=False)
+
+    # Matriculation formats differ between institutions, so the pattern
+    # is data rather than a single regex in code.
+    matric_pattern = db.Column(db.String(200))
+    matric_example = db.Column(db.String(60))
+
+    # Shown to a student whose institution is not yet using the service,
+    # and counted as demand.
+    is_onboarded = db.Column(db.Boolean, default=False, nullable=False)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
     ticket_sequence = db.Column(db.Integer, default=0, nullable=False)
@@ -62,6 +84,7 @@ class Institution(TimestampMixin, db.Model):
             "logo_url": self.logo_url,
             "brand_hue": self.brand_hue,
             "is_active": self.is_active,
+            "is_onboarded": self.is_onboarded,
         }
         if include_settings:
             data.update(
@@ -74,6 +97,9 @@ class Institution(TimestampMixin, db.Model):
                     "working_hours_end": self.working_hours_end,
                     "allow_anonymous": self.allow_anonymous,
                     "retention_months": self.retention_months,
+                    "verification_mode": self.verification_mode,
+                    "matric_pattern": self.matric_pattern,
+                    "matric_example": self.matric_example,
                 }
             )
         return data

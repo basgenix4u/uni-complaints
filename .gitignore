@@ -59,3 +59,6 @@ media/
 /frontend/playwright-report/
 /frontend/blob-report/
 /frontend/.playwright/
+
+# Test upload artefacts
+/backend/uploads_test/
