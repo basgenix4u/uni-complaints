@@ -92,12 +92,14 @@ services:
       TERMII_API_KEY: ${TERMII_API_KEY:-}
     volumes:
       - uploads:/app/uploads
-    # Escalation every 30 minutes, delivery every 5, purge once a day.
+    # Escalation every 30 minutes, delivery every 5, purge and the ignored
+    # report once a day. The report enforces its own weekly interval.
     command: >
       sh -c 'while true; do
         flask send-queue || true;
         [ $$(( $$(date +%s) / 1800 % 1 )) -eq 0 ] && flask escalate || true;
         [ "$$(date +%H%M)" = "0200" ] && flask purge-expired || true;
+        [ "$$(date +%H%M)" = "0700" ] && flask report-ignored || true;
         sleep 300;
       done'
 

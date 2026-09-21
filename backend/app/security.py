@@ -94,9 +94,63 @@ def db_false():
 def can_view_complaint(user, complaint) -> bool:
     if user.institution_id != complaint.institution_id and user.role != "platform_admin":
         return False
-    if user.is_staff:
+
+    if not user.is_staff:
+        return complaint.student_id == user.id
+
+    if not getattr(complaint, "is_confidential", False):
         return True
-    return complaint.student_id == user.id
+
+    # A harassment report naming a lecturer must not be readable by that
+    # lecturer's own colleagues, so a confidential complaint is limited to
+    # the handling unit, whoever owns it, and the institution's officers.
+    if user.role in ("institution_admin", "platform_admin"):
+        return True
+    if complaint.assigned_to_id == user.id:
+        return True
+    return bool(complaint.department_id) and user.department_id == complaint.department_id
+
+
+def visible_complaints():
+    """Complaints the caller may read, scoped to their institution.
+
+    Every list, count, chart and export goes through this. Filtering
+    after the fact would still leak a confidential report through a
+    total, and a total is enough to tell a department that one of its
+    own has been reported.
+    """
+    from app.models.complaint import Complaint
+
+    return tenant_query(Complaint).filter(confidential_filter(g.current_user))
+
+
+def confidential_filter(user):
+    """Restrict a complaint query to what this person may read.
+
+    Applied to every list and aggregate rather than filtering after the
+    fact, so a confidential report cannot leak through a count, a chart
+    or an export even where the rows themselves are never rendered.
+    """
+    from sqlalchemy import or_
+
+    from app.models.complaint import Complaint
+
+    if not user.is_staff:
+        return Complaint.student_id == user.id
+    if user.role in ("institution_admin", "platform_admin"):
+        return true_()
+
+    permitted = [Complaint.is_confidential.is_(False), Complaint.assigned_to_id == user.id]
+    if user.department_id:
+        permitted.append(Complaint.department_id == user.department_id)
+
+    return or_(*permitted)
+
+
+def true_():
+    from sqlalchemy import true
+
+    return true()
 
 
 def can_modify_complaint(user, complaint) -> bool:

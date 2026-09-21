@@ -78,6 +78,9 @@ def seed_routing(institution) -> int:
     is far easier than building the table from scratch, and an
     institution that never reviews it still has working routing rather
     than none.
+
+    Flushes but does not commit, so provisioning an institution, its
+    units, its routing and its first administrator stays one transaction.
     """
     units = {
         d.slug: d
@@ -107,7 +110,7 @@ def seed_routing(institution) -> int:
         )
         created += 1
 
-    db.session.commit()
+    db.session.flush()
     return created
 
 
@@ -137,3 +140,99 @@ def ignored_complaints(institution, days: int = 7):
     )
 
     return [c for c in rows if as_aware(c.escalated_at) and as_aware(c.escalated_at) < cutoff]
+
+
+# Days between reports. Weekly, because a report that arrives daily is a
+# report nobody opens.
+REPORT_INTERVAL_DAYS = 7
+
+
+def report_ignored(institution, days: int = 7) -> dict:
+    """Email the institution's head the list of complaints it has ignored.
+
+    Sent to the institution administrators rather than to the unit that
+    failed, because by this point the unit has already been told three
+    times and telling it a fourth is not the remedy.
+
+    Returns a summary rather than sending nothing when the list is empty:
+    an institution with no ignored complaints does not need a weekly
+    email saying so.
+    """
+    from app.models.user import User
+    from app.services.delivery import queue_email
+
+    rows = ignored_complaints(institution, days=days)
+    if not rows:
+        return {"institution": institution.code, "ignored": 0, "notified": 0}
+
+    heads = User.query.filter(
+        User.institution_id == institution.id,
+        User.role == "institution_admin",
+        User.is_active.is_(True),
+    ).all()
+
+    lines = [
+        f"{c.ticket_number}  {c.category.replace('_', ' ')}  "
+        f"filed {c.created_at.strftime('%d %b %Y') if c.created_at else 'unknown'}"
+        for c in rows[:50]
+    ]
+    if len(rows) > 50:
+        lines.append(f"...and {len(rows) - 50} more.")
+
+    body = (
+        f"{len(rows)} complaint(s) at {institution.name} have been escalated to the top of "
+        f"the institution and are still unanswered after {days} days.\n\n"
+        + "\n".join(lines)
+        + "\n\nEach one is a student still waiting. Sign in to Resolve to see the detail."
+    )
+
+    for head in heads:
+        queue_email(
+            institution.id,
+            head.email,
+            f"{len(rows)} complaint(s) still unanswered at {institution.name}",
+            body,
+            user_id=head.id,
+        )
+
+    db.session.commit()
+    return {"institution": institution.code, "ignored": len(rows), "notified": len(heads)}
+
+
+def report_ignored_everywhere(days: int = 7, force: bool = False) -> dict:
+    """Run the ignored report for every active institution.
+
+    Driven by a scheduler that fires every few minutes, so the interval
+    is enforced here rather than by the timer. `force` is for an
+    administrator asking for the report now.
+    """
+    from datetime import timedelta
+
+    from app.models.base import as_aware, utcnow
+    from app.models.institution import Institution
+
+    now = utcnow()
+    cutoff = now - timedelta(days=REPORT_INTERVAL_DAYS)
+
+    institutions = 0
+    complaints = 0
+    notified = 0
+
+    for institution in Institution.query.filter_by(is_active=True).all():
+        last = as_aware(institution.ignored_report_sent_at)
+        if not force and last and last > cutoff:
+            continue
+
+        result = report_ignored(institution, days=days)
+        if result["ignored"]:
+            institution.ignored_report_sent_at = now
+            institutions += 1
+            complaints += result["ignored"]
+            notified += result["notified"]
+
+    db.session.commit()
+    return {
+        "institutions_reported": institutions,
+        "complaints_ignored": complaints,
+        "heads_notified": notified,
+    }

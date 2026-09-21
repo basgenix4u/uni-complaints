@@ -84,11 +84,20 @@ def add_working_hours(start: datetime, hours: float, open_hour: int, close_hour:
     return cursor.astimezone(timezone.utc)
 
 
-def deadline_for(institution, department, priority: str, start: datetime | None = None):
-    """Acknowledgement and resolution deadlines in working hours."""
+def deadline_for(institution, department, priority: str, start: datetime | None = None,
+                 override_hours: int | None = None):
+    """Acknowledgement and resolution deadlines in working hours.
+
+    Three settings can supply the base figure, and the most specific one
+    wins: the routing rule for this category, then the handling unit,
+    then the institution. A missing result and a broken tap are both
+    Registry's problem and are not the same kind of wait.
+    """
     start = start or utcnow()
-    base_hours = (department.sla_hours if department and department.sla_hours else None) or (
-        institution.default_sla_hours
+    base_hours = (
+        override_hours
+        or (department.sla_hours if department and department.sla_hours else None)
+        or institution.default_sla_hours
     )
     factor = PRIORITY_SLA_FACTOR.get(priority, 1.0)
 
@@ -101,100 +110,239 @@ def deadline_for(institution, department, priority: str, start: datetime | None 
     )
 
 
-def run_escalation_sweep(institution_id: str | None = None) -> dict:
-    """Escalate complaints that have passed their deadline.
+# Working hours a rung is given to respond before the next one is told.
+ESCALATION_STEP_HOURS = 24
 
-    Idempotent: a complaint is escalated once, recorded on the audit trail,
-    and skipped on later runs. Safe to call repeatedly from a scheduler.
+
+def escalation_ladder(complaint) -> list[tuple[str, list]]:
+    """Who is told, in order, as a complaint goes unanswered.
+
+    A university has a chain of command and it is worth following. The
+    demo notified every department head at once, which trains people to
+    ignore the alerts and leaves nobody accountable. This climbs one rung
+    at a time: the unit that owns the work, then the office above it,
+    then the institution.
+
+    Empty rungs are dropped rather than stalling the climb, so an
+    institution that has not appointed a dean still escalates.
+    """
+    from app.models.routing import RoutingRule
+    from app.models.user import User
+    from app.security import can_view_complaint
+
+    def staff_in(department_id, roles):
+        if not department_id:
+            return []
+        return (
+            User.query.filter(
+                User.institution_id == complaint.institution_id,
+                User.department_id == department_id,
+                User.role.in_(roles),
+                User.is_active.is_(True),
+            )
+            .limit(10)
+            .all()
+        )
+
+    rule = RoutingRule.query.filter_by(
+        institution_id=complaint.institution_id, category=complaint.category
+    ).first()
+
+    rungs: list[tuple[str, list]] = [
+        ("the unit head", staff_in(complaint.department_id, ("dept_head", "dean"))),
+    ]
+
+    # The office above the handling unit. For an academic matter that is
+    # the dean of the student's faculty; for an administrative one it is
+    # whichever unit the rule nominates, usually Registry.
+    if rule and rule.target_type == "department":
+        student = db.session.get(User, complaint.student_id)
+        faculty_id = student.faculty_id if student else None
+        deans = (
+            User.query.filter(
+                User.institution_id == complaint.institution_id,
+                User.faculty_id == faculty_id,
+                User.role == "dean",
+                User.is_active.is_(True),
+            ).all()
+            if faculty_id
+            else []
+        )
+        rungs.append(("the dean", deans))
+    elif rule and rule.escalates_to_department_id:
+        rungs.append(
+            ("the escalation unit", staff_in(rule.escalates_to_department_id, ("dept_head", "dean")))
+        )
+
+    rungs.append(
+        (
+            "the institution",
+            User.query.filter(
+                User.institution_id == complaint.institution_id,
+                User.role == "institution_admin",
+                User.is_active.is_(True),
+            )
+            .limit(10)
+            .all(),
+        )
+    )
+
+    # A confidential complaint must not widen its audience simply because
+    # it was ignored. Anyone who could not open it is dropped here.
+    return [
+        (label, [u for u in people if can_view_complaint(u, complaint)])
+        for label, people in rungs
+        if people
+    ]
+
+
+def _escalate_one(complaint, now) -> bool:
+    """Advance a complaint one rung. Returns True if it moved.
+
+    Missing the deadline and telling somebody about it are kept apart on
+    purpose. An institution that has appointed nobody to a unit still has
+    an overdue complaint, and the student is still owed the news; it
+    simply goes straight onto the ignored report instead of climbing.
     """
     from app.models.institution import Institution
     from app.models.user import User
 
+    ladder = escalation_ladder(complaint)
+    level = complaint.escalation_level or 0
+    first_time = complaint.escalated_at is None
+
+    if level >= len(ladder) and not first_time:
+        # The top has been reached and nothing happened. Nobody else is
+        # told; the complaint now belongs on the ignored report.
+        complaint.next_escalation_at = None
+        return False
+
+    label = None
+    if level < len(ladder):
+        label, recipients = ladder[level]
+        for person in recipients:
+            notify(
+                person.id,
+                complaint.institution_id,
+                "Complaint needs attention",
+                f"{complaint.ticket_number} was not answered in time and has been raised with you.",
+                complaint.id,
+                "escalation",
+            )
+        complaint.escalation_level = level + 1
+
+        institution = db.session.get(Institution, complaint.institution_id)
+        complaint.next_escalation_at = add_working_hours(
+            now,
+            ESCALATION_STEP_HOURS,
+            institution.working_hours_start if institution else 8,
+            institution.working_hours_end if institution else 17,
+        )
+    else:
+        complaint.next_escalation_at = None
+
+    record_event(
+        complaint,
+        None,
+        "escalated",
+        to_value=f"level {complaint.escalation_level}",
+        note=(
+            f"Raised with {label} after no response."
+            if label
+            else "Past its deadline, and there is nobody above to raise it with."
+        ),
+    )
+
+    if first_time:
+        complaint.escalated_at = now
+        complaint.priority = "urgent"
+
+        notify(
+            complaint.student_id,
+            complaint.institution_id,
+            "Your complaint has been escalated",
+            f"{complaint.ticket_number} passed its deadline, so it has been raised with "
+            "senior staff. You do not need to do anything.",
+            complaint.id,
+            "escalation",
+        )
+
+        # Escalation is the one event worth the cost of a text: data
+        # runs out, but a phone still receives SMS.
+        student = db.session.get(User, complaint.student_id)
+        if student and student.phone:
+            queue_sms(
+                complaint.institution_id,
+                student.phone,
+                f"Resolve: complaint {complaint.ticket_number} passed its deadline and has "
+                "been escalated to senior staff. No action needed from you.",
+                user_id=student.id,
+                complaint_id=complaint.id,
+            )
+
+    return True
+
+
+def run_escalation_sweep(institution_id: str | None = None) -> dict:
+    """Escalate complaints that have passed a deadline.
+
+    Safe to call repeatedly: each complaint advances at most one rung per
+    sweep, and only once the previous rung has had its own window to
+    respond.
+    """
     now = utcnow()
+
+    due_now = db.or_(
+        db.and_(
+            Complaint.escalated_at.is_(None),
+            Complaint.resolve_due_at.isnot(None),
+            Complaint.resolve_due_at < now,
+        ),
+        db.and_(
+            Complaint.next_escalation_at.isnot(None),
+            Complaint.next_escalation_at < now,
+        ),
+    )
+
     query = Complaint.query.filter(
-        Complaint.status.notin_(("resolved", "closed", "declined")),
-        Complaint.escalated_at.is_(None),
-        Complaint.resolve_due_at.isnot(None),
+        Complaint.status.notin_(("resolved", "closed", "declined")), due_now
     )
     if institution_id:
         query = query.filter(Complaint.institution_id == institution_id)
 
     escalated = 0
-    reminded = 0
-
     for complaint in query.limit(500).all():
-        due = as_aware(complaint.resolve_due_at)
-        if due is None:
-            continue
-
-        if now > due:
-            complaint.escalated_at = now
-            complaint.priority = "urgent" if complaint.priority != "urgent" else "urgent"
-
-            leaders = (
-                User.query.filter(
-                    User.institution_id == complaint.institution_id,
-                    User.role.in_(("dept_head", "institution_admin")),
-                    User.is_active.is_(True),
-                )
-                .limit(10)
-                .all()
-            )
-            for leader in leaders:
-                notify(
-                    leader.id,
-                    complaint.institution_id,
-                    "Complaint passed its deadline",
-                    f"{complaint.ticket_number} was not answered in time and needs attention.",
-                    complaint.id,
-                    "escalation",
-                )
-
-            record_event(
-                complaint,
-                None,
-                "escalated",
-                to_value="overdue",
-                note="No response before the deadline.",
-            )
-            notify(
-                complaint.student_id,
-                complaint.institution_id,
-                "Your complaint has been escalated",
-                f"{complaint.ticket_number} passed its deadline, so it has been raised with "
-                "senior staff. You do not need to do anything.",
-                complaint.id,
-                "escalation",
-            )
-
-            # Escalation is the one event worth the cost of a text: data
-            # runs out, but a phone still receives SMS.
-            student = db.session.get(User, complaint.student_id)
-            if student and student.phone:
-                queue_sms(
-                    complaint.institution_id,
-                    student.phone,
-                    f"Resolve: complaint {complaint.ticket_number} passed its deadline and has "
-                    "been escalated to senior staff. No action needed from you.",
-                    user_id=student.id,
-                    complaint_id=complaint.id,
-                )
-
+        if _escalate_one(complaint, now):
             escalated += 1
 
-        elif complaint.assigned_to_id and (due - now) <= timedelta(hours=12):
-            # One reminder before the deadline, tracked so it is not repeated.
-            if not complaint.reminder_sent_at:
-                complaint.reminder_sent_at = now
-                notify(
-                    complaint.assigned_to_id,
-                    complaint.institution_id,
-                    "Deadline approaching",
-                    f"{complaint.ticket_number} is due soon.",
-                    complaint.id,
-                    "reminder",
-                )
-                reminded += 1
+    # A separate pass for the reminder, which is about an approaching
+    # deadline rather than a missed one.
+    approaching = Complaint.query.filter(
+        Complaint.status.notin_(("resolved", "closed", "declined")),
+        Complaint.escalated_at.is_(None),
+        Complaint.reminder_sent_at.is_(None),
+        Complaint.assigned_to_id.isnot(None),
+        Complaint.resolve_due_at.isnot(None),
+        Complaint.resolve_due_at >= now,
+    )
+    if institution_id:
+        approaching = approaching.filter(Complaint.institution_id == institution_id)
+
+    reminded = 0
+    for complaint in approaching.limit(500).all():
+        due = as_aware(complaint.resolve_due_at)
+        if due is None or (due - now) > timedelta(hours=12):
+            continue
+        complaint.reminder_sent_at = now
+        notify(
+            complaint.assigned_to_id,
+            complaint.institution_id,
+            "Deadline approaching",
+            f"{complaint.ticket_number} is due soon.",
+            complaint.id,
+            "reminder",
+        )
+        reminded += 1
 
     db.session.commit()
     return {"escalated": escalated, "reminded": reminded, "checked_at": now.isoformat()}

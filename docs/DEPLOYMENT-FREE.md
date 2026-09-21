@@ -106,7 +106,8 @@ A successful run prints what it did:
   "results": {
     "escalate": { "escalated": 1, "reminded": 0 },
     "send-queue": { "sent": 0, "failed": 0, "considered": 2 },
-    "purge-expired": { "complaints_purged": 0 }
+    "purge-expired": { "complaints_purged": 0 },
+    "report-ignored": { "institutions_reported": 0, "complaints_ignored": 0 }
   },
   "success": true
 }

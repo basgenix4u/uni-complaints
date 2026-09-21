@@ -59,6 +59,12 @@ class Institution(TimestampMixin, db.Model):
     matric_pattern = db.Column(db.String(200))
     matric_example = db.Column(db.String(60))
 
+    # Last time the head was sent the list of complaints the institution
+    # has ignored. Recorded so a scheduler running every quarter of an
+    # hour sends a weekly report rather than a weekly report every
+    # quarter of an hour.
+    ignored_report_sent_at = db.Column(db.DateTime(timezone=True))
+
     # Shown to a student whose institution is not yet using the service,
     # and counted as demand.
     is_onboarded = db.Column(db.Boolean, default=False, nullable=False)

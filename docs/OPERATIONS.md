@@ -123,6 +123,7 @@ again.
 | `flask send-queue` | 5 minutes | Deliver queued email and texts |
 | `flask escalate` | 30 minutes | Raise complaints past their deadline |
 | `flask purge-expired` | Nightly | Delete complaints past the retention period |
+| `flask report-ignored` | Nightly | Email each institution's head what it has left unanswered. Enforces its own weekly interval, so a nightly schedule sends a weekly report |
 
 Run one by hand:
 

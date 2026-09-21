@@ -8,25 +8,17 @@ import re
 from flask import Blueprint, request
 
 from app.extensions import db
-from app.models.institution import Department, Institution
+from app.models.institution import Institution
 from app.models.user import User
 from app.routes.auth import EMAIL_RE, fail, ok, validate_password
 
 from app.security import staff_required
+from app.services.routing import seed_routing, seed_units
 
 bp = Blueprint("platform", __name__, url_prefix="/api/platform")
 
 CODE_RE = re.compile(r"^[A-Z]{2,8}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-
-DEFAULT_DEPARTMENTS = (
-    ("Bursary", "bursary"),
-    ("Registry", "registry"),
-    ("Student Affairs", "student-affairs"),
-    ("Works and Maintenance", "works"),
-    ("Library", "library"),
-    ("Security", "security"),
-)
 
 
 @bp.get("/institutions")
@@ -93,12 +85,13 @@ def create_institution():
     db.session.add(institution)
     db.session.flush()
 
-    for department_name, department_slug in DEFAULT_DEPARTMENTS:
-        db.session.add(
-            Department(
-                institution_id=institution.id, name=department_name, slug=department_slug
-            )
-        )
+    # A new institution gets the standard units and a draft routing table
+    # immediately, so complaints reach the right office from the first
+    # day rather than piling up unassigned while the table is written.
+    # Both are additive and meant to be edited.
+    units_created = seed_units(institution)
+    db.session.flush()
+    rules_created = seed_routing(institution)
 
     admin = User(
         institution_id=institution.id,
@@ -115,6 +108,8 @@ def create_institution():
         {
             "institution": institution.to_dict(include_settings=True),
             "admin": admin.to_dict(),
+            "units_created": units_created,
+            "rules_created": rules_created,
         },
         "Institution created.",
         201,

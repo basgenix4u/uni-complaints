@@ -29,6 +29,8 @@ const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const InstitutionSettings = lazy(() => import('./pages/admin/InstitutionSettings'));
+const RoutingRules = lazy(() => import('./pages/admin/RoutingRules'));
+const IgnoredComplaints = lazy(() => import('./pages/admin/IgnoredComplaints'));
 const PlatformInstitutions = lazy(() => import('./pages/platform/PlatformInstitutions'));
 
 // Shared
@@ -138,6 +140,8 @@ function App() {
               }
             >
               <Route path="/admin/institution" element={<InstitutionSettings />} />
+              <Route path="/admin/routing" element={<RoutingRules />} />
+              <Route path="/admin/ignored" element={<IgnoredComplaints />} />
             </Route>
 
             {/* Platform owner */}

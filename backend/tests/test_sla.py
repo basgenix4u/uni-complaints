@@ -15,6 +15,13 @@ def wat(year, month, day, hour, minute=0):
     return datetime(year, month, day, hour, minute, tzinfo=WAT)
 
 
+def bursary(institution):
+    """The unit a fees complaint routes to once routing is seeded."""
+    from app.models.institution import Department
+
+    return Department.query.filter_by(institution_id=institution.id, slug="bursary").first()
+
+
 def test_working_hours_do_not_run_overnight():
     # 16:00 Monday plus 4 hours, with a day closing at 17:00, lands at
     # 11:00 Tuesday rather than 20:00 Monday.
@@ -121,14 +128,22 @@ def test_sweep_does_not_escalate_twice(client, alpha, db):
     assert run_escalation_sweep()["escalated"] == 0
 
 
-def test_escalation_notifies_the_student_and_leadership(client, alpha, db):
-    from app.models.complaint import Complaint, Notification
+def test_escalation_notifies_the_student_and_the_handling_unit(client, alpha, db):
     from app.models.base import utcnow
+    from app.models.complaint import Complaint, Notification
+    from app.services.routing import seed_routing, seed_units
+
+    seed_units(alpha)
+    db.session.commit()
+    seed_routing(alpha)
+    db.session.commit()
 
     student = make_user(alpha, "student@test.ng")
     head = make_user(alpha, "head@test.ng", role="dept_head")
-    token = login(client, "student@test.ng")
+    head.department_id = bursary(alpha).id
+    db.session.commit()
 
+    token = login(client, "student@test.ng")
     complaint_id = client.post("/api/complaints", headers=auth(token), json=COMPLAINT).get_json()[
         "data"
     ]["complaint"]["id"]
@@ -140,6 +155,99 @@ def test_escalation_notifies_the_student_and_leadership(client, alpha, db):
     run_escalation_sweep()
 
     assert Notification.query.filter_by(user_id=head.id, type="escalation").count() == 1
+    assert Notification.query.filter_by(user_id=student.id, type="escalation").count() == 1
+
+
+def test_escalation_climbs_one_rung_at_a_time(client, alpha, db):
+    """Telling everyone at once trains everyone to ignore the alerts."""
+    from app.models.base import utcnow
+    from app.models.complaint import Complaint, Notification
+    from app.services.routing import seed_routing, seed_units
+
+    seed_units(alpha)
+    db.session.commit()
+    seed_routing(alpha)
+    db.session.commit()
+
+    make_user(alpha, "student@test.ng")
+    head = make_user(alpha, "head@test.ng", role="dept_head")
+    head.department_id = bursary(alpha).id
+    principal = make_user(alpha, "vc@test.ng", role="institution_admin")
+    db.session.commit()
+
+    token = login(client, "student@test.ng")
+    complaint_id = client.post("/api/complaints", headers=auth(token), json=COMPLAINT).get_json()[
+        "data"
+    ]["complaint"]["id"]
+
+    complaint = db.session.get(Complaint, complaint_id)
+    complaint.resolve_due_at = utcnow() - timedelta(hours=1)
+    db.session.commit()
+
+    run_escalation_sweep()
+
+    # Only the unit head so far. The institution has not been troubled.
+    assert Notification.query.filter_by(user_id=head.id, type="escalation").count() == 1
+    assert Notification.query.filter_by(user_id=principal.id, type="escalation").count() == 0
+
+    complaint = db.session.get(Complaint, complaint_id)
+    assert complaint.escalation_level == 1
+
+    # The unit had its window and did nothing, so it climbs.
+    complaint.next_escalation_at = utcnow() - timedelta(minutes=1)
+    db.session.commit()
+    run_escalation_sweep()
+
+    assert Notification.query.filter_by(user_id=principal.id, type="escalation").count() == 1
+    assert db.session.get(Complaint, complaint_id).escalation_level == 2
+
+
+def test_escalation_stops_at_the_top(client, alpha, db):
+    """Once the institution has been told, there is nobody else to tell."""
+    from app.models.base import utcnow
+    from app.models.complaint import Complaint
+
+    make_user(alpha, "student@test.ng")
+    make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    token = login(client, "student@test.ng")
+    complaint_id = client.post("/api/complaints", headers=auth(token), json=COMPLAINT).get_json()[
+        "data"
+    ]["complaint"]["id"]
+
+    complaint = db.session.get(Complaint, complaint_id)
+    complaint.resolve_due_at = utcnow() - timedelta(hours=1)
+    db.session.commit()
+
+    run_escalation_sweep()
+    complaint = db.session.get(Complaint, complaint_id)
+    assert complaint.escalation_level == 1
+
+    complaint.next_escalation_at = utcnow() - timedelta(minutes=1)
+    db.session.commit()
+
+    assert run_escalation_sweep()["escalated"] == 0
+    assert db.session.get(Complaint, complaint_id).next_escalation_at is None
+
+
+def test_a_complaint_still_escalates_when_no_staff_exist(client, alpha, db):
+    """An unstaffed unit is not a reason to leave the student uninformed."""
+    from app.models.base import utcnow
+    from app.models.complaint import Complaint, Notification
+
+    student = make_user(alpha, "student@test.ng")
+    token = login(client, "student@test.ng")
+
+    complaint_id = client.post("/api/complaints", headers=auth(token), json=COMPLAINT).get_json()[
+        "data"
+    ]["complaint"]["id"]
+
+    complaint = db.session.get(Complaint, complaint_id)
+    complaint.resolve_due_at = utcnow() - timedelta(hours=1)
+    db.session.commit()
+
+    assert run_escalation_sweep()["escalated"] == 1
+    assert db.session.get(Complaint, complaint_id).escalated_at is not None
     assert Notification.query.filter_by(user_id=student.id, type="escalation").count() == 1
 
 

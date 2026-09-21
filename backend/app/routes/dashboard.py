@@ -15,7 +15,7 @@ from app.models.base import as_aware, utcnow
 from app.models.complaint import Complaint
 from app.models.user import User
 from app.routes.auth import ok
-from app.security import auth_required, staff_required, tenant_query
+from app.security import auth_required, staff_required, tenant_query, visible_complaints
 
 bp = Blueprint("dashboard", __name__, url_prefix="/api/dashboard")
 
@@ -59,7 +59,7 @@ def _avg_resolution_hours(base) -> float:
 @bp.get("/overview")
 @staff_required("officer")
 def overview():
-    base = tenant_query(Complaint)
+    base = visible_complaints()
     counts = _status_counts(base)
     now = utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -109,7 +109,7 @@ def overview():
 @bp.get("/charts/status")
 @staff_required("officer")
 def status_chart():
-    counts = _status_counts(tenant_query(Complaint))
+    counts = _status_counts(visible_complaints())
     return ok(
         {
             "chart_data": [
@@ -124,7 +124,7 @@ def status_chart():
 @staff_required("officer")
 def category_chart():
     rows = (
-        tenant_query(Complaint)
+        visible_complaints()
         .with_entities(Complaint.category, func.count(Complaint.id).label("count"))
         .group_by(Complaint.category)
         .order_by(func.count(Complaint.id).desc())
@@ -144,7 +144,7 @@ def category_chart():
 @staff_required("officer")
 def priority_chart():
     rows = (
-        tenant_query(Complaint)
+        visible_complaints()
         .with_entities(Complaint.priority, func.count(Complaint.id))
         .group_by(Complaint.priority)
         .all()
@@ -169,7 +169,7 @@ def trend_chart():
     )
 
     rows = (
-        tenant_query(Complaint)
+        visible_complaints()
         .filter(Complaint.created_at >= start)
         .with_entities(
             func.date(Complaint.created_at).label("day"),
@@ -196,7 +196,7 @@ def trend_chart():
 def monthly_chart():
     year = request.args.get("year", utcnow().year, type=int)
     rows = (
-        tenant_query(Complaint)
+        visible_complaints()
         .filter(func.strftime("%Y", Complaint.created_at) == str(year))
         .with_entities(func.strftime("%m", Complaint.created_at).label("month"), func.count(Complaint.id))
         .group_by("month")
@@ -219,7 +219,7 @@ def monthly_chart():
 @bp.get("/reports/summary")
 @staff_required("dept_head")
 def summary_report():
-    base = tenant_query(Complaint)
+    base = visible_complaints()
     counts = _status_counts(base)
     total = sum(counts.values())
 
@@ -261,7 +261,7 @@ def staff_performance():
     for ranking individuals.
     """
     staff = tenant_query(User).filter(User.role.in_(("officer", "dept_head", "institution_admin"))).all()
-    base = tenant_query(Complaint)
+    base = visible_complaints()
 
     report = []
     for member in staff:
@@ -311,7 +311,7 @@ def export_complaints():
     """
     from app.services.export import complaints_to_csv
 
-    query = tenant_query(Complaint)
+    query = visible_complaints()
 
     for field in ("status", "category", "priority"):
         value = request.args.get(field)
@@ -343,7 +343,7 @@ def export_users():
 def student_stats():
     """Counts for the student's own dashboard."""
     user = g.current_user
-    base = tenant_query(Complaint).filter(Complaint.student_id == user.id)
+    base = visible_complaints().filter(Complaint.student_id == user.id)
     counts = _status_counts(base)
 
     recent = base.order_by(Complaint.created_at.desc()).limit(5).all()
