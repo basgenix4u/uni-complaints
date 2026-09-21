@@ -236,3 +236,60 @@ def test_the_average_resolution_is_computed_correctly(client, alpha, db):
     ).get_json()["data"]["overview"]
 
     assert 3.9 <= overview["avg_resolution_time_hours"] <= 4.1
+
+
+def test_numeric_fields_are_json_numbers_on_any_database(client, alpha, db):
+    """PostgreSQL returns NUMERIC from avg() and sum(), which arrives as a
+    Decimal. round() on a Decimal stays a Decimal, and jsonify renders
+    that as a JSON string, so these fields silently changed type between
+    SQLite and the deployed database: 4.0 became "4.0".
+
+    Asserting the value alone does not catch it, because "4.0" compares
+    equal to nothing and simply raises somewhere further downstream.
+    """
+    from datetime import timedelta
+
+    from app.models.base import utcnow
+    from app.models.complaint import Complaint
+
+    student = make_user(alpha, "student@test.ng")
+    filed = utcnow() - timedelta(hours=10)
+    db.session.add(
+        Complaint(
+            institution_id=alpha.id,
+            student_id=student.id,
+            ticket_number="AAA-NUM-0001",
+            title="Resolved and rated",
+            description="Filed, resolved four hours later, and rated by the student.",
+            category="fees_payment",
+            status="resolved",
+            satisfaction_rating=4,
+            created_at=filed,
+            resolved_at=filed + timedelta(hours=4),
+        )
+    )
+    db.session.commit()
+
+    make_user(alpha, "admin@test.ng", role="institution_admin")
+    token = login(client, "admin@test.ng")
+
+    overview = client.get(
+        "/api/dashboard/overview", headers=auth(token)
+    ).get_json()["data"]["overview"]
+    assert isinstance(overview["avg_resolution_time_hours"], (int, float))
+    assert not isinstance(overview["avg_resolution_time_hours"], str)
+    assert isinstance(overview["resolution_rate"], (int, float))
+
+    summary = client.get(
+        "/api/dashboard/reports/summary", headers=auth(token)
+    ).get_json()["data"]["summary"]
+    assert isinstance(summary["avg_satisfaction"], (int, float))
+    assert isinstance(summary["avg_resolution_time_hours"], (int, float))
+    assert isinstance(summary["rated_count"], int)
+
+    trend = client.get(
+        "/api/dashboard/charts/trend?days=30", headers=auth(token)
+    ).get_json()["data"]["chart_data"]
+    for point in trend:
+        assert isinstance(point["count"], int)
+        assert isinstance(point["resolved"], int)

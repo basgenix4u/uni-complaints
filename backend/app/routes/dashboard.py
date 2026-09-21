@@ -46,18 +46,23 @@ def _avg_resolution_hours(base) -> float:
     dialect = db.engine.dialect.name
     resolved = base.filter(Complaint.resolved_at.isnot(None))
 
+    # PostgreSQL returns NUMERIC from avg(extract(...)), which psycopg2
+    # hands back as Decimal. round() on a Decimal returns a Decimal, and
+    # jsonify renders that as a JSON string, so the endpoint quietly
+    # changed type between databases: 4.0 on SQLite, "4.0" on PostgreSQL.
+    # Anything doing arithmetic or charting on the value then breaks.
     if dialect == "postgresql":
         seconds = func.avg(
             func.extract("epoch", Complaint.resolved_at - Complaint.created_at)
         )
         value = resolved.with_entities(seconds).scalar()
-        return round((value or 0) / 3600, 1)
+        return round(float(value or 0) / 3600, 1)
 
     days = func.avg(
         func.julianday(Complaint.resolved_at) - func.julianday(Complaint.created_at)
     )
     value = resolved.with_entities(days).scalar()
-    return round((value or 0) * 24, 1)
+    return round(float(value or 0) * 24, 1)
 
 
 @bp.get("/overview")
@@ -183,7 +188,12 @@ def trend_chart():
         .group_by("day")
         .all()
     )
-    by_day = {str(day): (created, resolved or 0) for day, created, resolved in rows}
+    # count() is an integer on both, but sum() is NUMERIC on PostgreSQL
+    # and arrives as a Decimal, which would serialise as a string.
+    by_day = {
+        str(day): (int(created or 0), int(resolved or 0))
+        for day, created, resolved in rows
+    }
 
     # Days with no activity are emitted as zero so the chart has no gaps.
     series = []
@@ -274,7 +284,9 @@ def summary_report():
                 "declined": counts.get("declined", 0),
                 "open": sum(counts.get(s, 0) for s in OPEN_STATUSES),
                 "avg_resolution_time_hours": _avg_resolution_hours(base),
-                "avg_satisfaction": round(ratings[0], 2) if ratings and ratings[0] else None,
+                "avg_satisfaction": (
+                    round(float(ratings[0]), 2) if ratings and ratings[0] else None
+                ),
                 "rated_count": ratings[1] if ratings else 0,
             },
             "by_category": [
