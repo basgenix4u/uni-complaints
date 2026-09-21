@@ -1,7 +1,7 @@
 """Outbound message queue."""
 
 from app.extensions import db
-from app.models.base import TimestampMixin, new_uuid
+from app.models.base import fk, TimestampMixin, new_uuid
 
 
 class OutboundMessage(TimestampMixin, db.Model):
@@ -17,10 +17,10 @@ class OutboundMessage(TimestampMixin, db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
-    complaint_id = db.Column(db.String(36), db.ForeignKey("complaints.id", ondelete="CASCADE"))
+    user_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"))
+    complaint_id = db.Column(db.String(36), db.ForeignKey(fk("complaints.id"), ondelete="CASCADE"))
 
     channel = db.Column(db.String(10), nullable=False)
     recipient = db.Column(db.String(255), nullable=False)

@@ -11,7 +11,7 @@ matter.
 """
 
 from app.extensions import db
-from app.models.base import new_uuid, utcnow
+from app.models.base import fk, new_uuid, utcnow
 
 
 class AccessLog(db.Model):
@@ -23,12 +23,12 @@ class AccessLog(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
     complaint_id = db.Column(
-        db.String(36), db.ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("complaints.id"), ondelete="CASCADE"), nullable=False, index=True
     )
-    actor_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"), index=True)
+    actor_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"), index=True)
 
     # Role at the time of access. Kept separately because a person's role
     # can change afterwards and the log should say what they were then.

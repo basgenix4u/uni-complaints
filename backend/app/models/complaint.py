@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from app.extensions import db
-from app.models.base import TimestampMixin, as_aware, new_uuid, utcnow
+from app.models.base import fk, TimestampMixin, as_aware, new_uuid, utcnow
 
 STATUSES = (
     "submitted",
@@ -46,17 +46,17 @@ class Complaint(TimestampMixin, db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
 
     ticket_number = db.Column(db.String(20), nullable=False, index=True)
 
     student_id = db.Column(
-        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("users.id"), ondelete="CASCADE"), nullable=False, index=True
     )
-    assigned_to_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"), index=True)
+    assigned_to_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"), index=True)
     department_id = db.Column(
-        db.String(36), db.ForeignKey("departments.id", ondelete="SET NULL"), index=True
+        db.String(36), db.ForeignKey(fk("departments.id"), ondelete="SET NULL"), index=True
     )
 
     title = db.Column(db.String(200), nullable=False)
@@ -217,12 +217,12 @@ class Response(TimestampMixin, db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
     complaint_id = db.Column(
-        db.String(36), db.ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("complaints.id"), ondelete="CASCADE"), nullable=False, index=True
     )
-    author_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"), index=True)
+    author_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"), index=True)
 
     message = db.Column(db.Text, nullable=False)
     # Internal notes are filtered out for students in Complaint.to_dict and
@@ -260,12 +260,12 @@ class Notification(TimestampMixin, db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
     user_id = db.Column(
-        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("users.id"), ondelete="CASCADE"), nullable=False, index=True
     )
-    complaint_id = db.Column(db.String(36), db.ForeignKey("complaints.id", ondelete="CASCADE"))
+    complaint_id = db.Column(db.String(36), db.ForeignKey(fk("complaints.id"), ondelete="CASCADE"))
 
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.String(500), nullable=False)
@@ -299,12 +299,12 @@ class ComplaintEvent(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
     complaint_id = db.Column(
-        db.String(36), db.ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("complaints.id"), ondelete="CASCADE"), nullable=False, index=True
     )
-    actor_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+    actor_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"))
 
     action = db.Column(db.String(60), nullable=False)
     from_value = db.Column(db.String(120))
