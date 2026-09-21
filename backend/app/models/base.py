@@ -1,5 +1,6 @@
 """Shared model primitives."""
 
+import os
 import uuid
 from datetime import datetime, timezone
 
@@ -13,6 +14,18 @@ def utcnow() -> datetime:
     value, which compares incorrectly against aware timestamps.
     """
     return datetime.now(timezone.utc)
+
+
+def fk(target: str) -> str:
+    """Qualify a foreign key target with the configured schema.
+
+    A reference written as "users.id" resolves against the search path,
+    which is not reliable once these tables live outside `public`.
+    """
+    schema = os.getenv("DB_SCHEMA") or None
+    if not schema or "sqlite" in os.getenv("DATABASE_URL", "sqlite"):
+        return target
+    return f"{schema}.{target}"
 
 
 def new_uuid() -> str:
@@ -49,7 +62,7 @@ class TenantMixin:
     def _institution_fk():
         return db.Column(
             db.String(36),
-            db.ForeignKey("institutions.id", ondelete="CASCADE"),
+            db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"),
             nullable=False,
             index=True,
         )

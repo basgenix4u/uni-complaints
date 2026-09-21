@@ -5,7 +5,7 @@ import secrets
 from datetime import timedelta
 
 from app.extensions import db
-from app.models.base import new_uuid, utcnow
+from app.models.base import fk, new_uuid, utcnow
 
 # Long enough that guessing is impractical, short enough to be pasted from
 # an email without wrapping.
@@ -28,7 +28,7 @@ class PasswordReset(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     user_id = db.Column(
-        db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("users.id"), ondelete="CASCADE"), nullable=False, index=True
     )
 
     token_hash = db.Column(db.String(64), nullable=False, unique=True, index=True)

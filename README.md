@@ -89,7 +89,7 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 201 tests
+cd backend && pytest                    # 213 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
@@ -220,6 +220,11 @@ rollback.
 `docs/DEPLOYMENT.md` walks through Vercel for the frontend, Render for the
 API and scheduled jobs, and Supabase for the database and file storage.
 
+`docs/SHARED-DATABASE.md` covers deploying into a Supabase project that
+already hosts another application. Setting `DB_SCHEMA` puts every table in
+a namespace of its own, including the Alembic version table, so names such
+as `users` and `notifications` cannot collide with the existing system.
+
 `docs/DEPLOYMENT-FREE.md` covers running the whole thing on free tiers
 permanently. Scheduled work is driven by a GitHub Actions workflow calling
 an authenticated endpoint, so escalation, delivery and retention still run
@@ -304,7 +309,7 @@ backend/
                   sms, export, thumbnails, privacy,
                   cloudinary_storage, object_storage
     security.py   role checks and tenant scoping
-  tests/          201 tests
+  tests/          213 tests
 frontend/
   e2e/            52 browser journeys
   src/

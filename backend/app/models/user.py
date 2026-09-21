@@ -3,7 +3,7 @@
 import re
 
 from app.extensions import bcrypt, db
-from app.models.base import TimestampMixin, new_uuid, utcnow
+from app.models.base import fk, TimestampMixin, new_uuid, utcnow
 
 # Ordered by privilege; used for hierarchical permission checks.
 ROLES = ("student", "officer", "dept_head", "institution_admin", "platform_admin")
@@ -49,10 +49,10 @@ class User(TimestampMixin, db.Model):
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     # Nullable so a platform administrator can exist outside any tenant.
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), index=True
     )
     department_id = db.Column(
-        db.String(36), db.ForeignKey("departments.id", ondelete="SET NULL"), index=True
+        db.String(36), db.ForeignKey(fk("departments.id"), ondelete="SET NULL"), index=True
     )
 
     full_name = db.Column(db.String(150), nullable=False)

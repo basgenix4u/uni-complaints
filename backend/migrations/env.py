@@ -1,4 +1,19 @@
 import logging
+import os
+
+import sqlalchemy as sa
+
+# Read once at import: Alembic needs it before any app exists. SQLite has
+# no schemas, so the setting is ignored there and development keeps
+# working without a PostgreSQL instance.
+_CONFIGURED_SCHEMA = os.getenv("DB_SCHEMA") or None
+SCHEMA = _CONFIGURED_SCHEMA
+
+
+def _schema_for(connection):
+    if not _CONFIGURED_SCHEMA:
+        return None
+    return _CONFIGURED_SCHEMA if connection.dialect.name == "postgresql" else None
 from logging.config import fileConfig
 
 from flask import current_app
@@ -64,12 +79,30 @@ def run_migrations_offline():
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    schema = _CONFIGURED_SCHEMA if url.startswith("postgresql") else None
     context.configure(
-        url=url, target_metadata=get_metadata(), literal_binds=True
+        url=url,
+        target_metadata=get_metadata(),
+        literal_binds=True,
+        include_object=include_object,
+        include_schemas=bool(schema),
+        version_table_schema=schema,
     )
 
     with context.begin_transaction():
         context.run_migrations()
+
+
+def include_object(obj, name, type_, reflected, compare_to):
+    """Ignore anything outside our schema.
+
+    The same database may host another application. Without this,
+    autogenerate sees its tables as unexpected and proposes dropping
+    them.
+    """
+    if type_ == "table":
+        return (obj.schema or "public") == (SCHEMA or "public")
+    return True
 
 
 def run_migrations_online():
@@ -97,9 +130,22 @@ def run_migrations_online():
     connectable = get_engine()
 
     with connectable.connect() as connection:
+        # SQLite has no schemas, so this applies to PostgreSQL only.
+        # Created before anything else so the version table has somewhere
+        # to live on a first run.
+        schema = _schema_for(connection)
+        if schema:
+            # Created before anything else so the version table has
+            # somewhere to live on a first run.
+            connection.execute(sa.text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
+            connection.commit()
+
         context.configure(
             connection=connection,
             target_metadata=get_metadata(),
+            include_object=include_object,
+            include_schemas=bool(schema),
+            version_table_schema=schema,
             **conf_args
         )
 

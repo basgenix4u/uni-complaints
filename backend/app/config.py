@@ -61,6 +61,12 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-change-me")
 
+    # A dedicated PostgreSQL schema keeps these tables out of `public`,
+    # so the same database can host another application without the two
+    # colliding on common names such as users or notifications. Empty
+    # means `public`, which is right for a database of our own.
+    DB_SCHEMA = os.getenv("DB_SCHEMA") or None
+
     SQLALCHEMY_DATABASE_URI = _database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = _engine_options()

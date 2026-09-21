@@ -1,7 +1,7 @@
 """File attachments on complaints and replies."""
 
 from app.extensions import db
-from app.models.base import TimestampMixin, new_uuid
+from app.models.base import fk, TimestampMixin, new_uuid
 
 # Evidence for a complaint is realistically a photo, a scan or a document.
 # Archives and executables are excluded: they cannot be previewed, and
@@ -26,13 +26,13 @@ class Attachment(TimestampMixin, db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
     complaint_id = db.Column(
-        db.String(36), db.ForeignKey("complaints.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("complaints.id"), ondelete="CASCADE"), nullable=False, index=True
     )
-    response_id = db.Column(db.String(36), db.ForeignKey("responses.id", ondelete="CASCADE"))
-    uploaded_by_id = db.Column(db.String(36), db.ForeignKey("users.id", ondelete="SET NULL"))
+    response_id = db.Column(db.String(36), db.ForeignKey(fk("responses.id"), ondelete="CASCADE"))
+    uploaded_by_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"))
 
     # The name the user recognises, kept only for display.
     original_name = db.Column(db.String(255), nullable=False)

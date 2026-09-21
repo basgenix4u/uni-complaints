@@ -1,7 +1,7 @@
 """Institution (tenant) and its departments."""
 
 from app.extensions import db
-from app.models.base import TimestampMixin, new_uuid
+from app.models.base import fk, TimestampMixin, new_uuid
 
 
 class Institution(TimestampMixin, db.Model):
@@ -92,7 +92,7 @@ class Department(TimestampMixin, db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=new_uuid)
     institution_id = db.Column(
-        db.String(36), db.ForeignKey("institutions.id", ondelete="CASCADE"), nullable=False, index=True
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"), nullable=False, index=True
     )
 
     name = db.Column(db.String(150), nullable=False)
