@@ -339,15 +339,22 @@ def upgrade():
 def downgrade():
     SCHEMA = _schema()
 
-    # Reverse dependency order so foreign keys do not block the drops.
-    op.drop_table('access_logs', schema=SCHEMA)
-    op.drop_table('attachments', schema=SCHEMA)
-    op.drop_table('complaint_events', schema=SCHEMA)
-    op.drop_table('complaints', schema=SCHEMA)
-    op.drop_table('departments', schema=SCHEMA)
-    op.drop_table('institutions', schema=SCHEMA)
-    op.drop_table('notifications', schema=SCHEMA)
-    op.drop_table('outbound_messages', schema=SCHEMA)
-    op.drop_table('password_resets', schema=SCHEMA)
-    op.drop_table('responses', schema=SCHEMA)
-    op.drop_table('users', schema=SCHEMA)
+    # Reverse dependency order, not the alphabetical order autogenerate
+    # produces. PostgreSQL refuses to drop a table another still
+    # references, so the generated order failed with
+    # DependentObjectsStillExist at `complaints`. SQLite does not enforce
+    # foreign keys by default, which is why this was never noticed.
+    for table in (
+        "access_logs",
+        "attachments",
+        "complaint_events",
+        "notifications",
+        "outbound_messages",
+        "password_resets",
+        "responses",
+        "complaints",
+        "users",
+        "departments",
+        "institutions",
+    ):
+        op.drop_table(table, schema=SCHEMA)
