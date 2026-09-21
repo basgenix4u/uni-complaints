@@ -59,7 +59,20 @@ is right for a database of its own.
 
 ---
 
-## Status: applied to the ALIMS project
+## Status: at head on the ALIMS project
+
+Revisions 0002 to 0006 were applied on 21 September 2026, taking the
+schema from 12 tables to 20. The `public` schema was 38 tables before
+and 38 after. See docs/DEPLOYMENT-STATUS.md for how that was verified.
+
+One thing that caught us out: **Alembic does not carry row level
+security**. The original twelve tables had RLS enabled by hand when the
+schema was created; the eight new ones arrived without it. Run
+`backend/scripts/harden_schema.sql` after every migration against this
+database, which re-enables RLS on anything missing it and re-revokes the
+API roles. It is idempotent.
+
+## Originally applied to the ALIMS project
 
 The schema is live. Recorded here so the state is not guesswork.
 
