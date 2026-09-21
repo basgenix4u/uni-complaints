@@ -31,6 +31,19 @@ def _schema():
     return _CONFIGURED_SCHEMA if op.get_bind().dialect.name == "postgresql" else None
 
 
+def _fk(target: str) -> str:
+    """Qualify a foreign key target with the schema in force.
+
+    Autogenerate writes these as literals, baking in whichever schema was
+    configured when the revision was produced. That made the revision
+    work only for that one deployment: with DB_SCHEMA unset the migration
+    demanded a schema that had never been created, and the first upgrade
+    against a database of our own failed outright.
+    """
+    schema = _schema()
+    return f"{schema}.{target}" if schema else target
+
+
 def upgrade():
     SCHEMA = _schema()
 
@@ -52,11 +65,11 @@ def upgrade():
     sa.Column('sent_count', sa.Integer(), nullable=False),
     sa.Column('last_sent_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
-    sa.ForeignKeyConstraint(['accepted_user_id'], ['resolve.users.id'], name=op.f('fk_invitations_accepted_user_id_users'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['department_id'], ['resolve.departments.id'], name=op.f('fk_invitations_department_id_departments'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['faculty_id'], ['resolve.faculties.id'], name=op.f('fk_invitations_faculty_id_faculties'), ondelete='SET NULL'),
-    sa.ForeignKeyConstraint(['institution_id'], ['resolve.institutions.id'], name=op.f('fk_invitations_institution_id_institutions'), ondelete='CASCADE'),
-    sa.ForeignKeyConstraint(['invited_by_id'], ['resolve.users.id'], name=op.f('fk_invitations_invited_by_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['accepted_user_id'], [_fk('users.id')], name=op.f('fk_invitations_accepted_user_id_users'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['department_id'], [_fk('departments.id')], name=op.f('fk_invitations_department_id_departments'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['faculty_id'], [_fk('faculties.id')], name=op.f('fk_invitations_faculty_id_faculties'), ondelete='SET NULL'),
+    sa.ForeignKeyConstraint(['institution_id'], [_fk('institutions.id')], name=op.f('fk_invitations_institution_id_institutions'), ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['invited_by_id'], [_fk('users.id')], name=op.f('fk_invitations_invited_by_id_users'), ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_invitations')),
     schema=SCHEMA
     )

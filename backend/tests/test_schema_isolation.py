@@ -193,3 +193,31 @@ def test_constraint_names_are_deterministic(shared_sql):
     """
     assert "CONSTRAINT fk_complaints_student_id_users" in shared_sql
     assert "CONSTRAINT pk_complaints" in shared_sql
+
+
+def test_migrations_do_not_hardcode_a_schema_name():
+    """A revision must build wherever it is pointed.
+
+    Autogenerate writes foreign key targets as literals, baking in the
+    schema that happened to be configured when the revision was produced.
+    Three revisions carried 47 such literals, so an upgrade against a
+    database of our own — DB_SCHEMA unset, which is the ordinary case —
+    demanded a schema nobody had created and failed at the first table.
+
+    Caught by running the migrations on real PostgreSQL in CI; invisible
+    on SQLite, which ignores schemas entirely.
+    """
+    sql = generate_sql(schema=None)
+
+    assert "resolve." not in sql, (
+        "a revision hardcodes the 'resolve' schema, so it only works for one deployment"
+    )
+    assert "CREATE TABLE institutions" in sql
+
+
+def test_the_same_revisions_still_honour_a_schema():
+    """The other half: qualifying must not have been lost in the fix."""
+    sql = generate_sql(schema="resolve")
+
+    assert "CREATE TABLE resolve.institutions" in sql
+    assert "REFERENCES resolve.institutions" in sql
