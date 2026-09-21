@@ -92,7 +92,9 @@ class User(TimestampMixin, db.Model):
 
     institution = db.relationship("Institution", back_populates="users")
     department = db.relationship("Department", foreign_keys=[department_id])
-    faculty = db.relationship("Faculty", foreign_keys=[faculty_id])
+    # Named apart from the free text `faculty` column above, which still
+    # holds what a student typed. Both cannot be called the same thing.
+    faculty_record = db.relationship("Faculty", foreign_keys=[faculty_id])
 
     # -- password -----------------------------------------------------
 
