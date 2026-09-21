@@ -256,10 +256,32 @@ export const adminService = {
   createDepartment: (data) => api.post('/admin/departments', data).then(unwrap),
   updateDepartment: (id, data) => api.put(`/admin/departments/${id}`, data).then(unwrap),
   registrations: () => api.get('/admin/registrations').then(unwrap),
+  deliveryHealth: () => api.get('/admin/delivery-health').then(unwrap),
+  confirmEmail: (id) => api.put(`/admin/registrations/${id}/confirm-email`).then(unwrap),
   decideRegistration: (id, decision) =>
     api.put(`/admin/registrations/${id}`, { decision }).then(unwrap),
   settings: () => api.get('/admin/settings').then(unwrap),
   updateSettings: (data) => api.put('/admin/settings', data).then(unwrap),
+};
+
+export const invitationService = {
+  list: (params) => api.get('/invitations', { params }).then(unwrap),
+  create: (data) => api.post('/invitations', data).then(unwrap),
+  /** The endpoint takes a spreadsheet, so text pasted in becomes one. */
+  bulk: ({ csv, dry_run }) => {
+    const form = new FormData();
+    form.append('file', new Blob([csv], { type: 'text/csv' }), 'invitations.csv');
+    form.append('dry_run', dry_run ? 'true' : 'false');
+    // The boundary must be set by the browser, so the JSON default is
+    // cleared rather than overridden.
+    return api
+      .post('/invitations/bulk', form, { headers: { 'Content-Type': undefined } })
+      .then(unwrap);
+  },
+  resend: (id) => api.post(`/invitations/${id}/resend`).then(unwrap),
+  revoke: (id) => api.delete(`/invitations/${id}`).then(unwrap),
+  preview: (token) => api.get('/invitations/preview', { params: { token } }).then(unwrap),
+  accept: (data) => api.post('/invitations/accept', data).then(unwrap),
 };
 
 export const routingService = {

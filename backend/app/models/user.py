@@ -91,6 +91,14 @@ class User(TimestampMixin, db.Model):
     # only self-registration leaves this unset.
     email_verified_at = db.Column(db.DateTime(timezone=True))
 
+    # Set when an administrator confirmed the address by hand instead of
+    # the student following the link. Recorded because that is an
+    # assertion someone checked by other means, not proof the address
+    # works, and the difference matters if it is ever disputed.
+    email_verified_by_id = db.Column(
+        db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL")
+    )
+
     # Set where an institution vets each registration by hand, and where
     # a student registered against a register entry that did not match.
     # Such an account can sign in and see its own state, but cannot file.
