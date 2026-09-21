@@ -186,3 +186,53 @@ def test_an_absurd_year_is_refused(client, alpha):
     response = client.get("/api/dashboard/charts/monthly?year=99999", headers=auth(token))
 
     assert response.status_code == 422
+
+
+def test_the_average_uses_the_branch_matching_the_live_database(client, alpha, db):
+    """The dialect guard read db.session.bind, which is always None under
+    Flask-SQLAlchemy 3, so every database took the SQLite branch and the
+    deployed PostgreSQL raised UndefinedFunction on julianday.
+
+    No test caught it because SQLite was the only database ever run, and
+    on SQLite the wrong branch is the right one.
+    """
+    from app.extensions import db as _db
+    from app.routes.dashboard import _avg_resolution_hours
+
+    # The guard must resolve a real dialect, never fall back.
+    assert _db.session.bind is None, "idiom changed; revisit the guard"
+    assert _db.engine.dialect.name in ("sqlite", "postgresql")
+
+
+def test_the_average_resolution_is_computed_correctly(client, alpha, db):
+    """Exercises whichever branch the live database selects."""
+    from datetime import timedelta
+
+    from app.models.base import utcnow
+    from app.models.complaint import Complaint
+
+    student = make_user(alpha, "student@test.ng")
+    filed = utcnow() - timedelta(hours=10)
+    db.session.add(
+        Complaint(
+            institution_id=alpha.id,
+            student_id=student.id,
+            ticket_number="AAA-AVG-0001",
+            title="Resolved after a known interval",
+            description="Filed ten hours ago and resolved four hours later.",
+            category="fees_payment",
+            status="resolved",
+            created_at=filed,
+            resolved_at=filed + timedelta(hours=4),
+        )
+    )
+    db.session.commit()
+
+    make_user(alpha, "officer@test.ng", role="officer")
+    token = login(client, "officer@test.ng")
+
+    overview = client.get(
+        "/api/dashboard/overview", headers=auth(token)
+    ).get_json()["data"]["overview"]
+
+    assert 3.9 <= overview["avg_resolution_time_hours"] <= 4.1

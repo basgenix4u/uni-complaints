@@ -39,7 +39,11 @@ def _avg_resolution_hours(base) -> float:
     database rather than being pulled into the process, which matters once
     an institution has a large history.
     """
-    dialect = db.session.bind.dialect.name if db.session.bind else "sqlite"
+    # db.session.bind is None under Flask-SQLAlchemy 3, so the previous
+    # check silently fell through to the SQLite branch on every database.
+    # That was invisible while SQLite was the only one ever tested, and
+    # raised UndefinedFunction on the deployed PostgreSQL.
+    dialect = db.engine.dialect.name
     resolved = base.filter(Complaint.resolved_at.isnot(None))
 
     if dialect == "postgresql":
