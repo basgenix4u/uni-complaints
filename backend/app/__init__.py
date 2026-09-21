@@ -38,6 +38,7 @@ def create_app(config_name: str | None = None) -> Flask:
     from app.routes.dashboard import bp as dashboard_bp
     from app.routes.notifications import bp as notifications_bp
     from app.routes.platform import bp as platform_bp
+    from app.routes.invitations import bp as invitations_bp, public_bp as invitation_public_bp
     from app.routes.privacy import bp as privacy_bp
     from app.routes.tasks import bp as tasks_bp
 
@@ -49,6 +50,8 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(admin_bp)
     app.register_blueprint(attachments_bp)
     app.register_blueprint(platform_bp)
+    app.register_blueprint(invitations_bp)
+    app.register_blueprint(invitation_public_bp)
     app.register_blueprint(privacy_bp)
     app.register_blueprint(tasks_bp)
 

@@ -98,7 +98,13 @@ class Faculty(TimestampMixin, db.Model):
 
     # The Dean. Academic complaints escalate here from a department, which
     # the demo could not do because the role did not exist.
-    dean_user_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"))
+    # users.faculty_id points back here, so this pair is a cycle. Marked
+    # as a known one, otherwise metadata cannot order create and drop.
+    dean_user_id = db.Column(
+        db.String(36),
+        db.ForeignKey(fk("users.id"), ondelete="SET NULL", use_alter=True,
+                      name="fk_faculties_dean_user_id_users"),
+    )
 
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
@@ -155,7 +161,11 @@ class AcademicDepartment(TimestampMixin, db.Model):
 
     # The Head of Department, who receives academic complaints from their
     # own students before they escalate to the Dean.
-    head_user_id = db.Column(db.String(36), db.ForeignKey(fk("users.id"), ondelete="SET NULL"))
+    head_user_id = db.Column(
+        db.String(36),
+        db.ForeignKey(fk("users.id"), ondelete="SET NULL", use_alter=True,
+                      name="fk_academic_departments_head_user_id_users"),
+    )
 
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 

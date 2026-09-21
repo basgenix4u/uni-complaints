@@ -6,10 +6,25 @@ from app.extensions import bcrypt, db
 from app.models.base import fk, TimestampMixin, new_uuid, utcnow
 
 # Ordered by privilege; used for hierarchical permission checks.
-ROLES = ("student", "officer", "dept_head", "institution_admin", "platform_admin")
+ROLES = (
+    "student",
+    "officer",
+    "dept_head",
+    # Scope is a faculty. Academic complaints escalate here from a
+    # department, which the demo could not express because the role did
+    # not exist and escalation jumped straight to the institution.
+    "dean",
+    "institution_admin",
+    "platform_admin",
+)
 ROLE_RANK = {role: index for index, role in enumerate(ROLES)}
 
-STAFF_ROLES = ("officer", "dept_head", "institution_admin", "platform_admin")
+STAFF_ROLES = ("officer", "dept_head", "dean", "institution_admin", "platform_admin")
+
+# Roles an invitation may confer. Neither a student nor a platform
+# administrator is created this way: a student registers, and a platform
+# administrator is seeded outside the application.
+INVITABLE_ROLES = ("officer", "dept_head", "dean", "institution_admin")
 
 
 def normalise_matric(value: str | None) -> str | None:
@@ -54,6 +69,10 @@ class User(TimestampMixin, db.Model):
     department_id = db.Column(
         db.String(36), db.ForeignKey(fk("departments.id"), ondelete="SET NULL"), index=True
     )
+    # Set for a Dean, whose remit is a faculty rather than one unit.
+    faculty_id = db.Column(
+        db.String(36), db.ForeignKey(fk("faculties.id"), ondelete="SET NULL"), index=True
+    )
 
     full_name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(255), nullable=False, index=True)
@@ -73,6 +92,9 @@ class User(TimestampMixin, db.Model):
 
     institution = db.relationship("Institution", back_populates="users")
     department = db.relationship("Department", foreign_keys=[department_id])
+    # Named apart from the free text `faculty` column above, which still
+    # holds what a student typed. Both cannot be called the same thing.
+    faculty_record = db.relationship("Faculty", foreign_keys=[faculty_id])
 
     # -- password -----------------------------------------------------
 
@@ -105,6 +127,7 @@ class User(TimestampMixin, db.Model):
             "is_active": self.is_active,
             "institution_id": self.institution_id,
             "department_id": self.department_id,
+            "faculty_id": self.faculty_id,
             "matric_number": self.matric_number,
             "faculty": self.faculty,
             "department_name": self.department_name,
