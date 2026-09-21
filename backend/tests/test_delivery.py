@@ -66,13 +66,25 @@ def test_internal_note_does_not_email_the_student(client, alpha):
     assert OutboundMessage.query.filter_by(recipient="student@test.ng").count() == 0
 
 
-def test_escalation_queues_email_for_student_and_leadership(client, alpha, db):
+def test_escalation_queues_email_for_student_and_the_handling_unit(client, alpha, db):
     from app.models.base import utcnow
     from app.models.complaint import Complaint
+    from app.models.institution import Department
+    from app.services.routing import seed_routing, seed_units
     from app.services.sla import run_escalation_sweep
 
+    seed_units(alpha)
+    db.session.commit()
+    seed_routing(alpha)
+    db.session.commit()
+
     make_user(alpha, "student@test.ng")
-    make_user(alpha, "head@test.ng", role="dept_head")
+    head = make_user(alpha, "head@test.ng", role="dept_head")
+    head.department_id = Department.query.filter_by(
+        institution_id=alpha.id, slug="registry"
+    ).first().id
+    db.session.commit()
+
     token = login(client, "student@test.ng")
 
     complaint_id = client.post(

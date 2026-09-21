@@ -10,11 +10,19 @@ from app.models.complaint import (
     Response,
 )
 from app.models.institution import Department, Institution
+from app.models.routing import RoutingRule
 from app.models.user import User
 from app.routes.auth import fail, ok
-from app.security import auth_required, can_view_complaint, staff_required, tenant_query
+from app.security import (
+    auth_required,
+    can_view_complaint,
+    confidential_filter,
+    staff_required,
+    tenant_query,
+)
 from app.models.access_log import AccessLog
 from app.services.notifications import notify, record_event
+from app.services.routing import resolve_destination
 from app.services.tickets import generate_ticket_number, normalise_ticket
 from app.models.base import utcnow
 
@@ -68,9 +76,16 @@ def create_complaint():
     if not institution:
         return fail("Your account is not linked to an institution.", 400)
 
-    department = None
+    # Routing decides the destination; a student is not asked to work out
+    # which office owns their problem, which is the thing they came here
+    # unable to do. An explicit choice is still honoured, because a
+    # student who already knows is usually right.
+    department, rule = resolve_destination(institution, category, user)
+
     if payload.get("department_id"):
-        department = tenant_query(Department).filter_by(id=payload["department_id"]).first()
+        chosen = tenant_query(Department).filter_by(id=payload["department_id"]).first()
+        if chosen:
+            department = chosen
 
     complaint = Complaint(
         institution_id=institution.id,
@@ -82,19 +97,30 @@ def create_complaint():
         category=category,
         priority=priority,
         is_anonymous=bool(payload.get("is_anonymous")) and institution.allow_anonymous,
+        is_confidential=bool(rule and rule.is_confidential),
         status="submitted",
     )
-    complaint.apply_sla(institution, department)
+    complaint.apply_sla(
+        institution, department, override_hours=rule.sla_hours if rule else None
+    )
 
     db.session.add(complaint)
     db.session.flush()
 
-    record_event(complaint, user.id, "created", to_value="submitted")
+    record_event(
+        complaint,
+        user.id,
+        "created",
+        to_value="submitted",
+        note=f"Routed to {department.name}." if department else "Awaiting routing.",
+    )
+
+    where = f" It is with {department.name}." if department else ""
     notify(
         user.id,
         institution.id,
         "Complaint logged",
-        f"Your complaint {complaint.ticket_number} has been logged.",
+        f"Your complaint {complaint.ticket_number} has been logged.{where}",
         complaint.id,
         "submitted",
     )
@@ -109,10 +135,11 @@ def list_complaints():
     user = g.current_user
     query = tenant_query(Complaint)
 
-    # Students only ever see their own complaints.
-    if not user.is_staff:
-        query = query.filter(Complaint.student_id == user.id)
-    else:
+    # Students see only their own; staff see everything except the
+    # confidential work that is not theirs.
+    query = query.filter(confidential_filter(user))
+
+    if user.is_staff:
         if request.args.get("scope") == "mine":
             query = query.filter(Complaint.assigned_to_id == user.id)
         if request.args.get("unassigned") in ("1", "true"):
@@ -238,7 +265,7 @@ def add_response(complaint_id):
 def update_status(complaint_id):
     user = g.current_user
     complaint = tenant_query(Complaint).filter_by(id=complaint_id).first()
-    if not complaint:
+    if not complaint or not can_view_complaint(user, complaint):
         return fail("We could not find that complaint.", 404)
 
     payload = request.get_json(silent=True) or {}
@@ -291,7 +318,7 @@ def update_status(complaint_id):
 def assign(complaint_id):
     user = g.current_user
     complaint = tenant_query(Complaint).filter_by(id=complaint_id).first()
-    if not complaint:
+    if not complaint or not can_view_complaint(user, complaint):
         return fail("We could not find that complaint.", 404)
 
     payload = request.get_json(silent=True) or {}
@@ -301,6 +328,10 @@ def assign(complaint_id):
         assignee = tenant_query(User).filter_by(id=assignee_id).first()
         if not assignee or not assignee.is_staff:
             return fail("Choose a member of staff.", 422)
+        if complaint.is_confidential and not can_view_complaint(assignee, complaint):
+            return fail(
+                "This complaint is confidential and can only be given to the handling unit.", 422
+            )
         previous = complaint.assigned_to.full_name if complaint.assigned_to else None
         complaint.assigned_to_id = assignee.id
         record_event(complaint, user.id, "assigned", previous, assignee.full_name)
@@ -325,7 +356,7 @@ def assign(complaint_id):
 def update_priority(complaint_id):
     user = g.current_user
     complaint = tenant_query(Complaint).filter_by(id=complaint_id).first()
-    if not complaint:
+    if not complaint or not can_view_complaint(user, complaint):
         return fail("We could not find that complaint.", 404)
 
     priority = (request.get_json(silent=True) or {}).get("priority")
@@ -335,7 +366,13 @@ def update_priority(complaint_id):
     previous = complaint.priority
     complaint.priority = priority
     institution = db.session.get(Institution, complaint.institution_id)
-    complaint.apply_sla(institution, complaint.department)
+
+    rule = RoutingRule.query.filter_by(
+        institution_id=complaint.institution_id, category=complaint.category
+    ).first()
+    complaint.apply_sla(
+        institution, complaint.department, override_hours=rule.sla_hours if rule else None
+    )
     record_event(complaint, user.id, "priority_changed", previous, priority)
     db.session.commit()
 

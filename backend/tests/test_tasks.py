@@ -154,7 +154,7 @@ def test_every_job_runs_in_one_request(client, app):
 
     assert response.status_code == 200
     results = response.get_json()["results"]
-    assert set(results) == {"escalate", "send-queue", "purge-expired"}
+    assert set(results) == {"escalate", "send-queue", "purge-expired", "report-ignored"}
 
 
 def test_one_failing_job_does_not_stop_the_others(client, app, monkeypatch):

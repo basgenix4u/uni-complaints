@@ -25,7 +25,7 @@ bp = Blueprint("tasks", __name__, url_prefix="/api/tasks")
 # Only these may be triggered. A name that is not listed is rejected
 # before anything is imported, so the endpoint cannot be used to reach
 # arbitrary code.
-TASKS = ("escalate", "send-queue", "purge-expired")
+TASKS = ("escalate", "send-queue", "purge-expired", "report-ignored")
 
 
 def _authorised() -> bool:
@@ -49,6 +49,11 @@ def _run(name: str) -> dict:
         from app.services.delivery import process_queue
 
         return process_queue()
+
+    if name == "report-ignored":
+        from app.services.routing import report_ignored_everywhere
+
+        return report_ignored_everywhere()
 
     from app.models.institution import Institution
     from app.services.privacy import purge_expired_data

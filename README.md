@@ -31,6 +31,24 @@ It is **multi-tenant**: one deployment serves many institutions, each with its o
 | Institution admin | Manages staff, departments, service levels and settings |
 | Platform admin | Provisions institutions across the deployment |
 
+## Where a complaint goes
+
+A student should not have to work out which office owns their problem;
+that is the thing they came here unable to do. Each institution keeps a
+routing table mapping a category to the unit that answers it, and the
+destination is set the moment the complaint is filed.
+
+Routing is data rather than code because it genuinely differs between
+institutions: scholarships sit with Bursary at one university and with
+Student Affairs at another, and neither is wrong. A new institution
+starts from a draft table covering the units most Nigerian universities
+have, and edits it.
+
+Academic matters route to the complainant's own department rather than a
+fixed unit, since a disputed grade belongs with the department that set
+it. A rule may also override the deadline for its category, and may mark
+it confidential.
+
 ## How a complaint moves
 
 ```
@@ -47,7 +65,9 @@ Deadlines count **working hours only**, skipping weekends and public holidays. A
 
 Priority scales the target: urgent is a quarter of the standard window, low is double.
 
-When a deadline passes, `flask escalate` raises the complaint, notifies the student and department heads, and records it. The sweep is idempotent, so it is safe to run on a schedule.
+When a deadline passes, `flask escalate` raises the complaint and tells the student. Escalation then climbs the institution's own chain of command one rung at a time — the handling unit, then the dean or the escalation unit, then the institution — rather than alerting every department head at once, which trains everyone to ignore the alerts. The sweep is idempotent, so it is safe to run on a schedule.
+
+Anything that reaches the top and is still unanswered lands on an ignored list. The institution's head sees it and is emailed it weekly; the platform sees which institutions are not answering, as ticket numbers only.
 
 ---
 
@@ -89,13 +109,13 @@ The dev server proxies `/api` to the backend, so no cross-origin setup is needed
 ### Tests
 
 ```bash
-cd backend && pytest                    # 213 tests
+cd backend && pytest                    # 292 tests
 cd frontend && npm run lint && npm run build
 
 # Browser journeys, desktop and mobile, against a running API
 cd backend && RATELIMIT_ENABLED=false flask seed --demo && \
   RATELIMIT_ENABLED=false python run.py &
-cd frontend && npm run test:e2e         # 52 journeys
+cd frontend && npm run test:e2e         # 60 journeys
 ```
 
 The browser suite signs in once per role through the API and replays the
@@ -111,8 +131,11 @@ test would exhaust the rate limit, which is a protection worth keeping.
 | `flask escalate` | Escalate complaints past their deadline | every 30 minutes |
 | `flask send-queue` | Deliver queued email and texts | every 5 minutes |
 | `flask purge-expired` | Delete complaints past the retention period | nightly |
+| `flask report-ignored` | Email each institution's head what it has left unanswered | daily (sends weekly) |
 
-Both are idempotent and safe to run concurrently with the web process.
+All are idempotent and safe to run concurrently with the web process. The
+ignored report enforces its own weekly interval, so running it daily does
+not produce a weekly email daily.
 
 ---
 
@@ -130,6 +153,7 @@ Both are idempotent and safe to run concurrently with the web process.
 | Uploads | Allow-list of types, file signatures verified against the declared type, generated filenames, stored outside the served tree |
 | File access | Served only through an authorised endpoint, so a guessed URL reveals nothing |
 | Private notes | Filtered for students in the API, and students cannot set the flag |
+| Confidential complaints | A report naming a member of staff is kept from that person's own unit. Filtered out of every list, count, chart and export for anyone outside the handling unit, and it cannot be assigned to them or widened by escalation |
 | Spreadsheet exports | Values beginning with an equals sign are prefixed, so a title cannot execute when the file is opened |
 | Image previews | Generated from pixel data only, which drops the location a photograph was taken |
 | Transport | Security headers on every response; personal data is never cached |
@@ -302,16 +326,18 @@ All text meets WCAG 2.2 AA. The primary action measures 6.45:1.
 ```
 backend/
   app/
-    models/       institution, user, complaint, attachment, message
+    models/       institution, user, complaint, attachment, message,
+                  academic, routing, invitation
     routes/       auth, complaints, attachments, dashboard,
-                  notifications, admin, platform
+                  notifications, admin, platform, invitations,
+                  routing, privacy, tasks
     services/     tickets, sla, storage, delivery, notifications,
-                  sms, export, thumbnails, privacy,
-                  cloudinary_storage, object_storage
+                  sms, export, thumbnails, privacy, register,
+                  routing, cloudinary_storage, object_storage
     security.py   role checks and tenant scoping
-  tests/          213 tests
+  tests/          292 tests
 frontend/
-  e2e/            52 browser journeys
+  e2e/            60 browser journeys
   src/
     components/   ui primitives, complaint views
     pages/        auth, public, student, admin

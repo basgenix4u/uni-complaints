@@ -40,6 +40,7 @@ def create_app(config_name: str | None = None) -> Flask:
     from app.routes.platform import bp as platform_bp
     from app.routes.invitations import bp as invitations_bp, public_bp as invitation_public_bp
     from app.routes.privacy import bp as privacy_bp
+    from app.routes.routing import bp as routing_bp, platform_bp as routing_platform_bp
     from app.routes.tasks import bp as tasks_bp
 
     app.register_blueprint(auth_bp)
@@ -53,6 +54,8 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(invitations_bp)
     app.register_blueprint(invitation_public_bp)
     app.register_blueprint(privacy_bp)
+    app.register_blueprint(routing_bp)
+    app.register_blueprint(routing_platform_bp)
     app.register_blueprint(tasks_bp)
 
     logger = configure_logging(app)
@@ -199,6 +202,23 @@ def register_cli(app: Flask) -> None:
             f"Escalated {result['escalated']}, reminded {result['reminded']}."
         )
 
+    @app.cli.command("report-ignored")
+    @click.option("--force", is_flag=True, help="Send now, ignoring the weekly interval.")
+    def report_ignored(force):
+        """Email each institution's head what it has left unanswered.
+
+        The interval is enforced inside the service rather than by the
+        schedule, so running this more often does not produce a weekly
+        report more often.
+        """
+        from app.services.routing import report_ignored_everywhere
+
+        result = report_ignored_everywhere(force=force)
+        click.echo(
+            f"Reported {result['complaints_ignored']} ignored complaint(s) at "
+            f"{result['institutions_reported']} institution(s)."
+        )
+
     @app.cli.command("seed")
     @click.option("--demo", is_flag=True, help="Also create a demo institution and accounts.")
     def seed(demo):
@@ -209,7 +229,7 @@ def register_cli(app: Flask) -> None:
         """
         import os
 
-        from app.models.institution import Department, Institution
+        from app.models.institution import Institution
         from app.models.user import User
 
         db.create_all()
@@ -236,14 +256,14 @@ def register_cli(app: Flask) -> None:
                 db.session.add(institution)
                 db.session.flush()
 
-                for name, slug in (
-                    ("Bursary", "bursary"),
-                    ("Registry", "registry"),
-                    ("Student Affairs", "student-affairs"),
-                ):
-                    db.session.add(
-                        Department(institution_id=institution.id, name=name, slug=slug)
-                    )
+                # The standard units and a working routing table, so the
+                # demo behaves like a real institution rather than
+                # dropping every complaint into one unassigned pile.
+                from app.services.routing import seed_routing, seed_units
+
+                seed_units(institution)
+                db.session.flush()
+                seed_routing(institution)
                 db.session.flush()
 
                 staff = User(

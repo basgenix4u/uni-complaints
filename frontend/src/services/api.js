@@ -248,11 +248,20 @@ export const adminService = {
   updateSettings: (data) => api.put('/admin/settings', data).then(unwrap),
 };
 
+export const routingService = {
+  rules: () => api.get('/routing/rules').then(unwrap),
+  saveRule: (data) => api.post('/routing/rules', data).then(unwrap),
+  deleteRule: (id) => api.delete(`/routing/rules/${id}`).then(unwrap),
+  seed: () => api.post('/routing/seed').then(unwrap),
+  ignored: (days) => api.get('/routing/ignored', { params: { days } }).then(unwrap),
+};
+
 export const platformService = {
   institutions: () => api.get('/platform/institutions').then(unwrap),
   createInstitution: (data) => api.post('/platform/institutions', data).then(unwrap),
   toggleInstitution: (id) => api.put(`/platform/institutions/${id}/toggle-active`).then(unwrap),
   stats: () => api.get('/platform/stats').then(unwrap),
+  ignored: (days) => api.get('/platform/ignored', { params: { days } }).then(unwrap),
 };
 
 export default api;

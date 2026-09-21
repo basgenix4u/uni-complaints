@@ -68,6 +68,11 @@ class Complaint(TimestampMixin, db.Model):
 
     is_anonymous = db.Column(db.Boolean, default=False, nullable=False)
 
+    # Copied from the routing rule when the complaint is filed rather than
+    # read from it later, so that relaxing a rule never retrospectively
+    # exposes a report that was made in confidence.
+    is_confidential = db.Column(db.Boolean, default=False, nullable=False)
+
     acknowledge_due_at = db.Column(db.DateTime(timezone=True))
     resolve_due_at = db.Column(db.DateTime(timezone=True), index=True)
     acknowledged_at = db.Column(db.DateTime(timezone=True))
@@ -81,9 +86,17 @@ class Complaint(TimestampMixin, db.Model):
     satisfaction_comment = db.Column(db.String(500))
     response_count = db.Column(db.Integer, default=0, nullable=False)
 
-    # Set once when the deadline passes, so a sweep cannot escalate the
-    # same complaint twice.
+    # First escalation only. Kept distinct from the level below because
+    # "how long has this been ignored" is measured from the moment the
+    # institution was first told, not from the most recent nudge.
     escalated_at = db.Column(db.DateTime(timezone=True), index=True)
+
+    # How far up the hierarchy it has climbed. Zero is unescalated; each
+    # sweep raises it by one rung rather than telling everyone at once.
+    escalation_level = db.Column(db.Integer, default=0, nullable=False)
+    # When the next rung becomes due. Null means the ladder is exhausted.
+    next_escalation_at = db.Column(db.DateTime(timezone=True), index=True)
+
     reminder_sent_at = db.Column(db.DateTime(timezone=True))
 
     student = db.relationship("User", foreign_keys=[student_id])
@@ -107,12 +120,21 @@ class Complaint(TimestampMixin, db.Model):
 
     # -- SLA ----------------------------------------------------------
 
-    def apply_sla(self, institution, department=None) -> None:
-        """Set deadlines, counting only the institution's working hours."""
+    def apply_sla(self, institution, department=None, override_hours: int | None = None) -> None:
+        """Set deadlines, counting only the institution's working hours.
+
+        `override_hours` comes from the routing rule, which is the most
+        specific setting available: a missing result is not the same kind
+        of wait as a broken tap, even in the same unit.
+        """
         from app.services.sla import deadline_for
 
         self.acknowledge_due_at, self.resolve_due_at = deadline_for(
-            institution, department, self.priority, self.created_at or utcnow()
+            institution,
+            department,
+            self.priority,
+            self.created_at or utcnow(),
+            override_hours=override_hours,
         )
 
     @property
@@ -145,12 +167,14 @@ class Complaint(TimestampMixin, db.Model):
             "priority": self.priority,
             "status": self.status,
             "is_anonymous": self.is_anonymous,
+            "is_confidential": self.is_confidential,
             "is_overdue": self.is_overdue,
             "response_count": self.response_count,
             "resolution_note": self.resolution_note,
             "decline_reason": self.decline_reason,
             "satisfaction_rating": self.satisfaction_rating,
             "is_escalated": self.escalated_at is not None,
+            "escalation_level": self.escalation_level,
             "resolution_hours": self.resolution_hours,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,

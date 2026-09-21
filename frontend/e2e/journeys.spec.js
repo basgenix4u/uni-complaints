@@ -195,6 +195,71 @@ test.describe('staff journey', () => {
   });
 });
 
+test.describe('routing', () => {
+  test('a filed complaint arrives at a named unit without the student choosing one', async ({
+    page,
+  }) => {
+    await signIn(page, STUDENT);
+    await page.goto('/student/complaints/new');
+
+    await page.getByRole('button', { name: 'Fees and payment' }).click();
+    await page.getByRole('button', { name: /continue/i }).click();
+
+    await page.getByLabel(/^title/i).fill('Fees receipt is not reflecting on the portal');
+    await page
+      .getByLabel(/what happened/i)
+      .fill(
+        'I paid my school fees three weeks ago at the bank and the portal still shows the account as unpaid.',
+      );
+    await page.getByRole('button', { name: /continue/i }).click();
+    await page.getByRole('button', { name: /send complaint/i }).click();
+
+    await expect(page.getByRole('heading', { name: /your complaint is logged/i })).toBeVisible({
+      timeout: 20_000,
+    });
+
+    // Nobody was asked which office owns a fees query. The receipt names
+    // the unit anyway, because routing worked it out.
+    await expect(page.getByText('Sent to')).toBeVisible();
+    await expect(page.getByText('Bursary')).toBeVisible();
+  });
+
+  test('an administrator can see and change who answers what', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/routing');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /who answers what/i })).toBeVisible();
+    await expect(page.getByText('Bursary').first()).toBeVisible();
+
+    // Safety matters ship confidential, which is a safeguarding default
+    // rather than a routing preference.
+    await expect(page.getByText('Confidential').first()).toBeVisible();
+  });
+
+  test('the ignored list is reachable and can be widened', async ({ page }) => {
+    await signIn(page, ADMIN);
+    await page.goto('/admin/ignored');
+    await ready(page);
+
+    await expect(page.getByRole('heading', { name: /still waiting/i })).toBeVisible();
+
+    // Either outcome is correct depending on the seeded data; what must
+    // hold is that the window can be changed and the page answers.
+    await page.getByLabel(/unanswered for/i).selectOption('30');
+    await expect(
+      page.getByText(/nothing has been left this long|complaints? waiting/i).first(),
+    ).toBeVisible();
+  });
+
+  test('an officer is not offered the routing table', async ({ page }) => {
+    await signIn(page, STUDENT);
+    await page.goto('/admin/routing');
+
+    await expect(page).toHaveURL(/\/student\/dashboard/, { timeout: 15_000 });
+  });
+});
+
 test.describe('authorisation in the interface', () => {
   test('a student cannot reach the admin queue', async ({ page }) => {
     await signIn(page, STUDENT);

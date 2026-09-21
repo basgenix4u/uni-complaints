@@ -1,6 +1,7 @@
 # From demo to product: what the real thing needs
 
-**Status:** design discussion, not yet built. Nothing here is implemented.
+**Status:** stages 1 to 3 of section 7 are built and merged. The rest is
+still design. Section 7 records which is which.
 
 You are right that the current build is a working demo rather than a
 product. It assumes one institution with a flat list of departments, and
@@ -18,17 +19,18 @@ I checked the code rather than guessing.
 |---|---|
 | Staff must be insiders | ✓ correct — staff are created by an admin, never self-registered |
 | Students from different universities | ✗ registration silently accepts any institution slug, and the form does not even ask |
-| Different complaints go to different units | ✗ **no routing exists.** Category and department are unrelated fields |
-| Faculties differ per university | ✗ **hardcoded list of 10 in the frontend.** Same for every institution |
-| Students belong to departments | ✗ `faculty` and `department_name` are free text on the user, linked to nothing |
+| Different complaints go to different units | ✓ **fixed in stage 3.** Routing rules, owned by the institution, applied at filing |
+| Faculties differ per university | ✓ **fixed in stage 1.** Faculties and departments are per-institution tables |
+| Students belong to departments | ✓ **fixed in stage 1.** The student register carries faculty, department and level |
 | Non-onboarded schools should be blocked | ◑ partially — it checks the institution exists, but there is no request-to-join path |
 | Should not require a university email | ✓ correct today, any email works |
 | Google sign-in | ✗ not implemented |
 | Email verification | ✗ **none.** Anyone can register claiming any email |
 
-Two of these are serious. **No routing** means every complaint lands in
-one undifferentiated pile. **No email verification** means nothing stops
-someone registering as a student who is not one.
+Two of these were serious. **No routing** meant every complaint landed
+in one undifferentiated pile; that is fixed. **No email verification**
+still means nothing stops someone registering as a student who is not
+one, and it is the next thing worth doing.
 
 ---
 
@@ -297,16 +299,35 @@ membership record, not as a single column on the user.
 
 Each stage leaves the system working.
 
-| Stage | Work | Why this order |
-|---|---|---|
-| **1** | Faculties, departments, units as real tables. Student linked to them | Nothing else can be built on free text |
-| **2** | Invitations and bulk import for staff | Removes the hand-typing problem |
-| **3** | Routing rules, and escalation up the real hierarchy | The core product gap |
-| **4** | Institution directory, request-to-join, interest signal | Makes registration honest and captures demand |
-| **5** | Email verification, then Google sign-in | Verification first; Google is an accelerator on top |
-| **6** | Student register import and matric verification | Depends on 1 and 5 |
-| **7** | Onboarding wizard for institution admins | Packages 1 to 6 into something self-service |
-| **8** | Confidential queues, Dean role, appeals | Refinement once the shape is proven |
+| Stage | Work | Why this order | Status |
+|---|---|---|---|
+| **1** | Faculties, departments, units as real tables. Student linked to them | Nothing else can be built on free text | **Built** |
+| **2** | Invitations and bulk import for staff | Removes the hand-typing problem | **Built** |
+| **3** | Routing rules, and escalation up the real hierarchy | The core product gap | **Built** |
+| **4** | Institution directory, request-to-join, interest signal | Makes registration honest and captures demand | To do |
+| **5** | Email verification, then Google sign-in | Verification first; Google is an accelerator on top | To do |
+| **6** | Student register import and matric verification | Depends on 1 and 5 | Import built in 1; registration not yet wired to it |
+| **7** | Onboarding wizard for institution admins | Packages 1 to 6 into something self-service | To do |
+| **8** | Confidential queues, Dean role, appeals | Refinement once the shape is proven | Queues and the Dean built in 2 and 3; appeals to do |
+
+### What stage 3 actually changed
+
+- `POST /api/complaints` calls `resolve_destination()`, so a complaint
+  reaches a named unit without the student choosing one. An explicit
+  choice is still honoured.
+- A routing rule may override the deadline for its category. A missing
+  result and a broken tap are both Registry's and are not the same wait.
+- `is_confidential` is copied onto the complaint at filing. Confidential
+  work is filtered out of every list, count, chart and export for anyone
+  outside the handling unit, and cannot be assigned to them.
+- Escalation climbs one rung at a time — handling unit, then the dean or
+  the escalation unit, then the institution — instead of notifying every
+  department head at once. It never widens a confidential audience.
+- What survives the whole climb lands on an ignored report: visible to
+  the institution's head, emailed weekly, and visible to the platform as
+  ticket numbers only.
+- A new institution is provisioned with the standard units and a draft
+  routing table, so it works from the first day.
 
 **Stage 1 is unavoidable and everything depends on it.** It is also a
 migration: `faculty` and `department_name` become foreign keys.
@@ -315,28 +336,32 @@ migration: `faculty` and `department_name` become foreign keys.
 
 ## 8. Things worth deciding before building
 
-These are genuine forks, and I do not think I should pick for you.
+These were genuine forks. Most are now settled; the answers are
+recorded here so the reasoning is not lost.
 
-1. **Is the customer the university, or the student?** If universities
-   pay, the product is an administrative tool and the SUG is a
-   stakeholder. If students are the audience, it is closer to advocacy,
-   and a university that ignores complaints is the story rather than the
-   customer. This changes what gets built.
+1. **Is the customer the university, or the student?** *Decided: neither
+   pays. It is free for now.* That keeps the student as the audience
+   without making the institution an adversary, and it removes the
+   pressure to build billing before the product works.
 
-2. **What happens to a complaint the institution ignores?** The escalation
-   currently stops at the top of the institution. Does it stop there, or
-   does something else happen?
+2. **What happens to a complaint the institution ignores?** *Decided and
+   built.* Escalation climbs to the top of the institution and stops
+   there. Anything still unanswered after that piles onto an ignored
+   list: the institution's head sees it and is emailed it weekly, and
+   the platform sees which institutions are not answering — ticket
+   numbers only, never the complaints themselves.
 
-3. **Anonymous complaints.** Already supported, off by default. Harassment
-   cases are exactly where they matter and exactly where they are hardest
-   to act on.
+3. **Anonymous complaints.** *Decided.* Kept, and they stay. Confidential
+   routing now covers the related case: a report naming a member of staff
+   is kept out of that person's own unit even when it is not anonymous.
 
 4. **One account across institutions?** A student who transfers, or a
    graduate who still has an open complaint.
 
 5. **Polytechnics and colleges** use different words for the same things:
-   Rector rather than Vice-Chancellor, School rather than Faculty. Worth
-   deciding now whether the language adapts per institution type.
+   Rector rather than Vice-Chancellor, School rather than Faculty.
+   *Decided: set aside for now.* The structure already fits both; only
+   the labels differ, and that is a later change rather than a blocker.
 
 ---
 
