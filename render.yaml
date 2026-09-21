@@ -93,6 +93,14 @@ services:
       - key: LOG_LEVEL
         value: INFO
 
+      # Used once by `flask seed` to create the first administrator. The
+      # API cannot create one on its own, because creating staff requires
+      # an existing administrator. Change the password after signing in.
+      - key: PLATFORM_ADMIN_EMAIL
+        sync: false
+      - key: PLATFORM_ADMIN_PASSWORD
+        sync: false
+
   # Scheduled work. A separate service so a long purge cannot occupy a
   # request worker, and so it can be restarted independently.
   - type: cron
