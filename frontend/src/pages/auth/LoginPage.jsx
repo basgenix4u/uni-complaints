@@ -5,8 +5,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowRightEndOnRectangleIcon,
+  EnvelopeIcon,
+  LockClosedIcon,
+} from '@heroicons/react/24/outline';
 import { Button, Input } from '../../components/ui';
+import Brand from '../../components/layout/Brand';
 import useAuthStore from '../../stores/authStore';
 
 // Validation Schema
@@ -62,12 +67,21 @@ const LoginPage = () => {
 
   return (
     <div>
-      {/* Header */}
-      <div className="text-center mb-8">
+      {/* Header. The brand repeats here because on a wide screen the
+          panel's copy sits far to the left; the form should stand on its
+          own when it is all a narrow window shows. */}
+      <div className="mb-8">
+        <div className="mb-6 hidden items-center gap-3 lg:flex">
+          <Brand className="h-11 w-11" />
+          <span>
+            <span className="block font-display text-xl font-bold text-brand-800">Resolve</span>
+            <span className="block text-xs text-ink-500">Complaints that reach someone</span>
+          </span>
+        </div>
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-neutral-900 mb-2"
+          className="font-display text-3xl font-bold text-brand-800 mb-2"
         >
           Welcome back
         </motion.h1>
@@ -126,6 +140,7 @@ const LoginPage = () => {
           fullWidth
           loading={isLoading}
         >
+          <ArrowRightEndOnRectangleIcon className="h-5 w-5" aria-hidden="true" />
           Sign In
         </Button>
       </motion.form>

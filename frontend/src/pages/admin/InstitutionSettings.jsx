@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BuildingOffice2Icon, ClockIcon, PlusIcon } from '@heroicons/react/24/outline';
 
@@ -20,9 +21,12 @@ export default function InstitutionSettings() {
   const [errors, setErrors] = useState({});
   const [saved, setSaved] = useState('');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ['settings'],
     queryFn: () => adminService.settings(),
+    // A 404 here means the account has no institution, which retrying
+    // will not change.
+    retry: false,
   });
 
   const { data: departmentData } = useQuery({
@@ -53,6 +57,36 @@ export default function InstitutionSettings() {
     setDraft({ ...form, [field]: value });
     setErrors((current) => ({ ...current, [field]: undefined }));
   };
+
+  // The platform administrator has no institution, so this page has
+  // nothing to show them. It used to render its loading skeleton
+  // forever, because the request 404s and `form` never arrives — a
+  // blank page with no explanation, reload as often as you like.
+  if (isError || (!isLoading && !form)) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          Settings
+        </h1>
+        <div className="mt-6 rounded-lg border border-line bg-surface p-6">
+          <p className="font-semibold text-ink-900">
+            This account is not attached to an institution.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-600">
+            {errorMessage(error) || 'We could not find your institution.'} These settings belong
+            to an institution administrator. As the platform owner, you manage institutions from
+            the platform page instead.
+          </p>
+          <Link
+            to="/platform/institutions"
+            className="mt-4 inline-flex items-center gap-2 rounded-md bg-brand-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-800"
+          >
+            Go to institutions
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading || !form) {
     return (

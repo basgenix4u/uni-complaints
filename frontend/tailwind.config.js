@@ -63,17 +63,20 @@ export default {
           800: '#064E3B',
           900: '#022C22',
         },
+        // Gold against the green. 200-500 are tokenised so they can be
+        // themed with the rest; the remaining steps stay literal because
+        // nothing uses them yet.
         accent: {
-          50: '#FFF7ED',
-          100: '#FFEDD5',
-          200: '#FED7AA',
-          300: '#FDBA74',
-          400: '#FB923C',
-          500: '#D97706',
-          600: '#B45309',
-          700: '#92400E',
-          800: '#78350F',
-          900: '#451A03',
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          200: token('accent-200'),
+          300: token('accent-300'),
+          400: token('accent-400'),
+          500: token('accent-500'),
+          600: '#8A6508',
+          700: '#6B4E06',
+          800: '#4A3604',
+          900: '#2B1F02',
         },
         neutral: {
           50: '#F7F8FA',
