@@ -27,6 +27,15 @@ from app.services.routing import resolve_destination
 from app.services.tickets import generate_ticket_number, normalise_ticket
 from app.models.base import utcnow
 
+# The subset of timeline actions a student may see on their own
+# complaint. Everything else — private notes, the record of staff reads —
+# is the institution's working, not the complaint's progress.
+STUDENT_VISIBLE_EVENTS = {
+    "created", "status_changed", "assigned", "unassigned",
+    "priority_changed", "attached", "attachment_removed",
+    "rated", "escalated",
+}
+
 bp = Blueprint("complaints", __name__, url_prefix="/api/complaints")
 
 TITLE_MIN, TITLE_MAX = 5, 200
@@ -242,6 +251,17 @@ def get_complaint(complaint_id):
             )
         )
         db.session.commit()
+    else:
+        # The student gets the same timeline with the internal workings
+        # removed. Watching a complaint move — filed, routed,
+        # acknowledged, resolved — is the product's whole promise, and
+        # until now only staff could see the movement. Private notes and
+        # the record of staff reads stay out.
+        data["events"] = [
+            e.to_dict()
+            for e in complaint.events
+            if e.action in STUDENT_VISIBLE_EVENTS
+        ]
 
     return ok({"complaint": data})
 
