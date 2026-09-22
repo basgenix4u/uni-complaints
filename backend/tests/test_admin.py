@@ -147,3 +147,171 @@ def test_platform_admin_provisions_an_institution_with_its_first_admin(client, d
         "/api/auth/login",
         json={"email": "admin@gamma.edu.ng", "password": "Password123"},
     ).status_code == 200
+
+
+def test_a_provisioned_institution_is_open_for_business(client, db):
+    """Provisioning is the act of bringing an institution into service.
+
+    is_onboarded defaults to false because the directory also lists
+    institutions we merely know of. Inheriting that default here meant
+    every institution created through the API was dead on arrival: no
+    student could register, and no endpoint existed to change it.
+    """
+    from app.models.institution import Institution
+
+    make_user(None, "platform@test.ng", role="platform_admin")
+    token = login(client, "platform@test.ng")
+
+    response = client.post(
+        "/api/platform/institutions",
+        headers=auth(token),
+        json={
+            "name": "Kano State University",
+            "code": "KSU",
+            "slug": "kano-state",
+            "admin_name": "The Registrar",
+            "admin_email": "registrar@ksu.test",
+            "admin_password": "Password123",
+        },
+    )
+
+    assert response.status_code == 201
+    institution = Institution.query.filter_by(slug="kano-state").first()
+    assert institution.is_onboarded is True
+    # Open on day one, because the register is empty until a registrar
+    # uploads one. Starting in register mode rejects every student.
+    assert institution.verification_mode == "open"
+
+
+def test_a_student_can_register_at_a_newly_provisioned_institution(client, db):
+    """The end to end consequence of the flag, rather than the flag itself."""
+    make_user(None, "platform@test.ng", role="platform_admin")
+    client.post(
+        "/api/platform/institutions",
+        headers=auth(login(client, "platform@test.ng")),
+        json={
+            "name": "Kano State University",
+            "code": "KSU",
+            "slug": "kano-state",
+            "admin_name": "The Registrar",
+            "admin_email": "registrar@ksu.test",
+            "admin_password": "Password123",
+        },
+    )
+
+    response = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Amina Yusuf",
+            "email": "amina@ksu.test",
+            "password": "Password123",
+            "institution": "kano-state",
+        },
+    )
+
+    assert response.status_code == 201, response.get_json()
+
+
+def test_the_platform_can_take_an_institution_out_of_service(client, db):
+    from app.models.institution import Institution
+
+    make_user(None, "platform@test.ng", role="platform_admin")
+    token = login(client, "platform@test.ng")
+    created = client.post(
+        "/api/platform/institutions",
+        headers=auth(token),
+        json={
+            "name": "Kano State University",
+            "code": "KSU",
+            "slug": "kano-state",
+            "admin_name": "The Registrar",
+            "admin_email": "registrar@ksu.test",
+            "admin_password": "Password123",
+        },
+    ).get_json()["data"]["institution"]["id"]
+
+    response = client.put(
+        f"/api/platform/institutions/{created}/onboarding",
+        headers=auth(token),
+        json={"is_onboarded": False},
+    )
+
+    assert response.status_code == 200
+    assert Institution.query.get(created).is_onboarded is False
+
+    blocked = client.post(
+        "/api/auth/register",
+        json={
+            "full_name": "Amina Yusuf",
+            "email": "amina@ksu.test",
+            "password": "Password123",
+            "institution": "kano-state",
+        },
+    )
+    assert blocked.status_code == 409
+
+
+def test_the_verification_mode_can_be_switched_once_a_register_exists(client, db):
+    from app.models.institution import Institution
+
+    make_user(None, "platform@test.ng", role="platform_admin")
+    token = login(client, "platform@test.ng")
+    created = client.post(
+        "/api/platform/institutions",
+        headers=auth(token),
+        json={
+            "name": "Kano State University",
+            "code": "KSU",
+            "slug": "kano-state",
+            "admin_name": "The Registrar",
+            "admin_email": "registrar@ksu.test",
+            "admin_password": "Password123",
+        },
+    ).get_json()["data"]["institution"]["id"]
+
+    response = client.put(
+        f"/api/platform/institutions/{created}/onboarding",
+        headers=auth(token),
+        json={"is_onboarded": True, "verification_mode": "register"},
+    )
+
+    assert response.status_code == 200
+    assert Institution.query.get(created).verification_mode == "register"
+
+
+def test_an_invalid_verification_mode_is_refused(client, db):
+    make_user(None, "platform@test.ng", role="platform_admin")
+    token = login(client, "platform@test.ng")
+    created = client.post(
+        "/api/platform/institutions",
+        headers=auth(token),
+        json={
+            "name": "Kano State University",
+            "code": "KSU",
+            "slug": "kano-state",
+            "admin_name": "The Registrar",
+            "admin_email": "registrar@ksu.test",
+            "admin_password": "Password123",
+        },
+    ).get_json()["data"]["institution"]["id"]
+
+    response = client.put(
+        f"/api/platform/institutions/{created}/onboarding",
+        headers=auth(token),
+        json={"is_onboarded": True, "verification_mode": "invented"},
+    )
+
+    assert response.status_code == 422
+
+
+def test_an_institution_admin_cannot_change_onboarding(client, alpha):
+    """It is a platform decision, not one an institution makes for itself."""
+    make_user(alpha, "vc@test.ng", role="institution_admin")
+
+    response = client.put(
+        f"/api/platform/institutions/{alpha.id}/onboarding",
+        headers=auth(login(client, "vc@test.ng")),
+        json={"is_onboarded": True},
+    )
+
+    assert response.status_code == 403
