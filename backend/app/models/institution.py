@@ -19,6 +19,16 @@ class Institution(TimestampMixin, db.Model):
     type = db.Column(db.String(40), default="university", nullable=False)
     state = db.Column(db.String(60))
 
+    # What people actually call the place. Distinct from `code`, which
+    # prefixes every ticket number and so has to stay unique: acronyms do
+    # not. Several institutions answer to ACE, and a student searching
+    # "UNILAG" should find Lagos whatever its ticket prefix happens to be.
+    short_name = db.Column(db.String(20), index=True)
+
+    # How the institution is funded. Two institutions in different states
+    # often share a name, and this is what tells them apart in a list.
+    ownership = db.Column(db.String(20))
+
     logo_url = db.Column(db.String(500))
     # Brand hue in degrees; the palette is generated from this while
     # preserving the contrast ratios defined in the design system.
@@ -124,8 +134,10 @@ class Institution(TimestampMixin, db.Model):
             "id": self.id,
             "name": self.name,
             "slug": self.slug,
+            "short_name": self.short_name,
             "type": self.type,
             "state": self.state,
+            "ownership": self.ownership,
             "logo_url": self.logo_url,
             "is_onboarded": self.is_onboarded and self.is_active,
             # Tells the sign-up form what to ask for, so a student is not

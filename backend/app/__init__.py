@@ -272,6 +272,24 @@ def register_cli(app: Flask) -> None:
             f"{result['institutions_reported']} institution(s)."
         )
 
+    @app.cli.command("seed-directory")
+    def seed_directory():
+        """Load the national institution list into the directory.
+
+        Safe to run again when the list is refreshed. An institution that
+        has already been onboarded is left alone, because its own
+        administrators may have corrected details we would otherwise
+        overwrite.
+        """
+        from app.services.seed_directory import load
+
+        result = load()
+        click.echo(
+            f"Directory: {result['created']} added, {result['updated']} updated, "
+            f"{result['skipped_onboarded']} left alone (already onboarded), "
+            f"{result['total_in_file']} in the source list."
+        )
+
     @app.cli.command("seed")
     @click.option("--demo", is_flag=True, help="Also create a demo institution and accounts.")
     def seed(demo):

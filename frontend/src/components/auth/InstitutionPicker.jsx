@@ -11,6 +11,12 @@ import Button from '../ui/Button';
 import { Input } from '../ui/Field';
 import { directoryService, errorMessage } from '../../services/api';
 
+const KIND_LABEL = {
+  university: 'University',
+  polytechnic: 'Polytechnic',
+  college_of_education: 'College of Education',
+};
+
 /**
  * Choosing where you study.
  *
@@ -29,11 +35,18 @@ export default function InstitutionPicker({ value, onChange }) {
   const [asked, setAsked] = useState(false);
   const [email, setEmail] = useState('');
   const [problem, setProblem] = useState('');
+  const [active, setActive] = useState(0);
+  // Reset during render rather than in an effect: the highlight belongs
+  // to a particular set of results, and carrying it into the next set
+  // would point at whatever happens to sit in that position.
+  const [activeFor, setActiveFor] = useState('');
 
   useEffect(() => {
     const timer = setTimeout(() => setDebounced(query.trim()), 250);
     return () => clearTimeout(timer);
   }, [query]);
+
+
 
   const { data, isFetching } = useQuery({
     queryKey: ['directory', debounced],
@@ -50,6 +63,34 @@ export default function InstitutionPicker({ value, onChange }) {
   });
 
   const institutions = data?.institutions ?? [];
+
+  if (activeFor !== debounced) {
+    setActiveFor(debounced);
+    setActive(0);
+  }
+
+  const choose = (institution) =>
+    institution.is_onboarded
+      ? onChange(institution)
+      : setAsking({ name: institution.name, slug: institution.slug });
+
+  // With several hundred institutions the list is the main interface, so
+  // it has to be reachable without a mouse. Enter is intercepted because
+  // this renders inside the registration form and would otherwise submit
+  // it half-filled.
+  const onSearchKeyDown = (event) => {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!institutions.length) return;
+      setActive((current) => {
+        const next = event.key === 'ArrowDown' ? current + 1 : current - 1;
+        return (next + institutions.length) % institutions.length;
+      });
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      if (institutions[active]) choose(institutions[active]);
+    }
+  };
 
   if (value) {
     return (
@@ -175,6 +216,10 @@ export default function InstitutionPicker({ value, onChange }) {
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Start typing, for example Bayero or BUK"
         autoComplete="off"
+        onKeyDown={onSearchKeyDown}
+        role="combobox"
+        aria-expanded={institutions.length > 0}
+        aria-controls="institution-results"
       />
 
       <div aria-live="polite">
@@ -197,17 +242,17 @@ export default function InstitutionPicker({ value, onChange }) {
         )}
 
         {institutions.length > 0 && (
-          <ul className="max-h-72 space-y-2 overflow-y-auto">
-            {institutions.map((institution) => (
+          <ul id="institution-results" className="max-h-72 space-y-2 overflow-y-auto">
+            {institutions.map((institution, index) => (
               <li key={institution.id}>
                 <button
                   type="button"
-                  onClick={() =>
-                    institution.is_onboarded
-                      ? onChange(institution)
-                      : setAsking({ name: institution.name, slug: institution.slug })
-                  }
-                  className="flex w-full items-center gap-3 rounded-lg border border-line bg-surface p-3.5 text-left transition-colors hover:border-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+                  onClick={() => choose(institution)}
+                  onMouseEnter={() => setActive(index)}
+                  aria-selected={index === active}
+                  className={`flex w-full items-center gap-3 rounded-lg border bg-surface p-3.5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700 ${
+                    index === active ? 'border-brand-600' : 'border-line hover:border-brand-600'
+                  }`}
                 >
                   <BuildingLibraryIcon
                     className="h-5 w-5 shrink-0 text-ink-500"
@@ -217,9 +262,18 @@ export default function InstitutionPicker({ value, onChange }) {
                     <span className="block truncate font-medium text-ink-900">
                       {institution.name}
                     </span>
-                    {institution.state && (
-                      <span className="block text-caption text-ink-500">{institution.state}</span>
-                    )}
+                    {/* Several institutions share a name and differ only
+                        by state or type, so the subtitle is what makes
+                        the right one pickable. */}
+                    <span className="block truncate text-caption text-ink-500">
+                      {[
+                        institution.short_name,
+                        institution.state,
+                        KIND_LABEL[institution.type],
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
                   </span>
                   {institution.is_onboarded ? (
                     <span className="shrink-0 rounded-full bg-brand-50 px-2.5 py-0.5 text-caption font-semibold text-brand-800">

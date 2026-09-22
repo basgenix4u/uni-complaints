@@ -1,0 +1,3642 @@
+[
+ {
+  "name": "A.D. Rufa'i College of Education, Legal and General Studies",
+  "slug": "a-d-rufa-i-college-of-education-legal-and-general-st",
+  "short_name": "ADRICE",
+  "state": "Jigawa",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "AJETUNMOBI College of Education Irra",
+  "slug": "ajetunmobi-college-of-education-irra",
+  "short_name": "ACEI",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Abdu Gusau Polytechnic",
+  "slug": "abdu-gusau-polytechnic",
+  "short_name": "AGP",
+  "state": "Zamfara",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Abdulkadir Kure University",
+  "slug": "abdulkadir-kure-university",
+  "short_name": "AKU",
+  "state": "Niger",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Abia State College of Education (Technical)",
+  "slug": "abia-state-college-of-education-technical",
+  "short_name": "ASCE",
+  "state": "Abia",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Abia State University",
+  "slug": "abia-state-university",
+  "short_name": "ABSU",
+  "state": "Abia",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Abiola Ajimobi Technical University",
+  "slug": "abiola-ajimobi-technical-university",
+  "short_name": "AATU",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Abraham Adesanya Polytechnic",
+  "slug": "abraham-adesanya-polytechnic",
+  "short_name": "AAP",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Abubakar Tafawa Balewa University",
+  "slug": "abubakar-tafawa-balewa-university",
+  "short_name": "ATBU",
+  "state": "Bauchi",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Abubakar Tatari Polytechnic",
+  "slug": "abubakar-tatari-polytechnic",
+  "short_name": "ATP",
+  "state": "Bauchi",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Achievers University",
+  "slug": "achievers-university",
+  "short_name": "AU",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Adamawa State College of Education",
+  "slug": "adamawa-state-college-of-education",
+  "short_name": "ASCE",
+  "state": "Adamawa",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Adamawa State Polytechnic",
+  "slug": "adamawa-state-polytechnic",
+  "short_name": "ASP",
+  "state": "Adamawa",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Adamawa State University",
+  "slug": "adamawa-state-university",
+  "short_name": "ADSU",
+  "state": "Adamawa",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Adamu Augie College of Education",
+  "slug": "adamu-augie-college-of-education",
+  "short_name": "AACE",
+  "state": "Kebbi",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Adamu Tafawa Balewa College of Education",
+  "slug": "adamu-tafawa-balewa-college-of-education",
+  "short_name": "ATBCE",
+  "state": "Bauchi",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Adekunle Ajasin University",
+  "slug": "adekunle-ajasin-university",
+  "short_name": "AAUA",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Adeleke University",
+  "slug": "adeleke-university",
+  "short_name": "AU",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Adeniran Ogunsanya College of Education",
+  "slug": "adeniran-ogunsanya-college-of-education",
+  "short_name": "AOCE",
+  "state": "Lagos",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Adeseun Ogundoyin Polytechnic",
+  "slug": "adeseun-ogundoyin-polytechnic",
+  "short_name": "AOP",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Adeyemi College of Education",
+  "slug": "adeyemi-college-of-education",
+  "short_name": "ACE",
+  "state": "Ondo",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Adeyemi Federal University of Education",
+  "slug": "adeyemi-federal-university-of-education",
+  "short_name": "AFUE",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Admiralty University Ibusa",
+  "slug": "admiralty-university-ibusa",
+  "short_name": "AUI",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Afe Babalola University",
+  "slug": "afe-babalola-university",
+  "short_name": "ABUAD",
+  "state": "Ekiti",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "African Aviation and Aerospace University",
+  "slug": "african-aviation-and-aerospace-university",
+  "short_name": "AAAU",
+  "state": "FCT",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "African Thinkers Community of Inquiry College of Education",
+  "slug": "african-thinkers-community-of-inquiry-college-of-edu",
+  "short_name": "ATCICE",
+  "state": "Enugu",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "African University of Science and Technology",
+  "slug": "african-university-of-science-and-technology",
+  "short_name": "AUST",
+  "state": "FCT",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ahmadu Bello University",
+  "slug": "ahmadu-bello-university",
+  "short_name": "ABU",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Ahman Pategi University",
+  "slug": "ahman-pategi-university",
+  "short_name": "APU",
+  "state": "Kwara",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Air Force Institute of Technology",
+  "slug": "air-force-institute-of-technology-uni",
+  "short_name": "AFIT",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Air Force Institute of Technology",
+  "slug": "air-force-institute-of-technology",
+  "short_name": "AFIT",
+  "state": "Kaduna",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Ajayi Crowther University",
+  "slug": "ajayi-crowther-university",
+  "short_name": "ACU",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ajayi Polytechnic",
+  "slug": "ajayi-polytechnic",
+  "short_name": "AP",
+  "state": "Ekiti",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Akanu Ibiam Federal Polytechnic",
+  "slug": "akanu-ibiam-federal-polytechnic",
+  "short_name": "AIFP",
+  "state": "Ebonyi",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Akawe Torkula Polytechnic",
+  "slug": "akawe-torkula-polytechnic",
+  "short_name": "ATP",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Akwa Ibom State College of Arts and Science",
+  "slug": "akwa-ibom-state-college-of-arts-and-science",
+  "short_name": "AISCAS",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Akwa Ibom State College of Education",
+  "slug": "akwa-ibom-state-college-of-education",
+  "short_name": "AISCE",
+  "state": "Akwa Ibom",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Akwa Ibom State Polytechnic",
+  "slug": "akwa-ibom-state-polytechnic",
+  "short_name": "AISP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Akwa Ibom State University",
+  "slug": "akwa-ibom-state-university",
+  "short_name": "AKSU",
+  "state": "Akwa Ibom",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Al-Ansar University Maiduguri",
+  "slug": "al-ansar-university-maiduguri",
+  "short_name": "AAUM",
+  "state": "Borno",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Al-Hikmah",
+  "slug": "al-hikmah",
+  "short_name": "AH",
+  "state": "Nasarawa",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Al-Hikmah University",
+  "slug": "al-hikmah-university",
+  "short_name": "AHU",
+  "state": "Kwara",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Al-Qalam University",
+  "slug": "al-qalam-university",
+  "short_name": "AQU",
+  "state": "Katsina",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Alex Ekwueme Federal University Ndufu Alike Ikwo",
+  "slug": "alex-ekwueme-federal-university-ndufu-alike-ikwo",
+  "short_name": "AEFUNAI",
+  "state": "Ebonyi",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Aliko Dangote University of Science and Technology",
+  "slug": "aliko-dangote-university-of-science-and-technology",
+  "short_name": "ADUST",
+  "state": "Kano",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Allover Central Polytechnic",
+  "slug": "allover-central-polytechnic",
+  "short_name": "ACP",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Alvan Ikoku Federal College of Education",
+  "slug": "alvan-ikoku-federal-college-of-education",
+  "short_name": "AIFCE",
+  "state": "Imo",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Alvan Ikoku Federal University of Education",
+  "slug": "alvan-ikoku-federal-university-of-education",
+  "short_name": "AIFUE",
+  "state": "Imo",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Ambrose Alli University",
+  "slug": "ambrose-alli-university",
+  "short_name": "AAU",
+  "state": "Edo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "American Polytechnic",
+  "slug": "american-polytechnic",
+  "short_name": "AP",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "American University of Nigeria",
+  "slug": "american-university-of-nigeria",
+  "short_name": "AUN",
+  "state": "Adamawa",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Aminu Saleh College of Education",
+  "slug": "aminu-saleh-college-of-education",
+  "short_name": "ASCE",
+  "state": "Bauchi",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Anambra State Polytechnic",
+  "slug": "anambra-state-polytechnic",
+  "short_name": "ASP",
+  "state": "Anambra",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Anchor University",
+  "slug": "anchor-university",
+  "short_name": "AU",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ansar-Ud-Deen College of Education",
+  "slug": "ansar-ud-deen-college-of-education",
+  "short_name": "AUDCE",
+  "state": "Lagos",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Arthur Jarvis University",
+  "slug": "arthur-jarvis-university",
+  "short_name": "AJU",
+  "state": "Cross River",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ashi Polytechnic",
+  "slug": "ashi-polytechnic",
+  "short_name": "AP",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Auchi Polytechnic",
+  "slug": "auchi-polytechnic",
+  "short_name": "AUCHIPOLY",
+  "state": "Edo",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Ave Maria University",
+  "slug": "ave-maria-university",
+  "short_name": "AMU",
+  "state": "Nasarawa",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Babcock University",
+  "slug": "babcock-university",
+  "short_name": "BU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Bauchi State University",
+  "slug": "bauchi-state-university",
+  "short_name": "BASUG",
+  "state": "Bauchi",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Bayelsa Medical University",
+  "slug": "bayelsa-medical-university",
+  "short_name": "BMU",
+  "state": "Bayelsa",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Bayelsa State Polytechnic",
+  "slug": "bayelsa-state-polytechnic",
+  "short_name": "BSP",
+  "state": "Bayelsa",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Bayero University",
+  "slug": "bayero-university",
+  "short_name": "BUK",
+  "state": "Kano",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Baze University",
+  "slug": "baze-university",
+  "short_name": "BAZE",
+  "state": "FCT",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Bellarks Polytechnic",
+  "slug": "bellarks-polytechnic",
+  "short_name": "BP",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Bells University of Technology",
+  "slug": "bells-university-of-technology",
+  "short_name": "BUT",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Benson Idahosa University",
+  "slug": "benson-idahosa-university",
+  "short_name": "BIU",
+  "state": "Edo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Benue State Polytechnic",
+  "slug": "benue-state-polytechnic",
+  "short_name": "BSP",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Benue State University",
+  "slug": "benue-state-university",
+  "short_name": "BSU",
+  "state": "Benue",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Best Solution Polytechnic",
+  "slug": "best-solution-polytechnic",
+  "short_name": "BSP",
+  "state": "Ondo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Bilyaminu Othman College of Education",
+  "slug": "bilyaminu-othman-college-of-education",
+  "short_name": "BOCE",
+  "state": "Bauchi",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Bingham University",
+  "slug": "bingham-university",
+  "short_name": "BU",
+  "state": "Nasarawa",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Binyamu Usman Polytechnic",
+  "slug": "binyamu-usman-polytechnic",
+  "short_name": "BUP",
+  "state": "Jigawa",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Bolmor Polytechnic",
+  "slug": "bolmor-polytechnic",
+  "short_name": "BP",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Borno State University",
+  "slug": "borno-state-university",
+  "short_name": "BOSU",
+  "state": "Borno",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Bowen University",
+  "slug": "bowen-university",
+  "short_name": "BOWEN",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Brainfill Polytechnic",
+  "slug": "brainfill-polytechnic",
+  "short_name": "BP",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "British Transatlantic Polytechnic",
+  "slug": "british-transatlantic-polytechnic",
+  "short_name": "BTP",
+  "state": "Ondo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "CETEP City University",
+  "slug": "cetep-city-university",
+  "short_name": "CCU",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Caleb University",
+  "slug": "caleb-university",
+  "short_name": "CU",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Calvary Polytechnic",
+  "slug": "calvary-polytechnic",
+  "short_name": "CP",
+  "state": "Delta",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Captain Elechi Amadi Polytechnic",
+  "slug": "captain-elechi-amadi-polytechnic",
+  "short_name": "CEAP",
+  "state": "Rivers",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Caritas University",
+  "slug": "caritas-university",
+  "short_name": "CU",
+  "state": "Enugu",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Chrisland University",
+  "slug": "chrisland-university",
+  "short_name": "CU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Christopher University",
+  "slug": "christopher-university",
+  "short_name": "CU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Chukwuemeka Odumegwu Ojukwu University",
+  "slug": "chukwuemeka-odumegwu-ojukwu-university",
+  "short_name": "COOU",
+  "state": "Anambra",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Citi Polytechnic",
+  "slug": "citi-polytechnic",
+  "short_name": "CP",
+  "state": "FCT",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "City College of Education, Mararaba",
+  "slug": "city-college-of-education-mararaba",
+  "short_name": "CCE",
+  "state": "Nasarawa",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Clifford University",
+  "slug": "clifford-university",
+  "short_name": "CU",
+  "state": "Abia",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Coal City University",
+  "slug": "coal-city-university",
+  "short_name": "CCU",
+  "state": "Enugu",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Coastal Polytechnic",
+  "slug": "coastal-polytechnic",
+  "short_name": "CP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "College of Administration, Management and Technology, Potiskum",
+  "slug": "college-of-administration-management-and-technology",
+  "short_name": "CA",
+  "state": "Yobe",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Agriculture, Science and Technology, Gujba",
+  "slug": "college-of-agriculture-science-and-technology-gujba",
+  "short_name": "CA",
+  "state": "Yobe",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Agriculture, Science and Technology, Lafia",
+  "slug": "college-of-agriculture-science-and-technology-lafia",
+  "short_name": "CA",
+  "state": "Nasarawa",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education Ilemona",
+  "slug": "college-of-education-ilemona",
+  "short_name": "CEI",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "College of Education and Legal Studies, Nguru",
+  "slug": "college-of-education-and-legal-studies-nguru",
+  "short_name": "CELS",
+  "state": "Yobe",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Akamkpa",
+  "slug": "college-of-education-akamkpa",
+  "short_name": "CE",
+  "state": "Cross River",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Akwanga",
+  "slug": "college-of-education-akwanga",
+  "short_name": "CE",
+  "state": "Nasarawa",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Billiri",
+  "slug": "college-of-education-billiri",
+  "short_name": "CE",
+  "state": "Gombe",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Ekiadolor",
+  "slug": "college-of-education-ekiadolor",
+  "short_name": "CE",
+  "state": "Edo",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Gindiri",
+  "slug": "college-of-education-gindiri",
+  "short_name": "CE",
+  "state": "Plateau",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Katsina-Ala",
+  "slug": "college-of-education-katsina-ala",
+  "short_name": "CE",
+  "state": "Benue",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Lanlate",
+  "slug": "college-of-education-lanlate",
+  "short_name": "CE",
+  "state": "Oyo",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Oju",
+  "slug": "college-of-education-oju",
+  "short_name": "CE",
+  "state": "Benue",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Waka-Biu",
+  "slug": "college-of-education-waka-biu",
+  "short_name": "CE",
+  "state": "Borno",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "College of Education, Warri",
+  "slug": "college-of-education-warri",
+  "short_name": "CE",
+  "state": "Delta",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Covenant Polytechnic",
+  "slug": "covenant-polytechnic",
+  "short_name": "CP",
+  "state": "Abia",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Covenant University",
+  "slug": "covenant-university",
+  "short_name": "CU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Crawford University",
+  "slug": "crawford-university",
+  "short_name": "CU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Crescent University",
+  "slug": "crescent-university",
+  "short_name": "CU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Cross River Institute of Technology and Management",
+  "slug": "cross-river-institute-of-technology-and-management",
+  "short_name": "CRITM",
+  "state": "Cross River",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Crown Polytechnic",
+  "slug": "crown-polytechnic",
+  "short_name": "CP",
+  "state": "Ekiti",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "D.S Agbenro ICT Polytechnic, Itori-Ewekoro",
+  "slug": "d-s-agbenro-ict-polytechnic-itori-ewekoro",
+  "short_name": "DSAIP",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Daboss Polytechnic",
+  "slug": "daboss-polytechnic",
+  "short_name": "DP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Delar College of Education",
+  "slug": "delar-college-of-education",
+  "short_name": "DCE",
+  "state": "Oyo",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Delta State Maritime Polytechnic",
+  "slug": "delta-state-maritime-polytechnic",
+  "short_name": "DSMP",
+  "state": "Delta",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Delta State Polytechnic, Ogwashi-Uku",
+  "slug": "delta-state-polytechnic-ogwashi-uku",
+  "short_name": "DSP",
+  "state": "Delta",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Delta State Polytechnic, Otefe-Oghara",
+  "slug": "delta-state-polytechnic-otefe-oghara",
+  "short_name": "DSP",
+  "state": "Delta",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Delta State University of Science and Technology",
+  "slug": "delta-state-university-of-science-and-technology",
+  "short_name": "DSUST",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Delta State University, Abraka",
+  "slug": "delta-state-university-abraka",
+  "short_name": "DELSU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Dennis Osadebay University",
+  "slug": "dennis-osadebay-university",
+  "short_name": "DOU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Distinct Polytechnic",
+  "slug": "distinct-polytechnic",
+  "short_name": "DP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Dominican University Ibadan",
+  "slug": "dominican-university-ibadan",
+  "short_name": "DUI",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Dorben Polytechnic",
+  "slug": "dorben-polytechnic",
+  "short_name": "DP",
+  "state": "FCT",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Eastern Polytechnic",
+  "slug": "eastern-polytechnic",
+  "short_name": "EP",
+  "state": "Rivers",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Ebonyi State College of Education",
+  "slug": "ebonyi-state-college-of-education",
+  "short_name": "ESCE",
+  "state": "Ebonyi",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Ebonyi State University",
+  "slug": "ebonyi-state-university",
+  "short_name": "ESU",
+  "state": "Ebonyi",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Edo State Polytechnic Usen",
+  "slug": "edo-state-polytechnic-usen",
+  "short_name": "ESPU",
+  "state": "Edo",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Edo State University, Uzairue",
+  "slug": "edo-state-university-uzairue",
+  "short_name": "ESU",
+  "state": "Edo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Edward Olaseni Polytechnic",
+  "slug": "edward-olaseni-polytechnic",
+  "short_name": "EOP",
+  "state": "Ondo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Edwin Clark University",
+  "slug": "edwin-clark-university",
+  "short_name": "ECU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ekiti City Polytechnic",
+  "slug": "ekiti-city-polytechnic",
+  "short_name": "ECP",
+  "state": "Ekiti",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Ekiti State College of Agriculture and Technology",
+  "slug": "ekiti-state-college-of-agriculture-and-technology",
+  "short_name": "ESCAT",
+  "state": "Ekiti",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Ekiti State University",
+  "slug": "ekiti-state-university",
+  "short_name": "EKSU",
+  "state": "Ekiti",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Eko College of Management and Technology(Ekocity)",
+  "slug": "eko-college-of-management-and-technology-ekocity",
+  "short_name": "ECMT",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "El-thomp Polytechnic",
+  "slug": "el-thomp-polytechnic",
+  "short_name": "ETP",
+  "state": "Ondo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Elizade University",
+  "slug": "elizade-university",
+  "short_name": "EU",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Emmanuel Ayande University of Education",
+  "slug": "emmanuel-ayande-university-of-education",
+  "short_name": "EAUE",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Enugu State College of Education (Technical)",
+  "slug": "enugu-state-college-of-education-technical",
+  "short_name": "ESCE",
+  "state": "Enugu",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Enugu State University of Science and Technology",
+  "slug": "enugu-state-university-of-science-and-technology",
+  "short_name": "ESUT",
+  "state": "Enugu",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Enville Polytechnic",
+  "slug": "enville-polytechnic",
+  "short_name": "EP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Evangel University, Akaeze",
+  "slug": "evangel-university-akaeze",
+  "short_name": "EU",
+  "state": "Ebonyi",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "FCT College of Education",
+  "slug": "fct-college-of-education",
+  "short_name": "FCE",
+  "state": "FCT",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Federal College of Education (Special), Oyo",
+  "slug": "federal-college-of-education-special-oyo",
+  "short_name": "FCE",
+  "state": "Oyo",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Akoka",
+  "slug": "federal-college-of-education-technical-akoka",
+  "short_name": "FCE",
+  "state": "Lagos",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Asaba",
+  "slug": "federal-college-of-education-technical-asaba",
+  "short_name": "FCE",
+  "state": "Delta",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Bichi",
+  "slug": "federal-college-of-education-technical-bichi",
+  "short_name": "FCE",
+  "state": "Kano",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Gombe",
+  "slug": "federal-college-of-education-technical-gombe",
+  "short_name": "FCE",
+  "state": "Gombe",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Gusau",
+  "slug": "federal-college-of-education-technical-gusau",
+  "short_name": "FCE",
+  "state": "Zamfara",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Omoku",
+  "slug": "federal-college-of-education-technical-omoku",
+  "short_name": "FCE",
+  "state": "Rivers",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Potiskum",
+  "slug": "federal-college-of-education-technical-potiskum",
+  "short_name": "FCE",
+  "state": "Yobe",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education (Technical), Umunze",
+  "slug": "federal-college-of-education-technical-umunze",
+  "short_name": "FCE",
+  "state": "Anambra",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Abeokuta",
+  "slug": "federal-college-of-education-abeokuta",
+  "short_name": "FCE",
+  "state": "Ogun",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Eha-Amufu",
+  "slug": "federal-college-of-education-eha-amufu",
+  "short_name": "FCE",
+  "state": "Enugu",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Ididep",
+  "slug": "federal-college-of-education-ididep",
+  "short_name": "FCE",
+  "state": "Akwa Ibom",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Iwo",
+  "slug": "federal-college-of-education-iwo",
+  "short_name": "FCE",
+  "state": "Osun",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Kano",
+  "slug": "federal-college-of-education-kano",
+  "short_name": "FCE",
+  "state": "Kano",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Katsina",
+  "slug": "federal-college-of-education-katsina",
+  "short_name": "FCE",
+  "state": "Katsina",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Kontagora",
+  "slug": "federal-college-of-education-kontagora",
+  "short_name": "FCE",
+  "state": "Niger",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Obudu",
+  "slug": "federal-college-of-education-obudu",
+  "short_name": "FCE",
+  "state": "Cross River",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Okene",
+  "slug": "federal-college-of-education-okene",
+  "short_name": "FCE",
+  "state": "Kogi",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Pankshin",
+  "slug": "federal-college-of-education-pankshin",
+  "short_name": "FCE",
+  "state": "Plateau",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Yola",
+  "slug": "federal-college-of-education-yola",
+  "short_name": "FCE",
+  "state": "Adamawa",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal College of Education, Zaria",
+  "slug": "federal-college-of-education-zaria",
+  "short_name": "FCE",
+  "state": "Kaduna",
+  "kind": "college_of_education",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ayede",
+  "slug": "federal-polytechnic-ayede",
+  "short_name": "FPA",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Bali",
+  "slug": "federal-polytechnic-bali",
+  "short_name": "FPB",
+  "state": "Taraba",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Damaturu",
+  "slug": "federal-polytechnic-damaturu",
+  "short_name": "FPD",
+  "state": "Yobe",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Daura",
+  "slug": "federal-polytechnic-daura",
+  "short_name": "FPD",
+  "state": "Katsina",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ede",
+  "slug": "federal-polytechnic-ede",
+  "short_name": "FPE",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ekowe",
+  "slug": "federal-polytechnic-ekowe",
+  "short_name": "FPE",
+  "state": "Bayelsa",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Idah",
+  "slug": "federal-polytechnic-idah",
+  "short_name": "FPI",
+  "state": "Kogi",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ile-Oluji",
+  "slug": "federal-polytechnic-ile-oluji",
+  "short_name": "FPIO",
+  "state": "Ondo",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Kabo",
+  "slug": "federal-polytechnic-kabo",
+  "short_name": "FPK",
+  "state": "Kano",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Kaltungo",
+  "slug": "federal-polytechnic-kaltungo",
+  "short_name": "FPK",
+  "state": "Gombe",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Kaura-Namoda",
+  "slug": "federal-polytechnic-kaura-namoda",
+  "short_name": "FPKN",
+  "state": "Zamfara",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Monguno",
+  "slug": "federal-polytechnic-monguno",
+  "short_name": "FPM",
+  "state": "Borno",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Nasarawa",
+  "slug": "federal-polytechnic-nasarawa",
+  "short_name": "FPN",
+  "state": "Nasarawa",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ngodo Isuochi",
+  "slug": "federal-polytechnic-ngodo-isuochi",
+  "short_name": "FPNI",
+  "state": "Abia",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Nyak Shendam",
+  "slug": "federal-polytechnic-nyak-shendam",
+  "short_name": "FPNS",
+  "state": "Plateau",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ohodo",
+  "slug": "federal-polytechnic-ohodo",
+  "short_name": "FPO",
+  "state": "Enugu",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Oko",
+  "slug": "federal-polytechnic-oko",
+  "short_name": "FPO",
+  "state": "Anambra",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Orogun",
+  "slug": "federal-polytechnic-orogun",
+  "short_name": "FPO",
+  "state": "Delta",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ugep",
+  "slug": "federal-polytechnic-ugep",
+  "short_name": "FPU",
+  "state": "Cross River",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Ukana",
+  "slug": "federal-polytechnic-ukana",
+  "short_name": "FPU",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic Wannune",
+  "slug": "federal-polytechnic-wannune",
+  "short_name": "FPW",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic of Oil and Gas Bonny",
+  "slug": "federal-polytechnic-of-oil-and-gas-bonny",
+  "short_name": "FPOGB",
+  "state": "Rivers",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic, Ado-Ekiti",
+  "slug": "federal-polytechnic-ado-ekiti",
+  "short_name": "FP",
+  "state": "Ekiti",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic, Bauchi",
+  "slug": "federal-polytechnic-bauchi",
+  "short_name": "FP",
+  "state": "Bauchi",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic, Bida",
+  "slug": "federal-polytechnic-bida",
+  "short_name": "FP",
+  "state": "Niger",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic, Ilaro",
+  "slug": "federal-polytechnic-ilaro",
+  "short_name": "ILAROPOLY",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic, Mubi",
+  "slug": "federal-polytechnic-mubi",
+  "short_name": "FP",
+  "state": "Adamawa",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic, Nekede",
+  "slug": "federal-polytechnic-nekede",
+  "short_name": "NEKEDEPOLY",
+  "state": "Imo",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal Polytechnic, Offa",
+  "slug": "federal-polytechnic-offa",
+  "short_name": "FP",
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Birnin Kebbi",
+  "slug": "federal-university-birnin-kebbi",
+  "short_name": "FUBK",
+  "state": "Kebbi",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Dutse",
+  "slug": "federal-university-dutse",
+  "short_name": "FUD",
+  "state": "Jigawa",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Dutsin-Ma",
+  "slug": "federal-university-dutsin-ma",
+  "short_name": "FUDM",
+  "state": "Katsina",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Gashua",
+  "slug": "federal-university-gashua",
+  "short_name": "FUG",
+  "state": "Yobe",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Gusau",
+  "slug": "federal-university-gusau",
+  "short_name": "FUGUS",
+  "state": "Zamfara",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Kashere",
+  "slug": "federal-university-kashere",
+  "short_name": "FUK",
+  "state": "Gombe",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Lafia",
+  "slug": "federal-university-lafia",
+  "short_name": "FULAFIA",
+  "state": "Nasarawa",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Lokoja",
+  "slug": "federal-university-lokoja",
+  "short_name": "FUL",
+  "state": "Kogi",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Otuoke",
+  "slug": "federal-university-otuoke",
+  "short_name": "FUO",
+  "state": "Bayelsa",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Oye-Ekiti",
+  "slug": "federal-university-oye-ekiti",
+  "short_name": "FUOYE",
+  "state": "Ekiti",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University Wukari",
+  "slug": "federal-university-wukari",
+  "short_name": "FUWUKARI",
+  "state": "Taraba",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Agriculture, Abeokuta",
+  "slug": "federal-university-of-agriculture-abeokuta",
+  "short_name": "FUNAAB",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Agriculture, Mubi",
+  "slug": "federal-university-of-agriculture-mubi",
+  "short_name": "FUA",
+  "state": "Adamawa",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Agriculture, Zuru",
+  "slug": "federal-university-of-agriculture-zuru",
+  "short_name": "FUA",
+  "state": "Kebbi",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Applied Sciences Kachia",
+  "slug": "federal-university-of-applied-sciences-kachia",
+  "short_name": "FUASK",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Education, Pankshin",
+  "slug": "federal-university-of-education-pankshin",
+  "short_name": "FUE",
+  "state": "Plateau",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Education, Zaria",
+  "slug": "federal-university-of-education-zaria",
+  "short_name": "FUE",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Health Sciences, Azare",
+  "slug": "federal-university-of-health-sciences-azare",
+  "short_name": "FUHS",
+  "state": "Bauchi",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Petroleum Resources Effurun",
+  "slug": "federal-university-of-petroleum-resources-effurun",
+  "short_name": "FUPRE",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Technology Akure",
+  "slug": "federal-university-of-technology-akure",
+  "short_name": "FUTA",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Technology Ikot Abasi",
+  "slug": "federal-university-of-technology-ikot-abasi",
+  "short_name": "FUTIA",
+  "state": "Akwa Ibom",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Technology Minna",
+  "slug": "federal-university-of-technology-minna",
+  "short_name": "FUTMINNA",
+  "state": "Niger",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Technology Owerri",
+  "slug": "federal-university-of-technology-owerri",
+  "short_name": "FUTO",
+  "state": "Imo",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Federal University of Transportation, Daura",
+  "slug": "federal-university-of-transportation-daura",
+  "short_name": "FUT",
+  "state": "Katsina",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Fidei Polytechnic",
+  "slug": "fidei-polytechnic",
+  "short_name": "FP",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "First City Polytechnic",
+  "slug": "first-city-polytechnic",
+  "short_name": "FCP",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Foundation Polytechnic",
+  "slug": "foundation-polytechnic",
+  "short_name": "FP",
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Fountain University",
+  "slug": "fountain-university",
+  "short_name": "FU",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Gateway Polytechnic, Saapade",
+  "slug": "gateway-polytechnic-saapade",
+  "short_name": "GP",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Gboko Polytechnic",
+  "slug": "gboko-polytechnic",
+  "short_name": "GP",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Global Polytechnic",
+  "slug": "global-polytechnic",
+  "short_name": "GP",
+  "state": "Edo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Gloryland Polytechnic",
+  "slug": "gloryland-polytechnic",
+  "short_name": "GP",
+  "state": "Kogi",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Godfrey Okoye University",
+  "slug": "godfrey-okoye-university",
+  "short_name": "GOU",
+  "state": "Enugu",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Gombe State Polytechnic",
+  "slug": "gombe-state-polytechnic",
+  "short_name": "GSP",
+  "state": "Gombe",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Gombe State University",
+  "slug": "gombe-state-university",
+  "short_name": "GSU",
+  "state": "Gombe",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Gombe State University of Science and Technology",
+  "slug": "gombe-state-university-of-science-and-technology",
+  "short_name": "GSUST",
+  "state": "Gombe",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Gozie Anyachebelu Oragram Polytechnic",
+  "slug": "gozie-anyachebelu-oragram-polytechnic",
+  "short_name": "GAOP",
+  "state": "Anambra",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Grace Polytechnic",
+  "slug": "grace-polytechnic",
+  "short_name": "GP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Graceland Polytechnic",
+  "slug": "graceland-polytechnic",
+  "short_name": "GP",
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Greenfield University",
+  "slug": "greenfield-university",
+  "short_name": "GU",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Gregory University",
+  "slug": "gregory-university",
+  "short_name": "GU",
+  "state": "Abia",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Grundtvig Polytechnic",
+  "slug": "grundtvig-polytechnic",
+  "short_name": "GP",
+  "state": "Anambra",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Hallmark University",
+  "slug": "hallmark-university",
+  "short_name": "HU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Harry Pass Polytechnic",
+  "slug": "harry-pass-polytechnic",
+  "short_name": "HPP",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Harvard Polytechnic",
+  "slug": "harvard-polytechnic",
+  "short_name": "HP",
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Hassan Usman Katsina Polytechnic",
+  "slug": "hassan-usman-katsina-polytechnic",
+  "short_name": "HUKP",
+  "state": "Katsina",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Havard Wilson College of Education",
+  "slug": "havard-wilson-college-of-education",
+  "short_name": "HWCE",
+  "state": "Abia",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Heritage Polytechnic",
+  "slug": "heritage-polytechnic",
+  "short_name": "HP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Hezekiah University",
+  "slug": "hezekiah-university",
+  "short_name": "HU",
+  "state": "Imo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Hope Polytechnic",
+  "slug": "hope-polytechnic",
+  "short_name": "HP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Hussaini Adamu Federal Polytechnic",
+  "slug": "hussaini-adamu-federal-polytechnic",
+  "short_name": "HAFP",
+  "state": "Jigawa",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "I-con Universal Polytechnic",
+  "slug": "i-con-universal-polytechnic",
+  "short_name": "ICUP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Ibadan City Polytechnic",
+  "slug": "ibadan-city-polytechnic",
+  "short_name": "ICP",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Ibom Metropolitan Polytechnic",
+  "slug": "ibom-metropolitan-polytechnic",
+  "short_name": "IMP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Ibrahim Badamasi Babangida University",
+  "slug": "ibrahim-badamasi-babangida-university",
+  "short_name": "IBBU",
+  "state": "Niger",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Igbajo Polytechnic",
+  "slug": "igbajo-polytechnic",
+  "short_name": "IP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Igbinedion University",
+  "slug": "igbinedion-university",
+  "short_name": "IUO",
+  "state": "Edo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ignatius Ajuru University of Education",
+  "slug": "ignatius-ajuru-university-of-education",
+  "short_name": "IAUE",
+  "state": "Rivers",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Iheachukwu Madubuike Institute of Technology",
+  "slug": "iheachukwu-madubuike-institute-of-technology",
+  "short_name": "IMIT",
+  "state": "Abia",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Imo State College of Education",
+  "slug": "imo-state-college-of-education",
+  "short_name": "ISCE",
+  "state": "Imo",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Imo State Polytechnic",
+  "slug": "imo-state-polytechnic",
+  "short_name": "ISP",
+  "state": "Imo",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Imo State University",
+  "slug": "imo-state-university",
+  "short_name": "IMSU",
+  "state": "Imo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Inspire Polytechnic",
+  "slug": "inspire-polytechnic",
+  "short_name": "IP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Institute of Ecumenical Education, (Thinkers Corner), Enugu",
+  "slug": "institute-of-ecumenical-education-thinkers-corner-en",
+  "short_name": "IEE",
+  "state": "Enugu",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Institute of Management and Technology, Enugu",
+  "slug": "institute-of-management-and-technology-enugu",
+  "short_name": "IMT",
+  "state": "Enugu",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Intercontinental College of Technology",
+  "slug": "intercontinental-college-of-technology",
+  "short_name": "ICT",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Interlink Polytechnic",
+  "slug": "interlink-polytechnic",
+  "short_name": "IP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Isa Kaita College of Education",
+  "slug": "isa-kaita-college-of-education",
+  "short_name": "IKCE",
+  "state": "Katsina",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Isa Mustapha Agwai Polytechnic, Lafia",
+  "slug": "isa-mustapha-agwai-polytechnic-lafia",
+  "short_name": "IMAP",
+  "state": "Nasarawa",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Iwo City Polytechnic",
+  "slug": "iwo-city-polytechnic",
+  "short_name": "ICP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "James Hope University, Lagos",
+  "slug": "james-hope-university-lagos",
+  "short_name": "JHU",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Jigawa State College of Education",
+  "slug": "jigawa-state-college-of-education",
+  "short_name": "JSCE",
+  "state": "Jigawa",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Jigawa State College of Education and Legal Studies",
+  "slug": "jigawa-state-college-of-education-and-legal-studies",
+  "short_name": "JSCELS",
+  "state": "Jigawa",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Jigawa State Polytechnic",
+  "slug": "jigawa-state-polytechnic",
+  "short_name": "JSP",
+  "state": "Jigawa",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Joseph Ayo Babalola University",
+  "slug": "joseph-ayo-babalola-university",
+  "short_name": "JABU",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Joseph Sarwuan Tarka University",
+  "slug": "joseph-sarwuan-tarka-university",
+  "short_name": "JSTU",
+  "state": "Benue",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Kaduna Polytechnic",
+  "slug": "kaduna-polytechnic",
+  "short_name": "KADPOLY",
+  "state": "Kaduna",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Kaduna State College of Education",
+  "slug": "kaduna-state-college-of-education",
+  "short_name": "KSCE",
+  "state": "Kaduna",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Kaduna State University",
+  "slug": "kaduna-state-university",
+  "short_name": "KSU",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Kano State College of Education and Preliminary Studies",
+  "slug": "kano-state-college-of-education-and-preliminary-stud",
+  "short_name": "KSCEPS",
+  "state": "Kano",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Kano State Polytechnic",
+  "slug": "kano-state-polytechnic",
+  "short_name": "KSP",
+  "state": "Kano",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Kashim Ibrahim College of Education",
+  "slug": "kashim-ibrahim-college-of-education",
+  "short_name": "KICE",
+  "state": "Borno",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Katsina Institute of Technology and Management",
+  "slug": "katsina-institute-of-technology-and-management",
+  "short_name": "KITM",
+  "state": "Katsina",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Kebbi State Polytechnic",
+  "slug": "kebbi-state-polytechnic",
+  "short_name": "KSP",
+  "state": "Kebbi",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Kebbi State University of Science and Technology",
+  "slug": "kebbi-state-university-of-science-and-technology",
+  "short_name": "KSUSTA",
+  "state": "Kebbi",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Kenule Beeson Saro-Wiwa Polytechnic, Bori",
+  "slug": "kenule-beeson-saro-wiwa-polytechnic-bori",
+  "short_name": "KBSWP",
+  "state": "Rivers",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Khadija University",
+  "slug": "khadija-university",
+  "short_name": "KU",
+  "state": "Jigawa",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Kings Polytechnic",
+  "slug": "kings-polytechnic",
+  "short_name": "KP",
+  "state": "Edo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Kings University",
+  "slug": "kings-university",
+  "short_name": "KU",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Kingsley Ozumba Mbadiwe University",
+  "slug": "kingsley-ozumba-mbadiwe-university",
+  "short_name": "KOMU",
+  "state": "Imo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Kogi State College of Education (Technical), Kabba",
+  "slug": "kogi-state-college-of-education-technical-kabba",
+  "short_name": "KSCE",
+  "state": "Kogi",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Kogi State College of Education, Ankpa",
+  "slug": "kogi-state-college-of-education-ankpa",
+  "short_name": "KSCE",
+  "state": "Kogi",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Kogi State Polytechnic",
+  "slug": "kogi-state-polytechnic",
+  "short_name": "KSP",
+  "state": "Kogi",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Koladaisi University",
+  "slug": "koladaisi-university",
+  "short_name": "KU",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Kwara State College of Education (Technical), Lafiagi",
+  "slug": "kwara-state-college-of-education-technical-lafiagi",
+  "short_name": "KSCE",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Kwara State College of Education, Ilorin",
+  "slug": "kwara-state-college-of-education-ilorin",
+  "short_name": "KSCE",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Kwara State College of Education, Oro",
+  "slug": "kwara-state-college-of-education-oro",
+  "short_name": "KSCE",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Kwara State Polytechnic",
+  "slug": "kwara-state-polytechnic",
+  "short_name": "KSP",
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Kwara State University",
+  "slug": "kwara-state-university",
+  "short_name": "KWASU",
+  "state": "Kwara",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Kwararafa University",
+  "slug": "kwararafa-university",
+  "short_name": "KU",
+  "state": "Taraba",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ladoke Akintola University of Technology",
+  "slug": "ladoke-akintola-university-of-technology",
+  "short_name": "LAUTECH",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Lagos City Polytechnic",
+  "slug": "lagos-city-polytechnic",
+  "short_name": "LCP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Lagos State University",
+  "slug": "lagos-state-university",
+  "short_name": "LASU",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Lagos State University of Education",
+  "slug": "lagos-state-university-of-education",
+  "short_name": "LSUE",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Lagos State University of Science and Technology",
+  "slug": "lagos-state-university-of-science-and-technology",
+  "short_name": "LSUST",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Landmark Polytechnic",
+  "slug": "landmark-polytechnic",
+  "short_name": "LP",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Landmark University",
+  "slug": "landmark-university",
+  "short_name": "LMU",
+  "state": "Kwara",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Lead City University",
+  "slug": "lead-city-university",
+  "short_name": "LCU",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Legacy University Okija",
+  "slug": "legacy-university-okija",
+  "short_name": "LUO",
+  "state": "Anambra",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Lens Polytechnic",
+  "slug": "lens-polytechnic",
+  "short_name": "LP",
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Lighthouse Polytechnic",
+  "slug": "lighthouse-polytechnic",
+  "short_name": "LP",
+  "state": "Edo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Loam Polytechnic",
+  "slug": "loam-polytechnic",
+  "short_name": "LP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Madonna College of Health Technology",
+  "slug": "madonna-college-of-health-technology",
+  "short_name": "MCHT",
+  "state": "Abia",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Madonna University",
+  "slug": "madonna-university",
+  "short_name": "MU",
+  "state": "Rivers",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Mai-Idris Alooma Polytechnic, Geidam",
+  "slug": "mai-idris-alooma-polytechnic-geidam",
+  "short_name": "MIAP",
+  "state": "Yobe",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Marist Polytechnic",
+  "slug": "marist-polytechnic",
+  "short_name": "MP",
+  "state": "Enugu",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Maritime Academy of Nigeria",
+  "slug": "maritime-academy-of-nigeria",
+  "short_name": "MAN",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Mater Dei Polytechnic",
+  "slug": "mater-dei-polytechnic",
+  "short_name": "MDP",
+  "state": "Enugu",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "McPherson University",
+  "slug": "mcpherson-university",
+  "short_name": "MU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Mewar University",
+  "slug": "mewar-university",
+  "short_name": "MU",
+  "state": "Nasarawa",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Michael Okpara University of Agriculture, Umudike",
+  "slug": "michael-okpara-university-of-agriculture-umudike",
+  "short_name": "MOUAU",
+  "state": "Abia",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Michael Otedola College of Primary Education",
+  "slug": "michael-otedola-college-of-primary-education",
+  "short_name": "MOCPE",
+  "state": "Lagos",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Michael and Cecilia Ibru University",
+  "slug": "michael-and-cecilia-ibru-university",
+  "short_name": "MCIU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Modibbo Adama University, Yola",
+  "slug": "modibbo-adama-university-yola",
+  "short_name": "MAUTECH",
+  "state": "Adamawa",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Mohammed Goni College of Legal and Islamic Studies",
+  "slug": "mohammed-goni-college-of-legal-and-islamic-studies",
+  "short_name": "MGCLIS",
+  "state": "Borno",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Moje College of Education",
+  "slug": "moje-college-of-education",
+  "short_name": "MCE",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Montgomery Polytechnic",
+  "slug": "montgomery-polytechnic",
+  "short_name": "MP",
+  "state": "Ekiti",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Moshood Abiola Polytechnic",
+  "slug": "moshood-abiola-polytechnic",
+  "short_name": "MAPOLY",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Mountain Top University",
+  "slug": "mountain-top-university",
+  "short_name": "MTU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Mudiame University",
+  "slug": "mudiame-university",
+  "short_name": "MU",
+  "state": "Edo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Muftau Olanihun College of Education",
+  "slug": "muftau-olanihun-college-of-education",
+  "short_name": "MOCE",
+  "state": "Oyo",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Mustibrah Polytechnic",
+  "slug": "mustibrah-polytechnic",
+  "short_name": "MP",
+  "state": "Kano",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "NACABS Polytechnic",
+  "slug": "nacabs-polytechnic",
+  "short_name": "NP",
+  "state": "Nasarawa",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "NOGAK Polytechnic",
+  "slug": "nogak-polytechnic",
+  "short_name": "NP",
+  "state": "Cross River",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Nana Aishat Memorial College of Education",
+  "slug": "nana-aishat-memorial-college-of-education",
+  "short_name": "NAMCE",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Nasarawa State University",
+  "slug": "nasarawa-state-university",
+  "short_name": "NSUK",
+  "state": "Nasarawa",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Nation Builders Polytechnic",
+  "slug": "nation-builders-polytechnic",
+  "short_name": "NBP",
+  "state": "Delta",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "National Institute of Construction Technology and Management",
+  "slug": "national-institute-of-construction-technology-and-ma",
+  "short_name": "NICTM",
+  "state": "Edo",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "National Open University of Nigeria",
+  "slug": "national-open-university-of-nigeria",
+  "short_name": "NOUN",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Newland Polytechnic",
+  "slug": "newland-polytechnic",
+  "short_name": "NP",
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Niger Delta University",
+  "slug": "niger-delta-university",
+  "short_name": "NDU",
+  "state": "Bayelsa",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Niger State College of Education",
+  "slug": "niger-state-college-of-education",
+  "short_name": "NSCE",
+  "state": "Niger",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Niger State Polytechnic",
+  "slug": "niger-state-polytechnic",
+  "short_name": "NSP",
+  "state": "Niger",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Nigeria Airforce University",
+  "slug": "nigeria-airforce-university",
+  "short_name": "NAU",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigeria Maritime University",
+  "slug": "nigeria-maritime-university",
+  "short_name": "NMU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigeria Police Academy, Wudil",
+  "slug": "nigeria-police-academy-wudil",
+  "short_name": "NPA",
+  "state": "Kano",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigerian Army College of Environmental Science and Technology",
+  "slug": "nigerian-army-college-of-environmental-science-and-t",
+  "short_name": "NACEST",
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigerian Army School of Education (NASE), Ilorin",
+  "slug": "nigerian-army-school-of-education-nase-ilorin",
+  "short_name": "NASE",
+  "state": "Kwara",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Nigerian Army University, Biu",
+  "slug": "nigerian-army-university-biu",
+  "short_name": "NAU",
+  "state": "Borno",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigerian College of Aviation Technology",
+  "slug": "nigerian-college-of-aviation-technology",
+  "short_name": "NCAT",
+  "state": "Kaduna",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigerian Defence Academy",
+  "slug": "nigerian-defence-academy",
+  "short_name": "NDA",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigerian Defense Academy",
+  "slug": "nigerian-defense-academy",
+  "short_name": "NDA",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigerian Maritime University",
+  "slug": "nigerian-maritime-university",
+  "short_name": "NMU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nigerian University of Technology and Management",
+  "slug": "nigerian-university-of-technology-and-management",
+  "short_name": "NUTM",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Nile University of Nigeria",
+  "slug": "nile-university-of-nigeria",
+  "short_name": "NILE",
+  "state": "FCT",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Nnamdi Azikiwe University",
+  "slug": "nnamdi-azikiwe-university",
+  "short_name": "UNIZIK",
+  "state": "Anambra",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Nok University Kachia",
+  "slug": "nok-university-kachia",
+  "short_name": "NUK",
+  "state": "Kaduna",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Novelty Polytechnic",
+  "slug": "novelty-polytechnic",
+  "short_name": "NP",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Novena University",
+  "slug": "novena-university",
+  "short_name": "NU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Nuhu Bamalli Polytechnic",
+  "slug": "nuhu-bamalli-polytechnic",
+  "short_name": "NBP",
+  "state": "Kaduna",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Nwafor Orizu College of Education",
+  "slug": "nwafor-orizu-college-of-education",
+  "short_name": "NOCE",
+  "state": "Anambra",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Obafemi Awolowo University",
+  "slug": "obafemi-awolowo-university",
+  "short_name": "OAU",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Obong University",
+  "slug": "obong-university",
+  "short_name": "OU",
+  "state": "Akwa Ibom",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Odaji Agbo Polytechnic",
+  "slug": "odaji-agbo-polytechnic",
+  "short_name": "OAP",
+  "state": "Cross River",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Oduduwa Polytechnic",
+  "slug": "oduduwa-polytechnic",
+  "short_name": "OP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Oduduwa University",
+  "slug": "oduduwa-university",
+  "short_name": "OU",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ogbonnaya Onu Polytechnic (Abia State Polytechnic)",
+  "slug": "ogbonnaya-onu-polytechnic-abia-state-polytechnic",
+  "short_name": "OOP",
+  "state": "Abia",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Ogun State Institute of technology",
+  "slug": "ogun-state-institute-of-technology",
+  "short_name": "OSIT",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Olabisi Onabanjo University",
+  "slug": "olabisi-onabanjo-university",
+  "short_name": "OOU",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Olusegun Agagu University of Science and Technology",
+  "slug": "olusegun-agagu-university-of-science-and-technology",
+  "short_name": "OAUST",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Osun State College of Education, Ilesa",
+  "slug": "osun-state-college-of-education-ilesa",
+  "short_name": "OSCE",
+  "state": "Osun",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Osun State College of Technology",
+  "slug": "osun-state-college-of-technology",
+  "short_name": "OSCT",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Osun State Polytechnic",
+  "slug": "osun-state-polytechnic",
+  "short_name": "OSP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Osun State University",
+  "slug": "osun-state-university",
+  "short_name": "UNIOSUN",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Our Saviour Institute of Science and Technology",
+  "slug": "our-saviour-institute-of-science-and-technology-poly",
+  "short_name": "OSIST",
+  "state": "Enugu",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Our Saviour Institute of Science and Technology",
+  "slug": "our-saviour-institute-of-science-and-technology",
+  "short_name": "OSIST",
+  "state": "Enugu",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Oyo State College of Agriculture and Technology",
+  "slug": "oyo-state-college-of-agriculture-and-technology",
+  "short_name": "OSCAT",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "PAMO University of Medical Sciences",
+  "slug": "pamo-university-of-medical-sciences",
+  "short_name": "PUMS",
+  "state": "Rivers",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Pan-Atlantic University",
+  "slug": "pan-atlantic-university",
+  "short_name": "PAU",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Paramount Polytechnic",
+  "slug": "paramount-polytechnic",
+  "short_name": "PP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Paul University",
+  "slug": "paul-university",
+  "short_name": "PU",
+  "state": "Anambra",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Peaceland University",
+  "slug": "peaceland-university",
+  "short_name": "PU",
+  "state": "Enugu",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Petroleum Training Institute",
+  "slug": "petroleum-training-institute",
+  "short_name": "PTI",
+  "state": "Delta",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Piaget College of Education",
+  "slug": "piaget-college-of-education",
+  "short_name": "PCE",
+  "state": "Ogun",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Plateau State Polytechnic",
+  "slug": "plateau-state-polytechnic",
+  "short_name": "PSP",
+  "state": "Plateau",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Plateau State University",
+  "slug": "plateau-state-university",
+  "short_name": "PLASU",
+  "state": "Plateau",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Precious Cornerstone University",
+  "slug": "precious-cornerstone-university",
+  "short_name": "PCU",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Prime Polytechnic",
+  "slug": "prime-polytechnic",
+  "short_name": "PP",
+  "state": "Kogi",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Prince Abubakar Audu University",
+  "slug": "prince-abubakar-audu-university",
+  "short_name": "PAAU",
+  "state": "Kogi",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Raindrops Institute of Management and Technology",
+  "slug": "raindrops-institute-of-management-and-technology",
+  "short_name": "RIMT",
+  "state": "Imo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Ramat Polytechnic",
+  "slug": "ramat-polytechnic",
+  "short_name": "RP",
+  "state": "Borno",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Redeemer's University Nigeria",
+  "slug": "redeemer-s-university-nigeria",
+  "short_name": "RUN",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Renaissance University",
+  "slug": "renaissance-university",
+  "short_name": "RU",
+  "state": "Enugu",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Rhema University",
+  "slug": "rhema-university",
+  "short_name": "RU",
+  "state": "Abia",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Ritman University",
+  "slug": "ritman-university",
+  "short_name": "RU",
+  "state": "Akwa Ibom",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Rivers State University",
+  "slug": "rivers-state-university",
+  "short_name": "RSU",
+  "state": "Rivers",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Ronik Polytechnic",
+  "slug": "ronik-polytechnic",
+  "short_name": "RP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Rufus Giwa Polytechnic",
+  "slug": "rufus-giwa-polytechnic",
+  "short_name": "RGP",
+  "state": "Ondo",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "SAF Polytechnic",
+  "slug": "saf-polytechnic",
+  "short_name": "SP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Sa'adatu Rimi College of Education",
+  "slug": "sa-adatu-rimi-college-of-education",
+  "short_name": "SARCE",
+  "state": "Kano",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Salem University",
+  "slug": "salem-university",
+  "short_name": "SU",
+  "state": "Kogi",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Sam Maris University",
+  "slug": "sam-maris-university",
+  "short_name": "SMU",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Samuel Adegboyega University",
+  "slug": "samuel-adegboyega-university",
+  "short_name": "SAU",
+  "state": "Edo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Shaka Polytechnic",
+  "slug": "shaka-polytechnic",
+  "short_name": "SP",
+  "state": "Edo",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Shehu Shagari College of Education",
+  "slug": "shehu-shagari-college-of-education",
+  "short_name": "SSCE",
+  "state": "Sokoto",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Skyline University",
+  "slug": "skyline-university",
+  "short_name": "SU",
+  "state": "Kano",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Sokoto State University",
+  "slug": "sokoto-state-university",
+  "short_name": "SSU",
+  "state": "Sokoto",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "St. Augustine College of Education",
+  "slug": "st-augustine-college-of-education",
+  "short_name": "SACE",
+  "state": "Lagos",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Stars Polytechnic",
+  "slug": "stars-polytechnic",
+  "short_name": "SP",
+  "state": "Ogun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Sule Lamido University",
+  "slug": "sule-lamido-university",
+  "short_name": "SLU",
+  "state": "Jigawa",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Summit University",
+  "slug": "summit-university",
+  "short_name": "SU",
+  "state": "Kwara",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Sure Foundation Polytechnic",
+  "slug": "sure-foundation-polytechnic",
+  "short_name": "SFP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Tai Solarin Federal University of Education",
+  "slug": "tai-solarin-federal-university-of-education",
+  "short_name": "TASUED",
+  "state": "Ogun",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Taraba State Polytechnic",
+  "slug": "taraba-state-polytechnic",
+  "short_name": "TSP",
+  "state": "Taraba",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Taraba State University",
+  "slug": "taraba-state-university",
+  "short_name": "TSU",
+  "state": "Taraba",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Temple Gate Polytechnic",
+  "slug": "temple-gate-polytechnic",
+  "short_name": "TGP",
+  "state": "Abia",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "The Oke-Ogun Polytechnic",
+  "slug": "the-oke-ogun-polytechnic",
+  "short_name": "OOP",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "The Polytechnic Ibadan",
+  "slug": "the-polytechnic-ibadan",
+  "short_name": "PI",
+  "state": "Oyo",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "The Polytechnic Iresi",
+  "slug": "the-polytechnic-iresi",
+  "short_name": "PI",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "The Polytechnic, Adoka",
+  "slug": "the-polytechnic-adoka",
+  "short_name": null,
+  "state": "Benue",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "The Polytechnic, Igbo-Owu",
+  "slug": "the-polytechnic-igbo-owu",
+  "short_name": null,
+  "state": "Kwara",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "The Polytechnic, Ile-Ife",
+  "slug": "the-polytechnic-ile-ife",
+  "short_name": null,
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "TimeOn Kairos Polytechnic",
+  "slug": "timeon-kairos-polytechnic",
+  "short_name": "TKP",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Trinity Polytechnic",
+  "slug": "trinity-polytechnic",
+  "short_name": "TP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Ultra Excellence Polytechnic",
+  "slug": "ultra-excellence-polytechnic",
+  "short_name": "UEP",
+  "state": "Akwa Ibom",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Umar Suleiman College of Education",
+  "slug": "umar-suleiman-college-of-education",
+  "short_name": "USCE",
+  "state": "Yobe",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Umaru Ali Shinkafi Polytechnic",
+  "slug": "umaru-ali-shinkafi-polytechnic",
+  "short_name": "UASP",
+  "state": "Sokoto",
+  "kind": "polytechnic",
+  "ownership": "state"
+ },
+ {
+  "name": "Umaru Musa Yar'adua University",
+  "slug": "umaru-musa-yar-adua-university",
+  "short_name": "UMYU",
+  "state": "Katsina",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Unique College of Management and Technology",
+  "slug": "unique-college-of-management-and-technology",
+  "short_name": "UCMT",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "United Polytechnic",
+  "slug": "united-polytechnic",
+  "short_name": "UP",
+  "state": "Plateau",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "University of Abuja",
+  "slug": "university-of-abuja",
+  "short_name": "UNIABUJA",
+  "state": "FCT",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Benin",
+  "slug": "university-of-benin",
+  "short_name": "UNIBEN",
+  "state": "Edo",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Calabar",
+  "slug": "university-of-calabar",
+  "short_name": "UNICAL",
+  "state": "Cross River",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Cross River State",
+  "slug": "university-of-cross-river-state",
+  "short_name": "UNICROSS",
+  "state": "Cross River",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "University of Delta",
+  "slug": "university-of-delta",
+  "short_name": "UD",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "University of Ibadan",
+  "slug": "university-of-ibadan",
+  "short_name": "UI",
+  "state": "Oyo",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Ilorin",
+  "slug": "university-of-ilorin",
+  "short_name": "UNILORIN",
+  "state": "Kwara",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Jos",
+  "slug": "university-of-jos",
+  "short_name": "UNIJOS",
+  "state": "Plateau",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Lagos",
+  "slug": "university-of-lagos",
+  "short_name": "UNILAG",
+  "state": "Lagos",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Maiduguri",
+  "slug": "university-of-maiduguri",
+  "short_name": "UNIMAID",
+  "state": "Borno",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Mkar",
+  "slug": "university-of-mkar",
+  "short_name": "UM",
+  "state": "Benue",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "University of Nigeria, Nsukka",
+  "slug": "university-of-nigeria-nsukka",
+  "short_name": "UNN",
+  "state": "Enugu",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Port Harcourt",
+  "slug": "university-of-port-harcourt",
+  "short_name": "UNIPORT",
+  "state": "Rivers",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "University of Uyo",
+  "slug": "university-of-uyo",
+  "short_name": "UNIUYO",
+  "state": "Akwa Ibom",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Usmanu Danfodiyo University",
+  "slug": "usmanu-danfodiyo-university",
+  "short_name": "UDUS",
+  "state": "Sokoto",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Veritas University (Catholic University of Nigeria) Abuja",
+  "slug": "veritas-university-catholic-university-of-nigeria-ab",
+  "short_name": "VUNA",
+  "state": "FCT",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Villanova Polytechnic",
+  "slug": "villanova-polytechnic",
+  "short_name": "VP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Vineyard Polytechnic",
+  "slug": "vineyard-polytechnic",
+  "short_name": "VP",
+  "state": "Nasarawa",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Waziri Umaru Federal Polytechnic",
+  "slug": "waziri-umaru-federal-polytechnic",
+  "short_name": "WUFP",
+  "state": "Kebbi",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Wesley University",
+  "slug": "wesley-university",
+  "short_name": "WU",
+  "state": "Ondo",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Western Delta University",
+  "slug": "western-delta-university",
+  "short_name": "WDU",
+  "state": "Delta",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Westland Polytechnic",
+  "slug": "westland-polytechnic",
+  "short_name": "WP",
+  "state": "Osun",
+  "kind": "polytechnic",
+  "ownership": "private"
+ },
+ {
+  "name": "Westland University",
+  "slug": "westland-university",
+  "short_name": "WU",
+  "state": "Osun",
+  "kind": "university",
+  "ownership": "private"
+ },
+ {
+  "name": "Yaba College of Technology",
+  "slug": "yaba-college-of-technology",
+  "short_name": "YABATECH",
+  "state": "Lagos",
+  "kind": "polytechnic",
+  "ownership": "federal"
+ },
+ {
+  "name": "Yewa Central College of Education",
+  "slug": "yewa-central-college-of-education",
+  "short_name": "YCCE",
+  "state": "Ogun",
+  "kind": "college_of_education",
+  "ownership": "private"
+ },
+ {
+  "name": "Yobe State University",
+  "slug": "yobe-state-university",
+  "short_name": "YSU",
+  "state": "Yobe",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Yusuf Bala Usman College of Legal and General Studies",
+  "slug": "yusuf-bala-usman-college-of-legal-and-general-studie",
+  "short_name": "YBUCLGS",
+  "state": "Katsina",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Yusuf Maitama Sule Federal University of Education, Kano",
+  "slug": "yusuf-maitama-sule-federal-university-of-education-k",
+  "short_name": "YMSFUE",
+  "state": "Kano",
+  "kind": "university",
+  "ownership": "federal"
+ },
+ {
+  "name": "Yusuf Maitama Sule University Kano",
+  "slug": "yusuf-maitama-sule-university-kano",
+  "short_name": "YMSUK",
+  "state": "Kano",
+  "kind": "university",
+  "ownership": "state"
+ },
+ {
+  "name": "Zamfara State College of Education",
+  "slug": "zamfara-state-college-of-education",
+  "short_name": "ZSCE",
+  "state": "Zamfara",
+  "kind": "college_of_education",
+  "ownership": "state"
+ },
+ {
+  "name": "Zamfara State University",
+  "slug": "zamfara-state-university",
+  "short_name": "ZAMSU",
+  "state": "Zamfara",
+  "kind": "university",
+  "ownership": "state"
+ }
+]
