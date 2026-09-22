@@ -9,6 +9,8 @@ import Receipt from '../../components/complaints/Receipt';
 import { CATEGORY_GROUPS, PRIORITY, categoryLabel } from '../../utils/status';
 import { complaintService, errorMessage, fieldErrors } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
+import useDraft, { loadDraft } from '../../hooks/useDraft';
+import useOnline from '../../hooks/useOnline';
 
 const TITLE_MIN = 5;
 const BODY_MIN = 20;
@@ -22,13 +24,20 @@ export default function NewComplaint() {
 
   const [step, setStep] = useState(0);
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({
+  // Restored from the draft if one survives — the words are the part a
+  // person cannot cheaply produce twice, so they are never the part
+  // that is lost to a dropped connection or a locked phone.
+  const [form, setForm] = useState(() => ({
     category: '',
     title: '',
     description: '',
     priority: 'medium',
     is_anonymous: false,
-  });
+    ...loadDraft('complaint', user?.id),
+  }));
+  const [restored] = useState(() => Boolean(loadDraft('complaint', user?.id)?.description));
+  const clearDraft = useDraft('complaint', user?.id, form);
+  const online = useOnline();
 
   const anonymityOffered = Boolean(user?.institution?.allow_anonymous);
   const [errors, setErrors] = useState({});
@@ -50,7 +59,12 @@ export default function NewComplaint() {
 
   const submit = useMutation({
     mutationFn: () => complaintService.create(form),
-    onSuccess: (data) => setReceipt(data.complaint),
+    onSuccess: (data) => {
+      // Only a successful submission clears the draft. A failure keeps
+      // every word.
+      clearDraft();
+      setReceipt(data.complaint);
+    },
     onError: (error) => {
       const fields = fieldErrors(error);
       setErrors(Object.keys(fields).length ? fields : { form: errorMessage(error) });
@@ -93,6 +107,48 @@ export default function NewComplaint() {
       <p className="mt-1 text-ink-600">
         Give us the details and we will route it to the right department.
       </p>
+
+      {!online && (
+        <p
+          role="status"
+          className="mt-4 rounded-md px-4 py-3 text-sm font-medium"
+          style={{
+            backgroundColor: 'var(--status-progress-bg)',
+            color: 'var(--status-progress-fg)',
+          }}
+        >
+          You are offline. Keep writing — everything here is saved on this device, and you can
+          send it when the connection returns.
+        </p>
+      )}
+
+      {restored && (
+        <div
+          role="status"
+          className="mt-4 flex items-start justify-between gap-3 rounded-md border border-line bg-canvas px-4 py-3 text-sm"
+        >
+          <span className="text-ink-700">
+            We kept what you wrote last time. Carry on where you stopped, or start over.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              clearDraft();
+              setForm({
+                category: '',
+                title: '',
+                description: '',
+                priority: 'medium',
+                is_anonymous: false,
+              });
+              setStep(0);
+            }}
+            className="shrink-0 font-semibold text-brand-700 hover:text-brand-800"
+          >
+            Start over
+          </button>
+        </div>
+      )}
 
       <ol className="mt-6 flex gap-2" aria-label="Progress">
         {STEPS.map((label, index) => (
@@ -276,8 +332,17 @@ export default function NewComplaint() {
               <ArrowRightIcon className="h-4 w-4" aria-hidden="true" />
             </Button>
           ) : (
-            <Button type="button" loading={submit.isPending} onClick={() => submit.mutate()}>
-              {submit.isPending ? 'Securing your complaint' : 'Send complaint'}
+            <Button
+              type="button"
+              loading={submit.isPending}
+              disabled={!online}
+              onClick={() => submit.mutate()}
+            >
+              {submit.isPending
+                ? 'Securing your complaint'
+                : online
+                  ? 'Send complaint'
+                  : 'Offline — draft saved'}
             </Button>
           )}
         </div>
