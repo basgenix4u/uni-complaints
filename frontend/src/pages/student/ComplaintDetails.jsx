@@ -16,6 +16,7 @@ import PriorityBadge from '../../components/ui/PriorityBadge';
 import ProgressRail from '../../components/ui/ProgressRail';
 import { SkeletonList } from '../../components/ui/Skeleton';
 import AttachmentList from '../../components/complaints/AttachmentList';
+import Timeline from '../../components/complaints/Timeline';
 import { complaintService, errorMessage } from '../../services/api';
 import { categoryLabel, getStatus } from '../../utils/status';
 import { formatDateTime, formatDeadline, formatRelative, initials } from '../../utils/format';
@@ -176,6 +177,16 @@ export default function ComplaintDetails() {
           {complaint.description}
         </p>
       </section>
+
+      {/* The record of movement. Placed above the messages because "has
+          anything happened?" is the question a student returns to this
+          page to answer. */}
+      {complaint.events?.length > 0 && (
+        <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+          <h2 className="mb-5 text-sm font-bold text-ink-900">What has happened so far</h2>
+          <Timeline events={complaint.events} />
+        </section>
+      )}
 
       <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
         <AttachmentList
