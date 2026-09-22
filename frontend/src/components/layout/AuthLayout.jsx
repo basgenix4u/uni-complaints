@@ -57,8 +57,8 @@ const AuthLayout = () => {
               <span className="text-primary-600 font-bold text-2xl">U</span>
             </div>
             <div>
-              <h1 className="text-white font-bold text-2xl">UniComplaint</h1>
-              <p className="text-primary-200 text-sm">Student Complaint System</p>
+              <h1 className="text-white font-bold text-2xl">Resolve</h1>
+              <p className="text-primary-200 text-sm">Complaints that reach someone</p>
             </div>
           </Link>
 
@@ -79,48 +79,35 @@ const AuthLayout = () => {
             </p>
           </motion.div>
 
-          {/* Stats */}
-          <motion.div
+          {/* What the product actually promises. The figures that were
+              here before -- 10K+ resolved, 98% satisfaction, a testimonial
+              from a Dean -- were invented. Nobody has used this yet, and
+              inventing evidence on a complaints system is precisely the
+              dishonesty it exists to address. */}
+          <motion.ul
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="flex gap-12 mt-12"
+            className="mt-12 space-y-4"
           >
-            <div>
-              <p className="text-4xl font-bold text-white">10K+</p>
-              <p className="text-primary-200 text-sm">Complaints Resolved</p>
-            </div>
-            <div>
-              <p className="text-4xl font-bold text-white">98%</p>
-              <p className="text-primary-200 text-sm">Satisfaction Rate</p>
-            </div>
-            <div>
-              <p className="text-4xl font-bold text-white">24h</p>
-              <p className="text-primary-200 text-sm">Avg. Response Time</p>
-            </div>
-          </motion.div>
+            {[
+              ['A ticket, immediately', 'Track it without signing in. Nothing gets lost in an inbox.'],
+              ['A named deadline', 'Counted in working hours, and escalated up the chain if it passes.'],
+              ['The right office', 'Your complaint is routed on submission. You need not know who handles what.'],
+            ].map(([title, detail]) => (
+              <li key={title} className="flex gap-3">
+                <span
+                  aria-hidden="true"
+                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-white/70"
+                />
+                <span>
+                  <span className="block font-semibold text-white">{title}</span>
+                  <span className="block text-sm text-primary-200">{detail}</span>
+                </span>
+              </li>
+            ))}
+          </motion.ul>
 
-          {/* Testimonial */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="mt-12 p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20"
-          >
-            <p className="text-white/90 italic mb-4">
-              "This system has transformed how we handle student complaints. 
-              The response time has improved by 70%!"
-            </p>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-300 flex items-center justify-center text-primary-700 font-semibold">
-                D
-              </div>
-              <div>
-                <p className="text-white font-medium text-sm">Dr. Adebayo</p>
-                <p className="text-primary-200 text-xs">Dean of Student Affairs</p>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </div>
 
@@ -134,8 +121,8 @@ const AuthLayout = () => {
                 <span className="text-white font-bold text-xl">U</span>
               </div>
               <div>
-                <h1 className="font-bold text-neutral-900 text-xl">UniComplaint</h1>
-                <p className="text-xs text-neutral-500">Management System</p>
+                <h1 className="font-bold text-neutral-900 text-xl">Resolve</h1>
+                <p className="text-xs text-neutral-500">Complaint resolution</p>
               </div>
             </Link>
           </div>
