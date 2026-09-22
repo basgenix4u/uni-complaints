@@ -20,18 +20,31 @@ from app.models.institution import Institution
 # on an empty query would ship the whole table to a phone.
 MAX_RESULTS = 50
 
+# Ranking happens in Python, so the candidate set is capped first. This
+# is deliberately larger than a page: a good match must not be cut off
+# by SQL before it can be ranked to the top.
+RANK_CEILING = 300
+
 
 def _normalise(value: str) -> str:
     return re.sub(r"\s+", " ", (value or "").strip())
 
 
-def search(query: str = "", state: str = "", onboarded_only: bool = False) -> list[Institution]:
-    """Find institutions by name, code or state.
+def search(query: str = "", state: str = "", onboarded_only: bool = False,
+           kind: str = "", limit: int = MAX_RESULTS) -> list[Institution]:
+    """Find institutions by name, acronym, state or type.
 
     Institutions that have not been onboarded are included on purpose. A
     student needs to see that their university is known to us but not yet
     signed up, which is a different answer from "never heard of it" and
     leads somewhere.
+
+    Ordering matters more than filtering here. With several hundred
+    institutions in the list, a search for "lagos" matches a dozen, and
+    the one the student means is almost always the one whose name starts
+    with what they typed. Results are ranked rather than returned
+    alphabetically, or the University of Lagos appears below a college
+    nobody was looking for.
     """
     rows = Institution.query.filter_by(is_active=True)
 
@@ -41,22 +54,78 @@ def search(query: str = "", state: str = "", onboarded_only: bool = False) -> li
         rows = rows.filter(
             db.or_(
                 Institution.name.ilike(like),
+                Institution.short_name.ilike(like),
                 Institution.code.ilike(like),
                 Institution.slug.ilike(like),
+                # Typed as "uni lagos" or "unilag"; the slug is hyphenated
+                # so a space-stripped comparison catches both.
+                Institution.slug.ilike(f"%{term.replace(' ', '-')}%"),
             )
         )
 
     if state:
         rows = rows.filter(Institution.state.ilike(_normalise(state)))
 
+    if kind:
+        rows = rows.filter(Institution.type == _normalise(kind).lower())
+
     if onboarded_only:
         rows = rows.filter(Institution.is_onboarded.is_(True))
 
-    # Onboarded first: those are the ones a student can actually use.
+    found = rows.limit(RANK_CEILING).all()
+    found.sort(key=lambda i: _rank(i, term))
+    return found[:limit]
+
+
+def _rank(institution: Institution, term: str) -> tuple:
+    """Sort key: best match first.
+
+    Sorting in Python rather than SQL keeps the same ordering on SQLite
+    and PostgreSQL. The candidate set is capped first, so this never runs
+    over more rows than a page could show.
+    """
+    name = (institution.name or "").lower()
+    short = (institution.short_name or "").lower()
+    term = term.lower()
+
+    if not term:
+        tier = 0
+    elif short == term:
+        # Someone who types UNILAG means exactly one institution.
+        tier = 0
+    elif name == term:
+        tier = 1
+    elif short.startswith(term):
+        tier = 2
+    elif re.search(rf"\b{re.escape(term)}\b", name):
+        # A whole-word match anywhere in the name, which is the common
+        # case for a place: "ibadan" should reach the University of
+        # Ibadan as readily as Ibadan City Polytechnic. Ranking a prefix
+        # above this put every institution that merely starts with a town
+        # name ahead of the one people were looking for.
+        tier = 3
+    elif name.startswith(term):
+        tier = 4
+    else:
+        tier = 5
+
+    # A place name matches many institutions. Someone typing "ibadan"
+    # almost certainly wants the University of Ibadan rather than a
+    # private polytechnic that happens to sort earlier, so within a tier
+    # the larger, longer-established sector comes first. This is a
+    # heuristic about what people search for, not a judgement of quality.
+    sector = {"university": 0, "polytechnic": 1, "college_of_education": 2}
+    funding = {"federal": 0, "state": 1, "private": 2}
+
     return (
-        rows.order_by(Institution.is_onboarded.desc(), Institution.name)
-        .limit(MAX_RESULTS)
-        .all()
+        tier,
+        # An institution a student can actually use outranks one we merely
+        # know of, but only among equally good name matches.
+        0 if institution.is_onboarded else 1,
+        sector.get(institution.type, 3),
+        funding.get(institution.ownership, 3),
+        len(name),
+        name,
     )
 
 

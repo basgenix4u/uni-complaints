@@ -16,7 +16,11 @@ bp = Blueprint("directory", __name__, url_prefix="/api/directory")
 
 
 @bp.get("/institutions")
-@limiter.limit("60 per hour")
+# A type-ahead sends a request every time the student stops typing, so a
+# single careful sign-up can spend a dozen of these. Sixty an hour was
+# set when the directory held a handful of institutions and would now
+# lock people out mid-search. The endpoint is a read of public data.
+@limiter.limit("300 per hour")
 def list_institutions():
     """Search the directory.
 
@@ -28,6 +32,7 @@ def list_institutions():
     rows = search(
         query=request.args.get("q", ""),
         state=request.args.get("state", ""),
+        kind=request.args.get("kind", ""),
         onboarded_only=request.args.get("onboarded") in ("1", "true"),
     )
 
