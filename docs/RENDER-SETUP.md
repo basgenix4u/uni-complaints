@@ -30,6 +30,22 @@ Render → **New** → **Web Service** → connect `basgenix4u/uni-complaints`.
 Paste the contents of `render-env.txt` into **Environment**. Render
 accepts a bulk paste of `KEY=value` lines.
 
+> **If the deploy fails with `DuplicateTable: relation "users" already
+> exists`, `DB_SCHEMA` did not reach the service.**
+>
+> The container runs `flask db upgrade` on every deploy. Without
+> `DB_SCHEMA`, Alembic finds no version table in `public`, concludes the
+> database is empty, and replays every migration from the beginning —
+> into the schema belonging to the other application in this database.
+>
+> Open **Environment** in the Render dashboard and confirm `DB_SCHEMA` is
+> listed with the value `resolve`. A variable pasted into the wrong
+> service, saved without redeploying, or added as a Secret File rather
+> than an environment variable will all look set when they are not.
+>
+> The migration now refuses to run in that state, so a repeat is a failed
+> deploy and nothing worse.
+
 Four of them decide whether this works at all:
 
 - **`DATABASE_URL`** — session pooler, port **5432**. Not 6543: Render
@@ -48,17 +64,32 @@ Four of them decide whether this works at all:
 
 ## 3. First deploy
 
-The schema is already at `0006_manual_confirmation`, so there is nothing
-to migrate. Once the service is live, create the first administrator
-from the Render **Shell**:
+The schema is already at `0006_manual_confirmation` and the platform
+administrator already exists, so **you should not need to run anything**.
+
+If you ever do use the Render **Shell**, note that it does not inherit
+the service environment, and that matters more than it sounds:
 
 ```bash
+# WRONG. No DB_SCHEMA here, so this targets `public` — which belongs
+# to the other application sharing this database.
 flask seed
+
+# Right.
+DB_SCHEMA=resolve flask seed
 ```
 
-Not `--demo`. That creates a fictional university, which has no place in
-a real deployment. The password is `PLATFORM_ADMIN_PASSWORD` from the
-environment file.
+Running it the first way is exactly what produced
+
+    DuplicateTable: relation "users" already exists
+
+The application now refuses to start in that state rather than writing
+into someone else's schema, but the habit is worth keeping: **put
+`DB_SCHEMA=resolve` in front of every command you type in that shell.**
+
+Never `flask seed --demo` on a real deployment; it creates a fictional
+university. The administrator password is `PLATFORM_ADMIN_PASSWORD` from
+the environment file.
 
 ## 4. Point the frontend at it
 

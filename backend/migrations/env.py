@@ -105,6 +105,64 @@ def include_object(obj, name, type_, reflected, compare_to):
     return True
 
 
+def _refuse_to_migrate_over_someone_else(connection, schema):
+    """Stop a migration that would build in another application's schema.
+
+    DB_SCHEMA is read from the environment at import time. A deploy that
+    forgets it does not fail loudly: Alembic simply finds no version table
+    in `public`, concludes the database is empty, and replays every
+    migration from the beginning. Against a shared database that means
+    creating our tables inside someone else's schema.
+
+    It happened. `flask db upgrade` on a Render deploy without DB_SCHEMA
+    emitted an unqualified CREATE TABLE users at the public schema of a
+    database belonging to another application, and only stopped because
+    they had a table by that name:
+
+        DuplicateTable: relation "users" already exists
+
+    A missing variable cannot be distinguished from a deliberate choice to
+    use `public`, so this looks for evidence instead: if our version table
+    already exists in some other schema, this deploy is misconfigured.
+    """
+    if connection.dialect.name != "postgresql":
+        return
+    if schema:
+        return
+
+    inspector = sa.inspect(connection)
+    for candidate in inspector.get_schema_names():
+        if candidate in ("public", "information_schema") or candidate.startswith("pg_"):
+            continue
+        if inspector.has_table("alembic_version", schema=candidate):
+            raise SystemExit(
+                "\n"
+                "REFUSING TO MIGRATE.\n\n"
+                f"This database already holds our tables in the '{candidate}' schema,\n"
+                "but DB_SCHEMA is not set, so every table would be created in 'public'\n"
+                "instead. On a shared database that writes into another application.\n\n"
+                f"Set DB_SCHEMA={candidate} in the service environment and deploy again.\n"
+            )
+
+    # Nothing of ours anywhere, and we are pointed at public. That is the
+    # ordinary case for a database of our own, but if `public` is clearly
+    # already somebody's, say so rather than moving in.
+    if inspector.has_table("alembic_version", schema="public"):
+        return
+
+    theirs = set(inspector.get_table_names(schema="public"))
+    ours = {"institutions", "complaints", "departments"}
+    if len(theirs) > 5 and not (ours & theirs):
+        raise SystemExit(
+            "\n"
+            "REFUSING TO MIGRATE.\n\n"
+            f"The 'public' schema already contains {len(theirs)} tables that are not\n"
+            "ours, and DB_SCHEMA is not set. This looks like a database shared with\n"
+            "another application.\n\n"
+            "Set DB_SCHEMA to a schema of your own, for example DB_SCHEMA=resolve.\n"
+        )
+
+
 def run_migrations_online():
     """Run migrations in 'online' mode.
 
@@ -134,6 +192,9 @@ def run_migrations_online():
         # Created before anything else so the version table has somewhere
         # to live on a first run.
         schema = _schema_for(connection)
+
+        _refuse_to_migrate_over_someone_else(connection, schema)
+
         if schema:
             # Created before anything else so the version table has
             # somewhere to live on a first run.
