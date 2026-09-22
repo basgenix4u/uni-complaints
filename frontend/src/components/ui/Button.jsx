@@ -18,7 +18,7 @@ const SIZES = {
 };
 
 const Button = forwardRef(function Button(
-  { variant = 'primary', size = 'md', loading = false, disabled, className, children, ...props },
+  { variant = 'primary', size = 'md', loading = false, fullWidth = false, disabled, className, children, ...props },
   ref,
 ) {
   return (
@@ -33,6 +33,10 @@ const Button = forwardRef(function Button(
         'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none',
         VARIANTS[variant],
         SIZES[size],
+        // Was being spread onto the DOM as an unknown attribute and
+        // silently doing nothing, so every "full width" button was
+        // sitting at its content width.
+        fullWidth && 'w-full',
         className,
       )}
       {...props}

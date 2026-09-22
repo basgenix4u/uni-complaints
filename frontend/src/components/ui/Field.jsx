@@ -47,20 +47,50 @@ function Shell({ label, hint, error, required, children, ids }) {
 }
 
 export const Input = forwardRef(function Input(
-  { label, hint, error, required, id, className, ...props },
+  { label, hint, error, required, id, className, leftIcon, rightSlot, ...props },
   ref,
 ) {
   const ids = useFieldIds(id);
+  const field = (
+    <input
+      ref={ref}
+      id={ids.id}
+      aria-invalid={error ? 'true' : undefined}
+      aria-describedby={error ? ids.errorId : hint ? ids.hintId : undefined}
+      className={cn(
+        base,
+        'h-11',
+        // Room for whatever sits inside the field, so the caret never
+        // runs underneath it.
+        leftIcon && 'pl-10',
+        rightSlot && 'pr-11',
+        error ? 'border-[#B91C1C]' : 'border-line',
+        className,
+      )}
+      {...props}
+    />
+  );
+
   return (
     <Shell label={label} hint={hint} error={error} required={required} ids={ids}>
-      <input
-        ref={ref}
-        id={ids.id}
-        aria-invalid={error ? 'true' : undefined}
-        aria-describedby={error ? ids.errorId : hint ? ids.hintId : undefined}
-        className={cn(base, 'h-11', error ? 'border-[#B91C1C]' : 'border-line', className)}
-        {...props}
-      />
+      {leftIcon || rightSlot ? (
+        <div className="relative">
+          {leftIcon && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 text-ink-500"
+            >
+              {leftIcon}
+            </span>
+          )}
+          {field}
+          {rightSlot && (
+            <span className="absolute right-1 top-1/2 flex -translate-y-1/2">{rightSlot}</span>
+          )}
+        </div>
+      ) : (
+        field
+      )}
     </Shell>
   );
 });
