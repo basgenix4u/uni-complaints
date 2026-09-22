@@ -58,10 +58,48 @@ re-asserted after every future migration rather than remembered.
 
 ---
 
-## Application — not deployed
+## Application — verified against the live database, not yet hosted
 
-The API and frontend are not running anywhere. Everything below is
-prepared and unverified in production.
+The API has been run against the production Supabase instance and the
+whole product journey completed end to end. It is not yet running on
+Render or Vercel.
+
+### What was proven against the live database
+
+Signed in as the seeded platform administrator, then:
+
+| Step | Result |
+|---|---|
+| Provision an institution | 10 units and 19 routing rules seeded |
+| Open the academic session | created |
+| Import the academic tree | 2 faculties, 2 departments |
+| Import the student register | 1 record into 2025/2026 |
+| Student signs up as `eng coe 21 013` | normalised to `ENG/COE/21/013`, **approved outright**, faculty inherited |
+| Confirm the emailed link | confirmed |
+| File a complaint | ticket `VFY-3PJC-0001`, **routed to Bursary** without anyone choosing |
+
+The verification tenant was then deleted. The cascade removed everything
+under it, which is itself a check that the foreign keys are right, and
+the database was left as found: 0 institutions, 1 platform admin, and
+ALIMS still at exactly 38 tables.
+
+### A defect this found
+
+`POST /api/platform/institutions` never set `is_onboarded`, so it
+inherited the model default of false. **Every institution provisioned
+through the API was dead on arrival**: no student could register, and no
+endpoint existed to change it — the flag was reachable only by direct
+SQL.
+
+Only a live run surfaces this. The tests all created institutions
+through a fixture that set the flag, so the gap sat precisely between
+the code and its own test data.
+
+Provisioning now marks an institution as in service, defaults it to
+`open` verification (the register is empty on day one, and starting in
+`register` mode rejects every student until a spreadsheet is uploaded),
+and `PUT /api/platform/institutions/<id>/onboarding` can change both
+afterwards.
 
 ### What is ready
 

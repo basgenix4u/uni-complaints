@@ -81,6 +81,18 @@ def create_institution():
         type=(payload.get("type") or "university").strip(),
         state=(payload.get("state") or "").strip() or None,
         contact_email=(payload.get("contact_email") or "").strip() or None,
+        # Provisioning an institution is the deliberate act of bringing it
+        # into service, so it is in service. The column defaults to false
+        # because the directory also holds institutions we merely know of
+        # and have never onboarded; inheriting that default here meant
+        # every institution created through the API was dead on arrival,
+        # with no student able to register and no endpoint to change it.
+        is_onboarded=payload.get("is_onboarded", True) is not False,
+        # Open by default, because the register is empty on day one. An
+        # institution that starts in register mode rejects every student
+        # until a registrar has uploaded a spreadsheet, which is a poor
+        # first hour. Switched under Settings once the register is in.
+        verification_mode=(payload.get("verification_mode") or "open").strip(),
     )
     db.session.add(institution)
     db.session.flush()
@@ -128,6 +140,46 @@ def toggle_institution(institution_id):
 
     state = "activated" if institution.is_active else "suspended"
     return ok({"institution": institution.to_dict()}, f"Institution {state}.")
+
+
+@bp.put("/institutions/<institution_id>/onboarding")
+@staff_required("platform_admin")
+def set_onboarding(institution_id):
+    """Put an institution into service, or take it back out.
+
+    Distinct from suspending it. `is_active` is the switch for an
+    institution that has misbehaved or wound down; this is the one that
+    says whether students may register at all. The directory deliberately
+    lists institutions we know of but have not onboarded, so the two
+    states have to be separable.
+
+    Needed because there was no way to set this after provisioning, which
+    left the flag reachable only by direct SQL.
+    """
+    institution = db.session.get(Institution, institution_id)
+    if not institution:
+        return fail("We could not find that institution.", 404)
+
+    payload = request.get_json(silent=True) or {}
+    if "is_onboarded" not in payload:
+        return fail("Say whether the institution is in service.", 422)
+
+    institution.is_onboarded = bool(payload["is_onboarded"])
+
+    mode = (payload.get("verification_mode") or "").strip()
+    if mode:
+        if mode not in ("register", "open", "manual"):
+            return fail(
+                "Verification mode must be register, open or manual.",
+                422,
+                {"verification_mode": "Choose register, open or manual."},
+            )
+        institution.verification_mode = mode
+
+    db.session.commit()
+
+    state = "is now in service" if institution.is_onboarded else "is no longer accepting students"
+    return ok({"institution": institution.to_dict(include_settings=True)}, f"{institution.name} {state}.")
 
 
 @bp.get("/stats")
