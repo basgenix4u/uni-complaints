@@ -7,6 +7,49 @@ from app.extensions import bcrypt, cors, db, jwt, limiter, migrate
 from app.observability import configure_logging, configure_sentry, register_request_logging
 
 
+def _check_schema_isolation(app: Flask) -> None:
+    """Refuse to run unqualified against a database that is not ours.
+
+    DB_SCHEMA is read at import time to build the metadata, so a process
+    started without it silently targets `public`. On a dedicated database
+    that is correct and intended. On the shared Supabase project it means
+    writing into another application's schema, and the first sign of it
+    was a CREATE TABLE colliding with their `users` table.
+
+    A missing variable is indistinguishable from a deliberate choice, so
+    the check is for evidence rather than intent: if our tables already
+    exist in a named schema and we are not pointed at it, that is a
+    misconfiguration and the process should not start.
+    """
+    from sqlalchemy import inspect
+    from sqlalchemy.exc import SQLAlchemyError
+
+    if db.metadata.schema or app.config.get("TESTING"):
+        return
+    if db.engine.dialect.name != "postgresql":
+        return
+
+    try:
+        inspector = inspect(db.engine)
+        schemas = inspector.get_schema_names()
+    except SQLAlchemyError:
+        # Offline rendering of migrations and any start-up before the
+        # database is reachable must not be blocked by a safety check
+        # that itself needs a connection. A genuinely unreachable
+        # database fails later, with a better message than this one.
+        return
+
+    for schema in schemas:
+        if schema in ("public", "information_schema") or schema.startswith("pg_"):
+            continue
+        if inspector.has_table("alembic_version", schema=schema):
+            raise RuntimeError(
+                f"This database already holds our tables in the '{schema}' schema, "
+                f"but DB_SCHEMA is not set, so everything would be created in "
+                f"'public' instead. Set DB_SCHEMA={schema}."
+            )
+
+
 def create_app(config_name: str | None = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(get_config(config_name))
@@ -103,6 +146,11 @@ def create_app(config_name: str | None = None) -> Flask:
         if request.path.startswith("/api/") and request.path != "/api/health":
             response.headers.setdefault("Cache-Control", "no-store")
         return response
+
+    # Checked once at start-up rather than per request, and after the
+    # extensions are bound so the engine exists.
+    with app.app_context():
+        _check_schema_isolation(app)
 
     return app
 
@@ -238,7 +286,27 @@ def register_cli(app: Flask) -> None:
         from app.models.institution import Institution
         from app.models.user import User
 
-        db.create_all()
+        # create_all() only for SQLite, where there is no migration story
+        # and a developer expects a database to appear.
+        #
+        # On PostgreSQL the migrations own the schema. Calling create_all()
+        # there tried to build every table from scratch, and because the
+        # metadata schema is read from DB_SCHEMA at import time, a shell
+        # without that variable emitted unqualified DDL:
+        #
+        #     CREATE TABLE users (...)
+        #     psycopg2.errors.DuplicateTable: relation "users" already exists
+        #
+        # aimed at the public schema of a database shared with another
+        # application. The collision is the only reason it stopped.
+        if db.engine.dialect.name == "sqlite":
+            db.create_all()
+        elif not db.inspect(db.engine).has_table("users", schema=db.metadata.schema):
+            raise SystemExit(
+                "The schema does not exist yet. Run `flask db upgrade` first; "
+                "seed does not create tables on PostgreSQL because the "
+                "migrations own them."
+            )
 
         email = os.getenv("PLATFORM_ADMIN_EMAIL", "admin@resolve.ng").lower()
         password = os.getenv("PLATFORM_ADMIN_PASSWORD", "ChangeMe123")

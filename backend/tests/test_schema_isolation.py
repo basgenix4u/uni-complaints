@@ -221,3 +221,43 @@ def test_the_same_revisions_still_honour_a_schema():
 
     assert "CREATE TABLE resolve.institutions" in sql
     assert "REFERENCES resolve.institutions" in sql
+
+
+def test_seed_does_not_create_tables_on_postgresql():
+    """`flask seed` called create_all(), which on PostgreSQL tried to build
+    the whole schema from scratch.
+
+    Combined with DB_SCHEMA being read at import time, a shell without
+    that variable emitted unqualified DDL at the public schema of a
+    database shared with another application:
+
+        CREATE TABLE users (...)
+        DuplicateTable: relation "users" already exists
+
+    Their table existing is the only reason it stopped. Migrations own
+    the schema on PostgreSQL; seed must only ever insert rows.
+    """
+    source = (BACKEND / "app" / "__init__.py").read_text()
+
+    seed_body = source[source.index('@app.cli.command("seed")'):]
+    create_all_call = seed_body.index("db.create_all()")
+    guard = seed_body[:create_all_call]
+
+    assert 'dialect.name == "sqlite"' in guard, (
+        "seed must only call create_all() on SQLite, where there is no migration story"
+    )
+
+
+def test_the_application_refuses_to_run_unqualified_beside_our_own_tables():
+    """A missing DB_SCHEMA is indistinguishable from a deliberate choice,
+    so the guard looks for evidence rather than intent: our tables already
+    present in a named schema while we are pointed at public.
+    """
+    source = (BACKEND / "app" / "__init__.py").read_text()
+
+    assert "_check_schema_isolation" in source
+    assert "alembic_version" in source, (
+        "the guard should detect our own schema by its migration table"
+    )
+    # It has to run during start-up, not merely be defined.
+    assert source.count("_check_schema_isolation") >= 2
