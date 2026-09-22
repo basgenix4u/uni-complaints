@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import { Input } from '../../components/ui/Field';
 import InstitutionPicker from '../../components/auth/InstitutionPicker';
 import useAuthStore from '../../stores/authStore';
+import { authService, errorMessage } from '../../services/api';
 
 /**
  * Registering as a student.
@@ -106,19 +107,7 @@ export default function RegisterPage() {
   };
 
   if (done) {
-    return (
-      <div className="text-center">
-        <EnvelopeIcon className="mx-auto h-12 w-12 text-brand-700" aria-hidden="true" />
-        <h1 className="mt-3 font-display text-2xl font-bold text-ink-900">Check your email.</h1>
-        <p className="mx-auto mt-2 max-w-sm text-ink-600">
-          We sent a confirmation link to <strong>{done}</strong>. Open it to finish setting up your
-          account. It may take a minute, and it is worth checking the spam folder.
-        </p>
-        <Link to="/login" className="mt-6 inline-block">
-          <Button variant="secondary">Back to sign in</Button>
-        </Link>
-      </div>
-    );
+    return <ConfirmationStep email={done} onWrongEmail={() => setDone(null)} />;
   }
 
   return (
@@ -202,16 +191,18 @@ export default function RegisterPage() {
             <Input
               label="Password"
               type="password"
-              hint="At least 8 characters, with a capital, a small letter and a number."
+              autoComplete="new-password"
               value={form.password}
               onChange={set('password')}
               error={errors.password}
               required
             />
+            <PasswordChecklist password={form.password} />
 
             <Input
               label="Confirm password"
               type="password"
+              autoComplete="new-password"
               value={form.confirm_password}
               onChange={set('confirm_password')}
               error={errors.confirm_password}
@@ -252,5 +243,101 @@ export default function RegisterPage() {
         </Link>
       </motion.p>
     </div>
+  );
+}
+
+/**
+ * The wall after registering.
+ *
+ * This is the step most likely to lose the person: the link is in an
+ * inbox they may have misspelt, on a provider that may be slow, filed
+ * under spam. A dead end here costs the account. So the screen can send
+ * the link again — on a cooldown, because pressing it repeatedly only
+ * queues duplicates — and can go back if the address itself was wrong.
+ */
+function ConfirmationStep({ email, onWrongEmail }) {
+  const [cooldown, setCooldown] = useState(0);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const timer = setInterval(() => setCooldown((current) => current - 1), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown > 0]);
+
+  const resend = async () => {
+    setSending(true);
+    try {
+      const result = await authService.resendVerification(email);
+      toast.success(result?.message || 'If that address needs confirming, a new link is on its way.');
+      setCooldown(60);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="text-center">
+      <EnvelopeIcon className="mx-auto h-12 w-12 text-brand-700" aria-hidden="true" />
+      <h1 className="mt-3 font-display text-2xl font-bold text-ink-900">Check your email.</h1>
+      <p className="mx-auto mt-2 max-w-sm text-ink-600">
+        We sent a confirmation link to <strong>{email}</strong>. Open it to finish setting up your
+        account. It may take a minute, and it is worth checking the spam folder.
+      </p>
+
+      <div className="mt-6 flex flex-col items-center gap-3">
+        <Button variant="secondary" onClick={resend} loading={sending} disabled={cooldown > 0}>
+          {cooldown > 0 ? `Send it again (${cooldown}s)` : 'Send it again'}
+        </Button>
+        <button
+          type="button"
+          onClick={onWrongEmail}
+          className="text-sm font-medium text-brand-700 hover:text-brand-800"
+        >
+          Wrong email address? Go back and change it.
+        </button>
+        <Link to="/login" className="text-sm text-ink-500 hover:text-ink-700">
+          Back to sign in
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+
+/**
+ * The password rules, as live ticks rather than an error after the
+ * fact. The rules do not change; what changes is when the person finds
+ * out — while typing, not after a rejected submit on paid data.
+ */
+const PASSWORD_RULES = [
+  ['At least 8 characters', (value) => value.length >= 8],
+  ['A capital letter', (value) => /[A-Z]/.test(value)],
+  ['A small letter', (value) => /[a-z]/.test(value)],
+  ['A number', (value) => /\d/.test(value)],
+];
+
+function PasswordChecklist({ password }) {
+  if (!password) return null;
+  return (
+    <ul className="mt-1.5 grid grid-cols-2 gap-x-4 gap-y-1" aria-label="Password requirements">
+      {PASSWORD_RULES.map(([label, passes]) => {
+        const ok = passes(password);
+        return (
+          <li
+            key={label}
+            className={`flex items-center gap-1.5 text-caption ${
+              ok ? 'text-brand-700' : 'text-ink-500'
+            }`}
+          >
+            <span aria-hidden="true">{ok ? '\u2713' : '\u00B7'}</span>
+            {label}
+            <span className="sr-only">{ok ? ' \u2014 met' : ' \u2014 not yet met'}</span>
+          </li>
+        );
+      })}
+    </ul>
   );
 }

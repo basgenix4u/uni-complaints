@@ -38,7 +38,9 @@ const useAuthStore = create(
         } catch (err) {
           const errorMessage = err.response?.data?.message || 'Login failed';
           set({ isLoading: false, error: errorMessage });
-          return { success: false, error: errorMessage };
+          // The caller gets the raw error too: the 429 handler needs the
+          // Retry-After header, which the message alone cannot carry.
+          return { success: false, error: errorMessage, raw: err };
         }
       },
 

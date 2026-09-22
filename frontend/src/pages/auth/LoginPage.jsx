@@ -14,6 +14,9 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button, Input } from '../../components/ui';
 import useAuthStore from '../../stores/authStore';
+import useCapsLock from '../../hooks/useCapsLock';
+import useRetryAfter from '../../hooks/useRetryAfter';
+import useSlowRequest from '../../hooks/useSlowRequest';
 
 // Validation Schema
 const loginSchema = z.object({
@@ -31,6 +34,11 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLock, capsLockProps] = useCapsLock();
+  const retry = useRetryAfter();
+  // The free tier sleeps; the first request of the day takes up to a
+  // minute. Without narration that minute looks like a broken site.
+  const slowMessage = useSlowRequest(isLoading);
 
   const {
     register,
@@ -58,6 +66,9 @@ const LoginPage = () => {
           navigate('/admin/dashboard');
         }
       } else {
+        // A 429 carries how long to wait. Counting it down beats a
+        // toast that invites the retry the limit exists to stop.
+        if (result.raw?.response?.status === 429 && retry.start(result.raw)) return;
         toast.error(result.error || 'Login failed');
       }
     } catch (error) {
@@ -95,11 +106,14 @@ const LoginPage = () => {
         onSubmit={handleSubmit(onSubmit)}
         className="space-y-5"
       >
-        {/* Email */}
+        {/* Email. autocomplete and inputmode so password managers fill
+            it and phone keyboards show the @ key. */}
         <Input
           label="Email Address"
           type="email"
           placeholder="Enter your email"
+          autoComplete="email"
+          inputMode="email"
           leftIcon={<EnvelopeIcon className="h-5 w-5" />}
           error={errors.email?.message}
           {...register('email')}
@@ -110,8 +124,11 @@ const LoginPage = () => {
           label="Password"
           type={showPassword ? 'text' : 'password'}
           placeholder="Enter your password"
+          autoComplete="current-password"
           leftIcon={<LockClosedIcon className="h-5 w-5" />}
           error={errors.password?.message}
+          hint={capsLock ? 'Caps lock is on.' : undefined}
+          {...capsLockProps}
           rightSlot={
             <button
               type="button"
@@ -139,11 +156,33 @@ const LoginPage = () => {
           </Link>
         </div>
 
+        {/* Locked out: a clock that visibly runs down, in place of an
+            error that invites trying again immediately. */}
+        {retry.blocked && (
+          <p
+            role="alert"
+            className="rounded-md px-4 py-3 text-sm font-medium"
+            style={{
+              backgroundColor: 'var(--status-progress-bg)',
+              color: 'var(--status-progress-fg)',
+            }}
+          >
+            Too many attempts. You can try again in {retry.label}.
+          </p>
+        )}
+
         {/* Submit Button */}
-        <Button type="submit" size="lg" fullWidth loading={isLoading}>
+        <Button type="submit" size="lg" fullWidth loading={isLoading} disabled={retry.blocked}>
           <ArrowRightEndOnRectangleIcon className="h-5 w-5" aria-hidden="true" />
           Sign In
         </Button>
+
+        {/* While the free-tier server wakes, say so; the alternative is
+            a spinner indistinguishable from a hang. aria-live so the
+            change is announced without stealing focus. */}
+        <p aria-live="polite" className="min-h-5 text-center text-caption text-ink-500">
+          {isLoading ? slowMessage : ''}
+        </p>
       </motion.form>
 
       {/* Divider */}

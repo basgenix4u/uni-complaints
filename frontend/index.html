@@ -7,6 +7,10 @@
     <title>Resolve — complaint tracking for institutions</title>
     <meta name="description" content="File a complaint, get a ticket, and track it to resolution. Complaint and case management for Nigerian institutions." />
     <meta name="theme-color" content="#0B6B57" />
+    <!-- The API lives on another origin, so DNS, TCP and TLS can all be
+         done during first paint instead of queueing behind the login
+         tap. Harmless in development, where the origin does not match. -->
+    <link rel="preconnect" href="https://resolve-api-eadv.onrender.com" crossorigin />
   </head>
   <body>
     <div id="root"></div>
