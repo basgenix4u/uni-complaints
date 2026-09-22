@@ -85,6 +85,20 @@ def create_complaint():
     if not institution:
         return fail("Your account is not linked to an institution.", 400)
 
+    # A student who asks to be anonymous and is quietly filed under their
+    # own name is worse off than one who was refused, because they will
+    # say things they would not have said. If the institution has the
+    # setting off, say so and file nothing.
+    wants_anonymity = bool(payload.get("is_anonymous"))
+    if wants_anonymity and not institution.allow_anonymous:
+        return fail(
+            "This institution does not accept anonymous complaints. "
+            "You can still file this under your name, or raise it with "
+            "the platform team if you cannot safely be identified.",
+            422,
+            {"is_anonymous": "Anonymous complaints are turned off here."},
+        )
+
     # Routing decides the destination; a student is not asked to work out
     # which office owns their problem, which is the thing they came here
     # unable to do. An explicit choice is still honoured, because a
@@ -105,7 +119,7 @@ def create_complaint():
         description=description,
         category=category,
         priority=priority,
-        is_anonymous=bool(payload.get("is_anonymous")) and institution.allow_anonymous,
+        is_anonymous=wants_anonymity,
         is_confidential=bool(rule and rule.is_confidential),
         status="submitted",
     )

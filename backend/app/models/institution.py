@@ -91,6 +91,10 @@ class Institution(TimestampMixin, db.Model):
             "brand_hue": self.brand_hue,
             "is_active": self.is_active,
             "is_onboarded": self.is_onboarded,
+            # Not a setting: a student has to know before writing whether
+            # this can be sent without their name on it, and the answer
+            # changes what they are willing to report.
+            "allow_anonymous": self.allow_anonymous,
         }
         if include_settings:
             data.update(
@@ -101,7 +105,6 @@ class Institution(TimestampMixin, db.Model):
                     "acknowledge_sla_hours": self.acknowledge_sla_hours,
                     "working_hours_start": self.working_hours_start,
                     "working_hours_end": self.working_hours_end,
-                    "allow_anonymous": self.allow_anonymous,
                     "retention_months": self.retention_months,
                     "verification_mode": self.verification_mode,
                     "matric_pattern": self.matric_pattern,
