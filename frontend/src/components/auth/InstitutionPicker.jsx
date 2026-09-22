@@ -10,12 +10,7 @@ import {
 import Button from '../ui/Button';
 import { Input } from '../ui/Field';
 import { directoryService, errorMessage } from '../../services/api';
-
-const KIND_LABEL = {
-  university: 'University',
-  polytechnic: 'Polytechnic',
-  college_of_education: 'College of Education',
-};
+import { institutionTypeLabel } from '../../utils/institutionTypes';
 
 /**
  * Choosing where you study.
@@ -269,7 +264,7 @@ export default function InstitutionPicker({ value, onChange }) {
                       {[
                         institution.short_name,
                         institution.state,
-                        KIND_LABEL[institution.type],
+                        institutionTypeLabel(institution.type),
                       ]
                         .filter(Boolean)
                         .join(' · ')}

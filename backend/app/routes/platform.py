@@ -8,7 +8,7 @@ import re
 from flask import Blueprint, request
 
 from app.extensions import db
-from app.models.institution import Institution
+from app.models.institution import INSTITUTION_TYPES, Institution, canonical_type
 from app.models.user import User
 from app.routes.auth import EMAIL_RE, fail, ok, validate_password
 
@@ -122,6 +122,10 @@ def create_institution():
     if password_error:
         errors["admin_password"] = password_error
 
+    institution_type = canonical_type(payload.get("type") or "university")
+    if institution_type is None:
+        errors["type"] = "Choose " + ", ".join(INSTITUTION_TYPES) + "."
+
     if errors:
         return fail("Please check the highlighted fields.", 422, errors)
 
@@ -156,7 +160,7 @@ def create_institution():
         name=name,
         code=code,
         slug=slug,
-        type=(payload.get("type") or "university").strip(),
+        type=institution_type,
         state=(payload.get("state") or "").strip() or None,
         contact_email=(payload.get("contact_email") or "").strip() or None,
         # Provisioning an institution is the deliberate act of bringing it
