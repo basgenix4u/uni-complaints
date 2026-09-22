@@ -88,6 +88,7 @@ def test_production_still_refuses_unsafe_rate_limiting(monkeypatch):
         "JWT_SECRET_KEY": "y" * 50,
         "RATELIMIT_STORAGE_URI": "memory://",
         "WEB_CONCURRENCY": "2",
+        "CORS_ORIGINS": "https://uni-complaints.vercel.app",
     }.items():
         monkeypatch.setenv(key, value)
     monkeypatch.delenv("RATELIMIT_ENABLED", raising=False)
@@ -103,6 +104,7 @@ def test_production_accepts_redis(monkeypatch):
         "JWT_SECRET_KEY": "y" * 50,
         "RATELIMIT_STORAGE_URI": "redis://red-abc:6379",
         "WEB_CONCURRENCY": "2",
+        "CORS_ORIGINS": "https://uni-complaints.vercel.app",
     }.items():
         monkeypatch.setenv(key, value)
     monkeypatch.delenv("RATELIMIT_ENABLED", raising=False)
@@ -180,3 +182,79 @@ def test_the_request_id_header_is_exposed_to_the_browser(client):
     # The header itself must be present on the response.
     response = client.get("/api/health")
     assert response.headers.get("X-Request-ID")
+
+
+def production_env(monkeypatch, **overrides):
+    env = {
+        "SECRET_KEY": "x" * 50,
+        "JWT_SECRET_KEY": "y" * 50,
+        "RATELIMIT_STORAGE_URI": "redis://red-abc:6379",
+        "WEB_CONCURRENCY": "2",
+        "CORS_ORIGINS": "https://uni-complaints.vercel.app",
+    }
+    env.update(overrides)
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+    monkeypatch.delenv("RATELIMIT_ENABLED", raising=False)
+    monkeypatch.delenv("MAIL_TO_CONSOLE", raising=False)
+    return reload_config()
+
+
+def test_a_trailing_slash_in_the_allowlist_is_stripped(monkeypatch):
+    """This exact typo took the deployed site down.
+
+    The value was pasted into the host dashboard as a URL rather than an
+    origin. Nothing failed: the API stayed healthy, the logs stayed clean,
+    and every browser request was silently blocked.
+    """
+    config = production_env(
+        monkeypatch, CORS_ORIGINS="https://uni-complaints.vercel.app/"
+    )
+
+    assert config.Config.CORS_ORIGINS == ["https://uni-complaints.vercel.app"]
+
+
+def test_the_allowlist_survives_untidy_input(monkeypatch):
+    config = production_env(
+        monkeypatch,
+        CORS_ORIGINS=" https://a.example/ ,https://b.example,, https://a.example ",
+    )
+
+    assert config.Config.CORS_ORIGINS == ["https://a.example", "https://b.example"]
+
+
+def test_production_refuses_to_boot_without_an_allowlist(monkeypatch):
+    """Silently defaulting to localhost is worse than refusing to start."""
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+    config = production_env(monkeypatch)
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+
+    with pytest.raises(RuntimeError, match="CORS_ORIGINS"):
+        config.ProductionConfig()
+
+
+def test_production_refuses_a_localhost_only_allowlist(monkeypatch):
+    config = production_env(monkeypatch, CORS_ORIGINS="http://localhost:5173")
+
+    with pytest.raises(RuntimeError, match="CORS_ORIGINS"):
+        config.ProductionConfig()
+
+
+def test_the_browser_origin_is_allowed_end_to_end(monkeypatch):
+    """A slash in the configuration must not reach the response header."""
+    monkeypatch.setenv("CORS_ORIGINS", "https://uni-complaints.vercel.app/")
+    reload_config()
+
+    import app as app_package
+
+    importlib.reload(app_package)
+    application = app_package.create_app("testing")
+
+    response = application.test_client().get(
+        "/api/health", headers={"Origin": "https://uni-complaints.vercel.app"}
+    )
+
+    assert (
+        response.headers.get("Access-Control-Allow-Origin")
+        == "https://uni-complaints.vercel.app"
+    )

@@ -205,6 +205,7 @@ def test_production_allows_a_single_worker_without_redis(monkeypatch):
         "JWT_SECRET_KEY": "y" * 50,
         "RATELIMIT_STORAGE_URI": "memory://",
         "WEB_CONCURRENCY": "1",
+        "CORS_ORIGINS": "https://uni-complaints.vercel.app",
     }.items():
         monkeypatch.setenv(key, value)
     monkeypatch.delenv("RATELIMIT_ENABLED", raising=False)

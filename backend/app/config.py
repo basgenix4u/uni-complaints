@@ -23,6 +23,23 @@ def _database_url() -> str:
     return url
 
 
+def _origins(raw: str) -> list[str]:
+    """Parse the configured allowlist into values a browser can match.
+
+    A browser's Origin header is scheme://host[:port] with no path and no
+    trailing slash, so an entry typed as https://example.com/ matches
+    nothing and CORS fails silently with no error anywhere in the logs.
+    That exact typo cost us a production outage, so the trailing slash is
+    stripped rather than trusted.
+    """
+    origins = []
+    for entry in raw.split(","):
+        entry = entry.strip().rstrip("/")
+        if entry and entry not in origins:
+            origins.append(entry)
+    return origins
+
+
 def _engine_options() -> dict:
     """Engine settings appropriate to the database in use."""
     url = _database_url()
@@ -78,11 +95,9 @@ class Config:
         days=int(os.getenv("JWT_REFRESH_TOKEN_DAYS", "30"))
     )
 
-    CORS_ORIGINS = [
-        o.strip()
-        for o in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
-        if o.strip()
-    ]
+    CORS_ORIGINS = _origins(
+        os.getenv("CORS_ORIGINS", "http://localhost:5173")
+    )
 
     # Preview deployments get a unique hostname each time, so they cannot
     # be listed individually. A regex allows them without opening the API
@@ -220,6 +235,20 @@ class ProductionConfig(Config):
             raise RuntimeError(
                 "MAIL_TO_CONSOLE writes confirmation links to the log and must not be "
                 "enabled in production. Configure SMTP_HOST instead."
+            )
+
+        # An unset allowlist falls back to localhost, which every browser
+        # request from the real site then fails. The API stays healthy and
+        # the logs stay clean, so the only symptom is a site that cannot
+        # log in. Fail at boot instead, where the cause is legible.
+        configured = _origins(os.getenv("CORS_ORIGINS", ""))
+        if not configured or all(
+            o.startswith(("http://localhost", "http://127.0.0.1")) for o in configured
+        ):
+            raise RuntimeError(
+                "CORS_ORIGINS must list the browser origin of the deployed frontend, "
+                "for example https://uni-complaints.vercel.app. Without it every "
+                "browser request is blocked while the API itself appears healthy."
             )
 
 

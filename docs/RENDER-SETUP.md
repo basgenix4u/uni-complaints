@@ -58,6 +58,13 @@ Four of them decide whether this works at all:
 - **`APP_URL`** — every confirmation and invitation link is built from
   it. Wrong value, and every student is sent somewhere that does not
   exist.
+- **`CORS_ORIGINS`** — the browser origin of the frontend, written as
+  `https://uni-complaints.vercel.app` with **no trailing slash**. A
+  browser sends `scheme://host` and nothing else, so a value pasted as a
+  URL matches no request. We lost a day to exactly that: the API
+  answered every health check, the logs were clean, and the site simply
+  could not log in. The value is now normalised on read and production
+  refuses to boot without it, but paste it correctly anyway.
 - **`WEB_CONCURRENCY=1`** — the free tier has no Redis, so rate limits
   are counted per process. Production refuses to boot with
   `memory://` and a higher count, which is deliberate.
