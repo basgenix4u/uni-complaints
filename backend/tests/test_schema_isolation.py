@@ -221,3 +221,50 @@ def test_the_same_revisions_still_honour_a_schema():
 
     assert "CREATE TABLE resolve.institutions" in sql
     assert "REFERENCES resolve.institutions" in sql
+
+
+def test_migrations_refuse_to_run_unqualified_beside_our_own_schema():
+    """A deploy that forgets DB_SCHEMA must fail, not improvise.
+
+    Alembic finds no version table in `public`, concludes the database is
+    empty, and replays every migration from the beginning. On a shared
+    database that creates our tables inside another application's schema.
+
+    It happened on a real deploy. `flask db upgrade` without DB_SCHEMA
+    emitted an unqualified CREATE TABLE users at the public schema of a
+    database belonging to another application, and only stopped because
+    they had a table by that name.
+
+    The guard lives in env.py rather than create_app, because
+    `flask db upgrade` never builds an application.
+    """
+    source = (BACKEND / "migrations" / "env.py").read_text()
+
+    assert "_refuse_to_migrate_over_someone_else" in source
+    # Defined and actually called, not merely present.
+    assert source.count("_refuse_to_migrate_over_someone_else") >= 2
+    assert "alembic_version" in source
+
+    # Scoped to the online path: context.configure also appears in the
+    # offline renderer earlier in the file, which never connects.
+    online = source[source.index("def run_migrations_online"):]
+    called_at = online.index("_refuse_to_migrate_over_someone_else(connection")
+    configured_at = online.index("context.configure(")
+    assert called_at < configured_at, (
+        "the check must run before Alembic is configured, not after it has begun"
+    )
+
+
+def test_the_guard_does_not_block_a_database_of_our_own():
+    """The ordinary case — one database, no schema set — must still work,
+    which is why the check looks for evidence rather than requiring the
+    variable."""
+    source = (BACKEND / "migrations" / "env.py").read_text()
+
+    guard = source[source.index("def _refuse_to_migrate_over_someone_else"):]
+    guard = guard[:guard.index("\ndef ")]
+
+    # SQLite has no schemas at all, so it returns immediately.
+    assert 'dialect.name != "postgresql"' in guard
+    # And a schema that is already configured is the correct case.
+    assert "if schema:\n        return" in guard
