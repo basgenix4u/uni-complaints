@@ -113,6 +113,14 @@ class Config:
     # throwaway database. Never set this on a deployed environment.
     RATELIMIT_ENABLED = os.getenv("RATELIMIT_ENABLED", "true").lower() != "false"
 
+    # Number of proxies between the client and the application, whose
+    # X-Forwarded-* headers may be believed. Render puts exactly one in
+    # front of us. Zero means trust nothing, which is right when the
+    # application is reached directly: a client can set these headers
+    # itself, so trusting them unconditionally would let anyone forge a
+    # source address and defeat every per-address limit.
+    TRUSTED_PROXIES = int(os.getenv("TRUSTED_PROXIES", "0"))
+
     JSON_SORT_KEYS = False
 
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
@@ -249,6 +257,21 @@ class ProductionConfig(Config):
                 "CORS_ORIGINS must list the browser origin of the deployed frontend, "
                 "for example https://uni-complaints.vercel.app. Without it every "
                 "browser request is blocked while the API itself appears healthy."
+            )
+
+        # Every managed host puts a proxy in front of the container. Left
+        # at zero, every caller shares one apparent address: the login
+        # limit becomes global, so one person's failed attempts lock out
+        # everyone, and the access log records the load balancer instead
+        # of the person who read the complaint. Both fail quietly, which
+        # is why this is checked rather than left to a deployment note.
+        if int(os.getenv("TRUSTED_PROXIES", "0")) < 1:
+            raise RuntimeError(
+                "TRUSTED_PROXIES must be set to the number of proxies in front of "
+                "this service, normally 1 on a managed host. Without it every "
+                "request appears to come from the load balancer, so rate limits "
+                "are shared between all users and the access log records the "
+                "wrong address."
             )
 
 

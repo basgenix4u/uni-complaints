@@ -89,6 +89,7 @@ def test_production_still_refuses_unsafe_rate_limiting(monkeypatch):
         "RATELIMIT_STORAGE_URI": "memory://",
         "WEB_CONCURRENCY": "2",
         "CORS_ORIGINS": "https://uni-complaints.vercel.app",
+        "TRUSTED_PROXIES": "1",
     }.items():
         monkeypatch.setenv(key, value)
     monkeypatch.delenv("RATELIMIT_ENABLED", raising=False)
@@ -105,6 +106,7 @@ def test_production_accepts_redis(monkeypatch):
         "RATELIMIT_STORAGE_URI": "redis://red-abc:6379",
         "WEB_CONCURRENCY": "2",
         "CORS_ORIGINS": "https://uni-complaints.vercel.app",
+        "TRUSTED_PROXIES": "1",
     }.items():
         monkeypatch.setenv(key, value)
     monkeypatch.delenv("RATELIMIT_ENABLED", raising=False)
@@ -191,6 +193,7 @@ def production_env(monkeypatch, **overrides):
         "RATELIMIT_STORAGE_URI": "redis://red-abc:6379",
         "WEB_CONCURRENCY": "2",
         "CORS_ORIGINS": "https://uni-complaints.vercel.app",
+        "TRUSTED_PROXIES": "1",
     }
     env.update(overrides)
     for key, value in env.items():
