@@ -123,7 +123,7 @@ export default function MyComplaints() {
 
                 {!['resolved', 'closed', 'declined'].includes(complaint.status) && (
                   <p className="mt-2 text-caption text-ink-500">
-                    Response due {formatDeadline(complaint.resolve_due_at)}
+                    Response: {formatDeadline(complaint.resolve_due_at)}
                   </p>
                 )}
               </Link>
