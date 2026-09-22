@@ -1,7 +1,7 @@
 [
  {
   "name": "A.D. Rufa'i College of Education, Legal and General Studies",
-  "slug": "a-d-rufa-i-college-of-education-legal-and-general-studies",
+  "slug": "a-d-rufa-i-college-of-education-legal-and-general-st",
   "short_name": "ADRICE",
   "state": "Jigawa",
   "kind": "college_of_education",
@@ -201,7 +201,7 @@
  },
  {
   "name": "African Thinkers Community of Inquiry College of Education",
-  "slug": "african-thinkers-community-of-inquiry-college-of-education",
+  "slug": "african-thinkers-community-of-inquiry-college-of-edu",
   "short_name": "ATCICE",
   "state": "Enugu",
   "kind": "college_of_education",
@@ -233,7 +233,7 @@
  },
  {
   "name": "Air Force Institute of Technology",
-  "slug": "air-force-institute-of-technology-university",
+  "slug": "air-force-institute-of-technology-uni",
   "short_name": "AFIT",
   "state": "Kaduna",
   "kind": "university",
@@ -304,8 +304,8 @@
   "ownership": "state"
  },
  {
-  "name": "Akwa Ibom State University (formerly Akwa Ibom State University of Science and Technology)",
-  "slug": "akwa-ibom-state-university-formerly-akwa-ibom-state-university-of-science-and-technology",
+  "name": "Akwa Ibom State University",
+  "slug": "akwa-ibom-state-university",
   "short_name": "AKSU",
   "state": "Akwa Ibom",
   "kind": "university",
@@ -656,8 +656,8 @@
   "ownership": "private"
  },
  {
-  "name": "Captain Elechi Amadi Polytechnic (formerly Port-Harcourt Polytechnic)",
-  "slug": "captain-elechi-amadi-polytechnic-formerly-port-harcourt-polytechnic",
+  "name": "Captain Elechi Amadi Polytechnic",
+  "slug": "captain-elechi-amadi-polytechnic",
   "short_name": "CEAP",
   "state": "Rivers",
   "kind": "polytechnic",
@@ -688,8 +688,8 @@
   "ownership": "private"
  },
  {
-  "name": "Chukwuemeka Odumegwu Ojukwu University (formerly Anambra State University)",
-  "slug": "chukwuemeka-odumegwu-ojukwu-university-formerly-anambra-state-university",
+  "name": "Chukwuemeka Odumegwu Ojukwu University",
+  "slug": "chukwuemeka-odumegwu-ojukwu-university",
   "short_name": "COOU",
   "state": "Anambra",
   "kind": "university",
@@ -737,7 +737,7 @@
  },
  {
   "name": "College of Administration, Management and Technology, Potiskum",
-  "slug": "college-of-administration-management-and-technology-potiskum",
+  "slug": "college-of-administration-management-and-technology",
   "short_name": "CA",
   "state": "Yobe",
   "kind": "polytechnic",
@@ -1120,8 +1120,8 @@
   "ownership": "state"
  },
  {
-  "name": "Enugu State University of Science and Technology (formerly Anambra State University of Technology)",
-  "slug": "enugu-state-university-of-science-and-technology-formerly-anambra-state-university-of-technology",
+  "name": "Enugu State University of Science and Technology",
+  "slug": "enugu-state-university-of-science-and-technology",
   "short_name": "ESUT",
   "state": "Enugu",
   "kind": "university",
@@ -2057,7 +2057,7 @@
  },
  {
   "name": "Institute of Ecumenical Education, (Thinkers Corner), Enugu",
-  "slug": "institute-of-ecumenical-education-thinkers-corner-enugu",
+  "slug": "institute-of-ecumenical-education-thinkers-corner-en",
   "short_name": "IEE",
   "state": "Enugu",
   "kind": "college_of_education",
@@ -2185,7 +2185,7 @@
  },
  {
   "name": "Kano State College of Education and Preliminary Studies",
-  "slug": "kano-state-college-of-education-and-preliminary-studies",
+  "slug": "kano-state-college-of-education-and-preliminary-stud",
   "short_name": "KSCEPS",
   "state": "Kano",
   "kind": "college_of_education",
@@ -2649,7 +2649,7 @@
  },
  {
   "name": "National Institute of Construction Technology and Management",
-  "slug": "national-institute-of-construction-technology-and-management",
+  "slug": "national-institute-of-construction-technology-and-ma",
   "short_name": "NICTM",
   "state": "Edo",
   "kind": "polytechnic",
@@ -2721,7 +2721,7 @@
  },
  {
   "name": "Nigerian Army College of Environmental Science and Technology",
-  "slug": "nigerian-army-college-of-environmental-science-and-technology",
+  "slug": "nigerian-army-college-of-environmental-science-and-t",
   "short_name": "NACEST",
   "state": "Benue",
   "kind": "polytechnic",
@@ -2945,7 +2945,7 @@
  },
  {
   "name": "Our Saviour Institute of Science and Technology",
-  "slug": "our-saviour-institute-of-science-and-technology-polytechnic",
+  "slug": "our-saviour-institute-of-science-and-technology-poly",
   "short_name": "OSIST",
   "state": "Enugu",
   "kind": "polytechnic",
@@ -3416,8 +3416,8 @@
   "ownership": "federal"
  },
  {
-  "name": "University of Cross River State (formerly Cross River University of Technology)",
-  "slug": "university-of-cross-river-state-formerly-cross-river-university-of-technology",
+  "name": "University of Cross River State",
+  "slug": "university-of-cross-river-state",
   "short_name": "UNICROSS",
   "state": "Cross River",
   "kind": "university",
@@ -3472,8 +3472,8 @@
   "ownership": "federal"
  },
  {
-  "name": "University of Mkar (formerly called Hilltop University)",
-  "slug": "university-of-mkar-formerly-called-hilltop-university",
+  "name": "University of Mkar",
+  "slug": "university-of-mkar",
   "short_name": "UM",
   "state": "Benue",
   "kind": "university",
@@ -3513,7 +3513,7 @@
  },
  {
   "name": "Veritas University (Catholic University of Nigeria) Abuja",
-  "slug": "veritas-university-catholic-university-of-nigeria-abuja",
+  "slug": "veritas-university-catholic-university-of-nigeria-ab",
   "short_name": "VUNA",
   "state": "FCT",
   "kind": "university",
@@ -3601,7 +3601,7 @@
  },
  {
   "name": "Yusuf Bala Usman College of Legal and General Studies",
-  "slug": "yusuf-bala-usman-college-of-legal-and-general-studies",
+  "slug": "yusuf-bala-usman-college-of-legal-and-general-studie",
   "short_name": "YBUCLGS",
   "state": "Katsina",
   "kind": "college_of_education",
@@ -3609,7 +3609,7 @@
  },
  {
   "name": "Yusuf Maitama Sule Federal University of Education, Kano",
-  "slug": "yusuf-maitama-sule-federal-university-of-education-kano",
+  "slug": "yusuf-maitama-sule-federal-university-of-education-k",
   "short_name": "YMSFUE",
   "state": "Kano",
   "kind": "university",

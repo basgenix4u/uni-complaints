@@ -40,6 +40,32 @@ def test_the_source_list_is_well_formed():
         assert record["ownership"] in {"federal", "state", "private"}
 
 
+def test_every_value_fits_the_column_it_goes_in():
+    """SQLite ignores column lengths and PostgreSQL does not.
+
+    Six slugs carried a "(formerly ...)" suffix that pushed them past
+    VARCHAR(60). Locally everything passed; the deploy would have failed
+    on the real database.
+    """
+    records = json.loads(DATA_FILE.read_text(encoding="utf-8"))
+
+    limits = {
+        "name": Institution.name.type.length,
+        "slug": Institution.slug.type.length,
+        "short_name": Institution.short_name.type.length,
+        "state": Institution.state.type.length,
+        "ownership": Institution.ownership.type.length,
+    }
+
+    for record in records:
+        for field, limit in limits.items():
+            value = record.get(field) or ""
+            assert len(value) <= limit, (
+                f"{record['name']}: {field} is {len(value)} characters, "
+                f"column holds {limit}"
+            )
+
+
 def test_loading_fills_the_directory(app):
     summary = load()
 
