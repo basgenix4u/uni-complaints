@@ -93,6 +93,13 @@ def create_institution():
         # until a registrar has uploaded a spreadsheet, which is a poor
         # first hour. Switched under Settings once the register is in.
         verification_mode=(payload.get("verification_mode") or "open").strip(),
+        # On by default. The complaints least likely to be raised are the
+        # ones about the people who would read them, and the research on
+        # Nigerian institutions is consistent that those are exactly the
+        # complaints that go unreported. An institution can turn this off
+        # under Settings, but it should be a decision someone makes and
+        # can be asked about, not a default nobody chose.
+        allow_anonymous=payload.get("allow_anonymous", True) is not False,
     )
     db.session.add(institution)
     db.session.flush()

@@ -22,7 +22,15 @@ export default function NewComplaint() {
 
   const [step, setStep] = useState(0);
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ category: '', title: '', description: '', priority: 'medium' });
+  const [form, setForm] = useState({
+    category: '',
+    title: '',
+    description: '',
+    priority: 'medium',
+    is_anonymous: false,
+  });
+
+  const anonymityOffered = Boolean(user?.institution?.allow_anonymous);
   const [errors, setErrors] = useState({});
   const [receipt, setReceipt] = useState(null);
 
@@ -193,6 +201,28 @@ export default function NewComplaint() {
                 </option>
               ))}
             </Select>
+
+            {anonymityOffered && (
+              <div className="rounded-md border border-line bg-canvas p-4">
+                <label className="flex items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-line"
+                    checked={form.is_anonymous}
+                    onChange={(event) => set('is_anonymous', event.target.checked)}
+                  />
+                  <span>
+                    <span className="font-bold text-ink-900">Send this without my name</span>
+                    <span className="mt-1 block text-ink-700">
+                      Staff handling it will not see who you are. You will still get a
+                      ticket number and can follow the reply here, but nobody can contact
+                      you outside this page, so put everything they need in the details
+                      above.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
         )}
 
@@ -203,6 +233,12 @@ export default function NewComplaint() {
               <Summary label="About" value={categoryLabel(form.category)} />
               <Summary label="Title" value={form.title} />
               <Summary label="Urgency" value={PRIORITY[form.priority]?.label} />
+              {anonymityOffered && (
+                <Summary
+                  label="Your name"
+                  value={form.is_anonymous ? 'Hidden from staff' : 'Visible to staff'}
+                />
+              )}
             </dl>
             <div>
               <p className="mb-1.5 text-caption font-bold uppercase tracking-wider text-ink-500">
