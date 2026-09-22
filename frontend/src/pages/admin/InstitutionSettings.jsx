@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BuildingOffice2Icon, ClockIcon, PlusIcon } from '@heroicons/react/24/outline';
 
@@ -6,6 +7,7 @@ import Button from '../../components/ui/Button';
 import { Input, Select, Textarea } from '../../components/ui/Field';
 import Skeleton from '../../components/ui/Skeleton';
 import { adminService, errorMessage, fieldErrors } from '../../services/api';
+import useAuthStore from '../../stores/authStore';
 
 const TABS = [
   { key: 'profile', label: 'Institution' },
@@ -15,14 +17,19 @@ const TABS = [
 
 export default function InstitutionSettings() {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [tab, setTab] = useState('profile');
   const [draft, setDraft] = useState(null);
   const [errors, setErrors] = useState({});
   const [saved, setSaved] = useState('');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['settings'],
     queryFn: () => adminService.settings(),
+    // A platform administrator belongs to no institution, so this asks
+    // for something that does not exist. Retrying cannot change that.
+    retry: false,
   });
 
   const { data: departmentData } = useQuery({
@@ -54,11 +61,45 @@ export default function InstitutionSettings() {
     setErrors((current) => ({ ...current, [field]: undefined }));
   };
 
-  if (isLoading || !form) {
+  if (isLoading) {
     return (
       <div className="mx-auto max-w-3xl space-y-4 px-4 py-8">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
+  // These settings belong to one institution, and a platform
+  // administrator is attached to none. The request 404s, so the page used
+  // to sit on its loading skeleton indefinitely and read as blank. Say so
+  // instead, and point at the page that does apply.
+  if (!form) {
+    const orphaned = user?.role === 'platform_admin' && !user?.institution_id;
+
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          Settings
+        </h1>
+        <div className="mt-6 rounded-lg border border-line bg-surface p-6 shadow-e1">
+          <BuildingOffice2Icon className="h-8 w-8 text-ink-400" aria-hidden="true" />
+          <p className="mt-3 font-semibold text-ink-900">
+            {orphaned
+              ? 'Your account is not attached to an institution.'
+              : 'We could not load these settings.'}
+          </p>
+          <p className="mt-1 text-sm text-ink-600">
+            {orphaned
+              ? 'These settings belong to a single institution. As the platform owner you administer all of them from one place instead.'
+              : errorMessage(error)}
+          </p>
+          {orphaned && (
+            <Button className="mt-4" onClick={() => navigate('/platform/institutions')}>
+              Go to institutions
+            </Button>
+          )}
+        </div>
       </div>
     );
   }

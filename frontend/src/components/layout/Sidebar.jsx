@@ -47,8 +47,8 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
     { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon },
     { name: 'People', href: '/admin/users', icon: UsersIcon, roles: ['institution_admin', 'platform_admin'] },
     { name: 'Invite staff', href: '/admin/invitations', icon: EnvelopeIcon, roles: ['dept_head', 'dean', 'institution_admin', 'platform_admin'] },
-    { name: 'Institution', href: '/admin/institution', icon: BuildingOffice2Icon, roles: ['institution_admin', 'platform_admin'] },
-    { name: 'Routing', href: '/admin/routing', icon: ArrowsRightLeftIcon, roles: ['institution_admin', 'platform_admin'] },
+    { name: 'Institution', href: '/admin/institution', icon: BuildingOffice2Icon, roles: ['institution_admin', 'platform_admin'], needsInstitution: true },
+    { name: 'Routing', href: '/admin/routing', icon: ArrowsRightLeftIcon, roles: ['institution_admin', 'platform_admin'], needsInstitution: true },
     { name: 'Still waiting', href: '/admin/ignored', icon: ExclamationTriangleIcon, roles: ['institution_admin', 'platform_admin'] },
     { name: 'Registrations', href: '/admin/registrations', icon: UserPlusIcon, roles: ['institution_admin', 'platform_admin'] },
     { name: 'Academic structure', href: '/admin/academic', icon: AcademicCapIcon, roles: ['institution_admin', 'platform_admin'] },
@@ -66,8 +66,13 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
     platform_admin: 'Platform owner',
   };
 
+  // Some pages administer a single institution, and the platform owner
+  // belongs to none. Their role permits the route, so role alone is not
+  // enough: the request 404s and the page has nothing to show.
   const navItems = (isAdmin() ? adminNavItems : studentNavItems).filter(
-    (item) => !item.roles || item.roles.includes(user?.role),
+    (item) =>
+      (!item.roles || item.roles.includes(user?.role)) &&
+      (!item.needsInstitution || Boolean(user?.institution_id)),
   );
   const userRole = ROLE_LABELS[user?.role] || 'Student';
 
