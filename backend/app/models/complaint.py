@@ -256,22 +256,42 @@ class Response(TimestampMixin, db.Model):
     complaint = db.relationship("Complaint", back_populates="responses")
     author = db.relationship("User")
 
+    @property
+    def _author_is_hidden(self) -> bool:
+        """Whether naming the author would undo the complaint's anonymity.
+
+        Masking the complaint alone is not enough: the author almost
+        always replies to their own thread, and one reply carrying their
+        name and user id identifies every other message on it. Staff
+        replies are never masked, only the anonymous author's own.
+        """
+        complaint = self.complaint
+        return bool(
+            complaint
+            and complaint.is_anonymous
+            and self.author_id
+            and self.author_id == complaint.student_id
+        )
+
     def to_dict(self) -> dict:
+        if self._author_is_hidden:
+            author = {"id": None, "full_name": "Anonymous", "role": "student"}
+        elif self.author:
+            author = {
+                "id": self.author.id,
+                "full_name": self.author.full_name,
+                "role": self.author.role,
+            }
+        else:
+            author = None
+
         return {
             "id": self.id,
             "complaint_id": self.complaint_id,
             "message": self.message,
             "is_internal": self.is_internal,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "author": (
-                {
-                    "id": self.author.id,
-                    "full_name": self.author.full_name,
-                    "role": self.author.role,
-                }
-                if self.author
-                else None
-            ),
+            "author": author,
         }
 
     def __repr__(self) -> str:
@@ -341,6 +361,29 @@ class ComplaintEvent(db.Model):
     actor = db.relationship("User")
 
     def to_dict(self) -> dict:
+        # The timeline records who did what, and the first entry on every
+        # complaint is the author creating it. On an anonymous complaint
+        # that single row identifies them regardless of what the rest of
+        # the payload hides.
+        complaint = self.complaint
+        hide_actor = bool(
+            complaint
+            and complaint.is_anonymous
+            and self.actor_id
+            and self.actor_id == complaint.student_id
+        )
+
+        if hide_actor:
+            actor = {"id": None, "full_name": "Anonymous", "role": "student"}
+        elif self.actor:
+            actor = {
+                "id": self.actor.id,
+                "full_name": self.actor.full_name,
+                "role": self.actor.role,
+            }
+        else:
+            actor = None
+
         return {
             "id": self.id,
             "action": self.action,
@@ -348,11 +391,7 @@ class ComplaintEvent(db.Model):
             "to_value": self.to_value,
             "note": self.note,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "actor": (
-                {"id": self.actor.id, "full_name": self.actor.full_name, "role": self.actor.role}
-                if self.actor
-                else None
-            ),
+            "actor": actor,
         }
 
     def __repr__(self) -> str:

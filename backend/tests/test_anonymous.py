@@ -7,6 +7,8 @@ for anonymity that is not honoured, and an author who leaks through a
 field nobody thought about.
 """
 
+import json
+
 from app.extensions import db
 from app.models.complaint import Complaint
 from tests.conftest import auth, login, make_user
@@ -139,3 +141,67 @@ def test_a_new_institution_accepts_anonymous_complaints(client, alpha):
     from app.models.institution import Institution
 
     assert Institution.query.filter_by(slug="beta-university").one().allow_anonymous
+
+
+def test_a_reply_does_not_undo_the_anonymity_of_the_complaint(client, alpha):
+    """One reply carrying a name identifies the whole thread.
+
+    Masking the complaint is not enough. The author almost always adds
+    something afterwards, and that response was returning their name and
+    user id to staff.
+    """
+    alpha.allow_anonymous = True
+    db.session.commit()
+    token = student_token(client, alpha)
+
+    complaint_id = file_complaint(client, token, is_anonymous=True).get_json()["data"][
+        "complaint"
+    ]["id"]
+    reply = client.post(
+        f"/api/complaints/{complaint_id}/responses",
+        headers=auth(token),
+        json={"message": "Adding the date, it was the third of the month."},
+    )
+    assert reply.status_code == 201
+
+    make_user(alpha, "officer@test.ng", role="institution_admin")
+    staff = login(client, "officer@test.ng")
+
+    payload = client.get(f"/api/complaints/{complaint_id}", headers=auth(staff)).get_json()
+
+    serialised = json.dumps(payload)
+    assert "student@test.ng" not in serialised
+    assert "Test student" not in serialised
+
+    responses = payload["data"].get("responses") or payload["data"]["complaint"].get(
+        "responses", []
+    )
+    assert responses, "the reply should still be visible to staff"
+    assert all(r["author"]["id"] is None for r in responses)
+
+
+def test_a_staff_reply_is_still_attributed(client, alpha):
+    """Anonymity protects the student, not the institution."""
+    alpha.allow_anonymous = True
+    db.session.commit()
+    token = student_token(client, alpha)
+    complaint_id = file_complaint(client, token, is_anonymous=True).get_json()["data"][
+        "complaint"
+    ]["id"]
+
+    make_user(alpha, "officer@test.ng", role="institution_admin")
+    staff = login(client, "officer@test.ng")
+    client.post(
+        f"/api/complaints/{complaint_id}/responses",
+        headers=auth(staff),
+        json={"message": "We have referred this to the head of department."},
+    )
+
+    payload = client.get(
+        f"/api/complaints/{complaint_id}", headers=auth(staff)
+    ).get_json()["data"]
+    responses = payload.get("responses") or payload["complaint"].get("responses", [])
+    staff_replies = [r for r in responses if r["author"]["role"] != "student"]
+
+    assert staff_replies
+    assert all(r["author"]["id"] for r in staff_replies)
