@@ -3,6 +3,39 @@
 from app.extensions import db
 from app.models.base import fk, TimestampMixin, new_uuid
 
+# The vocabulary for `type`, in one place because two of them had already
+# drifted apart: the imported register wrote "college_of_education" while
+# the manual form wrote "college", so a filter for one silently excluded
+# the other and neither the caller nor the log said anything.
+INSTITUTION_TYPES = (
+    "university",
+    "polytechnic",
+    "college_of_education",
+    "teaching_hospital",
+    "agency",
+)
+
+# Older and shorter spellings that reached the database or a query string
+# before the vocabulary was settled. Accepting them costs nothing and
+# means a bookmarked filter keeps working.
+TYPE_ALIASES = {
+    "college": "college_of_education",
+    "colleges_of_education": "college_of_education",
+    "coe": "college_of_education",
+    "hospital": "teaching_hospital",
+    "poly": "polytechnic",
+    "uni": "university",
+}
+
+
+def canonical_type(value: str | None) -> str | None:
+    """Map a supplied type onto the vocabulary, or None if unrecognised."""
+    key = (value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if not key:
+        return None
+    key = TYPE_ALIASES.get(key, key)
+    return key if key in INSTITUTION_TYPES else None
+
 
 class Institution(TimestampMixin, db.Model):
     """A tenant: one university, polytechnic, college or agency."""

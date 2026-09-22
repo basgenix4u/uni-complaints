@@ -11,14 +11,10 @@ import { Input, Select } from '../../components/ui/Field';
 import Skeleton from '../../components/ui/Skeleton';
 import { errorMessage, fieldErrors, platformService } from '../../services/api';
 import { formatDate } from '../../utils/format';
-
-const TYPES = [
-  { value: 'university', label: 'University' },
-  { value: 'polytechnic', label: 'Polytechnic' },
-  { value: 'college', label: 'College of education' },
-  { value: 'hospital', label: 'Teaching hospital' },
-  { value: 'agency', label: 'Government agency' },
-];
+import {
+  INSTITUTION_TYPES as TYPES,
+  institutionTypeLabel,
+} from '../../utils/institutionTypes';
 
 const EMPTY = {
   name: '',
@@ -32,13 +28,6 @@ const EMPTY = {
 };
 
 const EMPTY_ADMIN = { admin_name: '', admin_email: '', admin_password: '' };
-
-const KIND_LABEL = {
-  university: 'University',
-  polytechnic: 'Polytechnic',
-  college_of_education: 'College of education',
-  college: 'College of education',
-};
 
 /** Derives a URL-safe slug from the institution name. */
 const toSlug = (value) =>
@@ -304,7 +293,7 @@ export default function PlatformInstitutions() {
                               {[
                                 institution.short_name,
                                 institution.state,
-                                KIND_LABEL[institution.type] || institution.type,
+                                institutionTypeLabel(institution.type),
                               ]
                                 .filter(Boolean)
                                 .join(' · ')}
@@ -335,7 +324,7 @@ export default function PlatformInstitutions() {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-ink-900">{picked.name}</p>
                   <p className="text-caption text-ink-600">
-                    {[picked.short_name, picked.state, KIND_LABEL[picked.type] || picked.type]
+                    {[picked.short_name, picked.state, institutionTypeLabel(picked.type)]
                       .filter(Boolean)
                       .join(' · ')}
                   </p>

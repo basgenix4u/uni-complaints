@@ -14,7 +14,7 @@ import re
 
 from app.extensions import db
 from app.models.academic import InstitutionInterest
-from app.models.institution import Institution
+from app.models.institution import Institution, canonical_type
 
 # Beyond this a search is not narrowing anything, and returning the lot
 # on an empty query would ship the whole table to a phone.
@@ -67,7 +67,9 @@ def search(query: str = "", state: str = "", onboarded_only: bool = False,
         rows = rows.filter(Institution.state.ilike(_normalise(state)))
 
     if kind:
-        rows = rows.filter(Institution.type == _normalise(kind).lower())
+        # An unrecognised type must not quietly behave like no filter at
+        # all; it should return nothing, which is the honest answer.
+        rows = rows.filter(Institution.type == (canonical_type(kind) or "\x00"))
 
     if onboarded_only:
         rows = rows.filter(Institution.is_onboarded.is_(True))
