@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
+import BottomNav from './BottomNav';
 import Navbar from './Navbar';
 import VerificationBanner from '../shared/VerificationBanner';
 import useAuthStore from '../../stores/authStore';
@@ -45,7 +46,8 @@ const getPageTitle = (pathname, isAdmin) => {
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { isAdmin } = useAuthStore();
+  const { isAdmin, user } = useAuthStore();
+  const isStudent = user?.role === 'student';
 
   const pageTitle = getPageTitle(location.pathname, isAdmin());
 
@@ -71,8 +73,8 @@ const DashboardLayout = () => {
 
         <VerificationBanner />
 
-        {/* Page Content */}
-        <main className="p-4 sm:p-6 lg:p-8">
+        {/* Page Content. Bottom padding on phones clears the tab bar. */}
+        <main className={`p-4 sm:p-6 lg:p-8 ${isStudent ? 'pb-24 lg:pb-8' : ''}`}>
           <motion.div
             key={location.pathname}
             initial="initial"
@@ -85,6 +87,11 @@ const DashboardLayout = () => {
           </motion.div>
         </main>
       </div>
+
+      {/* Students are phone-first; the four destinations that matter sit
+          in thumb reach instead of behind the hamburger. Staff keep the
+          sidebar — triage is desk work. */}
+      {isStudent && <BottomNav />}
     </div>
   );
 };

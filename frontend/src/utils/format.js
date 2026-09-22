@@ -36,9 +36,16 @@ export function formatDeadline(value) {
   const days = Math.ceil((date - new Date()) / 86400000);
   const stamp = format(date, 'EEE, d MMM yyyy');
 
-  if (days < 0) return `${stamp} · ${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} overdue`;
-  if (days === 0) return `${stamp} · today`;
-  return `${stamp} · ${days} day${days === 1 ? '' : 's'}`;
+  // Time remaining leads and the date follows, because "how long have
+  // they got?" is the question a student is asking. "Left" is the
+  // operative word — a deadline phrased as a bare date reads like an
+  // appointment, not a promise counting down.
+  if (days < 0) {
+    const overdue = Math.abs(days);
+    return `${overdue} day${overdue === 1 ? '' : 's'} overdue · was due ${stamp}`;
+  }
+  if (days === 0) return `today · ${stamp}`;
+  return `${days} day${days === 1 ? '' : 's'} left · ${stamp}`;
 }
 
 export function initials(name) {
