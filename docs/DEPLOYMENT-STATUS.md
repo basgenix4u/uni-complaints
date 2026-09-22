@@ -1,149 +1,90 @@
 # Deployment status
 
-What is actually deployed, what is not, and what was learned doing it.
-Updated when the state changes, not when the intention does.
+Last verified against production on 22 September 2026.
 
----
+## What is live
 
-## Database — done
-
-The `resolve` schema in the **ALIMS Project** Supabase instance
-(`eu-central-1`, `ACTIVE_HEALTHY`) is at the current head.
-
-| | Before | After |
+| Piece | Where | State |
 |---|---|---|
-| Migration version | `0001_initial` | `0006_manual_confirmation` |
-| Tables in `resolve` | 12 | 20 |
-| Tables in `public` (ALIMS) | 38 | **38** |
+| Frontend | `https://uni-complaints.vercel.app` | Serving, API base correct |
+| API | `https://resolve-api-eadv.onrender.com` | Healthy, CORS correct |
+| Database | Supabase `resolve` schema | At `0006_manual_confirmation` |
 
-The `public` count is the number that matters. This database belongs to
-another live application, and a schema-isolation mistake here damages
-someone else's system, not ours.
+The browser path works end to end. A login made with the deployed
+frontend's origin returns a token, the preflight on `/api/auth/login`
+answers with the right headers, and the public directory loads.
 
-### How it was applied
+## The two faults that were blocking it
 
-1. Rendered the SQL offline first with
-   `flask db upgrade 0001_initial:head --sql` under `DB_SCHEMA=resolve`,
-   and read all 258 lines before running any of them.
-2. Checked three things in the rendered output: every statement
-   qualified with `resolve.`, no `DROP`/`TRUNCATE`/`DELETE`, and every
-   `REFERENCES` pointing inside the schema.
-3. Wrapped the whole thing in `BEGIN`/`COMMIT` — the rendered SQL has no
-   transaction control of its own, and a half-applied schema is the
-   state that is genuinely hard to recover from.
-4. Verified the `public` table count was unchanged before and after.
+Both are fixed and verified against production, not merely committed.
 
-### What went wrong, and was fixed
+**`VITE_API_URL` had no `/api` suffix.** Vite inlines the value at build
+time, so the deployed bundle posted to `/auth/login` and Vercel's SPA
+rewrite returned the index page. Fixed in the dashboard and redeployed;
+the current bundle carries `https://resolve-api-eadv.onrender.com/api`.
 
-**Row level security was not carried by the migrations.** The original
-twelve tables had RLS enabled by hand when the schema was first created.
-Alembic revisions create tables; they know nothing about RLS or grants.
-So the eight new tables arrived with RLS off, sitting beside twelve with
-it on.
+**`CORS_ORIGINS` was set to a URL, not an origin.** The value ended in a
+trailing slash. A browser sends `scheme://host` with no path, so the
+allowlist matched nothing and every response left without an
+`Access-Control-Allow-Origin` header. Nothing failed anywhere: the API
+answered every health check and the logs were clean. The only symptom
+was a site that could not log in.
 
-Not immediately exploitable — `anon` and `authenticated` hold no grants
-on the schema, and it is not in PostgREST's exposed list — but it is
-defence in depth that was deliberately chosen once and then silently
-lost. Fixed, and `backend/scripts/harden_schema.sql` now exists so it is
-re-asserted after every future migration rather than remembered.
+Origins are now normalised when parsed, and production refuses to boot
+when the allowlist is missing or points only at localhost. Silent
+misconfiguration was the whole problem; a failed deploy is better.
 
-### Verified against the live database
+## What still blocks a real pilot
 
-- All 11 columns the newest code depends on are present.
-- The full academic chain inserts and joins correctly: institution →
-  session → faculty → department → student record. Run inside a
-  transaction and rolled back, so the database was left exactly as
-  found (0 institutions, 0 records, 1 platform admin).
-- RLS on all 20 tables; zero grants to `anon` or `authenticated`.
+**No email provider.** `SMTP_HOST` is unset, so no confirmation link is
+ever sent, and filing a complaint requires a confirmed address. There is
+a manual escape hatch — an institution admin can confirm an address at
+`PUT /api/admin/registrations/<id>/confirm-email` — and it works, but it
+does not scale past a handful of people. See `EMAIL-SETUP.md`; Brevo is
+the recommendation.
 
----
+**Nobody has used it.** No student, registrar or complaints officer has
+touched this. Every verification so far is our own.
 
-## Application — verified against the live database, not yet hosted
+**The database password should be rotated.** It was shared over a chat
+transcript.
 
-The API has been run against the production Supabase instance and the
-whole product journey completed end to end. It is not yet running on
-Render or Vercel.
+## Verifying it yourself
 
-### What was proven against the live database
+Health, and whether the browser origin is allowed:
 
-Signed in as the seeded platform administrator, then:
+```bash
+curl -sD- -o /dev/null \
+  -H "Origin: https://uni-complaints.vercel.app" \
+  https://resolve-api-eadv.onrender.com/api/health
+```
 
-| Step | Result |
-|---|---|
-| Provision an institution | 10 units and 19 routing rules seeded |
-| Open the academic session | created |
-| Import the academic tree | 2 faculties, 2 departments |
-| Import the student register | 1 record into 2025/2026 |
-| Student signs up as `eng coe 21 013` | normalised to `ENG/COE/21/013`, **approved outright**, faculty inherited |
-| Confirm the emailed link | confirmed |
-| File a complaint | ticket `VFY-3PJC-0001`, **routed to Bursary** without anyone choosing |
+An `access-control-allow-origin` header naming that exact origin means
+the browser path is intact. Its absence means the site cannot log in,
+whatever the status code says.
 
-The verification tenant was then deleted. The cascade removed everything
-under it, which is itself a check that the foreign keys are right, and
-the database was left as found: 0 institutions, 1 platform admin, and
-ALIMS still at exactly 38 tables.
+The free tier sleeps after fifteen minutes idle, so the first request
+after a quiet period takes thirty to fifty seconds. That is the platform,
+not a fault.
 
-### A defect this found
+## Onboarding an institution
 
-`POST /api/platform/institutions` never set `is_onboarded`, so it
-inherited the model default of false. **Every institution provisioned
-through the API was dead on arrival**: no student could register, and no
-endpoint existed to change it — the flag was reachable only by direct
-SQL.
+Sign in at `/login` as the platform administrator, then:
 
-Only a live run surfaces this. The tests all created institutions
-through a fixture that set the flag, so the gap sat precisely between
-the code and its own test data.
+```
+POST /api/platform/institutions
+{
+  "name": "...", "code": "FUW", "slug": "federal-university-wukari",
+  "admin_name": "...", "admin_email": "...", "admin_password": "..."
+}
+```
 
-Provisioning now marks an institution as in service, defaults it to
-`open` verification (the register is empty on day one, and starting in
-`register` mode rejects every student until a spreadsheet is uploaded),
-and `PUT /api/platform/institutions/<id>/onboarding` can change both
-afterwards.
+`code` is two to eight capitals; `slug` is lower case with hyphens. The
+call creates the institution, its first administrator, the standard
+units and a draft routing table, and marks it onboarded so students can
+register immediately. Anonymous complaints are on unless you pass
+`allow_anonymous: false`.
 
-### What is ready
-
-- `render.yaml` and `render.free.yaml` for the API.
-- `frontend/vercel.json`, root directory `frontend`.
-- `.github/workflows/scheduled-tasks.yml` for the jobs, since the free
-  tier has no scheduler.
-- CI runs the full suite against PostgreSQL 16 in both schema modes, so
-  the code is known to work on the database it will actually meet.
-
-### Frontend: live, backend: not yet
-
-The frontend is deployed at **https://uni-complaints.vercel.app**. It
-has no API behind it, so every `/api/*` request falls through the
-single-page rewrite and returns HTML. Signing in cannot work until the
-Render service exists.
-
-`docs/RENDER-SETUP.md` is the step by step. The environment values are
-generated into `/home/user/deploy/render-env.txt`, which is never
-committed, and the `DATABASE_URL` in it has been verified to connect.
-
-### Environment variables Render needs
-
-| Variable | Value | Why |
-|---|---|---|
-| `DATABASE_URL` | pooler string above | |
-| `DB_SCHEMA` | `resolve` | **Without this every table lands in `public` and collides with ALIMS** |
-| `SECRET_KEY`, `JWT_SECRET_KEY` | generated | Production refuses to boot with defaults |
-| `APP_URL` | the Vercel URL | Every confirmation and invitation link is built from it |
-| `SMTP_*`, `MAIL_FROM` | see EMAIL-SETUP.md | No provider means nobody can confirm an address |
-| `WEB_CONCURRENCY` | `1` | Free tier has no Redis, so rate limits are per process |
-| `RATELIMIT_STORAGE_URI` | `memory://` | Only valid because concurrency is 1 |
-| `TASK_TOKEN` | generated | Shared secret for the scheduled-job trigger |
-
-`VITE_API_URL` on Vercel must end in `/api`.
-
----
-
-## Honest assessment
-
-The database is deployed and verified. The application is not, and
-"schema is correct" is a weaker claim than "the product works" — the
-first has been demonstrated, the second has not.
-
-Nothing here has been used by a real student, a real registrar or a real
-complaints officer. Every routing default, SLA figure and CSV column
-assumption remains a guess until one of them looks at it.
+Students register against the slug, not the id. Until an email provider
+is configured, each new account needs its address confirming by hand
+before it can file anything.
