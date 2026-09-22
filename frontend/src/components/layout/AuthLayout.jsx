@@ -95,29 +95,28 @@ export default function AuthLayout() {
           />
         </picture>
 
-        {/* Green wash. The photograph is bright, and white type needs a
-            dark ground under it to stay legible. */}
+        {/* The wash. Measured off the supplied design rather than
+            guessed: the sample tints only the left side, where the copy
+            sits, and lets the photograph stand untouched where the
+            student sits. A full-panel tint made the whole image look
+            green; this one is gone by two-thirds across. */}
         <div
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(150deg, rgba(4,68,54,0.94) 0%, rgba(6,95,70,0.72) 42%, rgba(4,68,54,0.55) 100%)',
+              'linear-gradient(to right, rgba(2,22,11,0.94) 0%, rgba(3,36,20,0.80) 28%, rgba(5,52,33,0.40) 45%, rgba(6,63,45,0.10) 60%, rgba(6,63,45,0) 70%)',
+          }}
+        />
+        {/* A shallow floor of shade so the sign-off stays readable over
+            bright foliage at the bottom, matching the sample's base. */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-40"
+          style={{
+            background: 'linear-gradient(to top, rgba(2,22,11,0.55), rgba(2,22,11,0))',
           }}
         />
 
-        {/* The curved inner edge. Drawn over the photograph rather than
-            from the form side, which is overflow-hidden and would clip
-            anything reaching back across the boundary. */}
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          className="absolute inset-y-0 right-0 z-10 h-full w-[90px]"
-        >
-          <path d="M100 0 H38 C94 24 94 76 38 100 H100 Z" fill="var(--surface)" />
-        </svg>
-
-        <div className="relative z-20 flex h-full flex-col justify-between p-10 pr-20 xl:p-14 xl:pr-24">
+        <div className="relative z-20 flex h-full flex-col justify-between p-10 xl:p-14">
           <Wordmark />
 
           <motion.div {...rise} transition={{ duration: 0.45 }}>
@@ -182,34 +181,59 @@ export default function AuthLayout() {
   );
 }
 
-/** The green and gold flourishes in the two outer corners. */
+/**
+ * The flourishes on the form panel, matched to the supplied design by
+ * measurement rather than memory:
+ *
+ * - top-right: a solid green quarter-round tucked into the corner,
+ *   spanning roughly the top 17% of the panel's height and the last 8%
+ *   of its width, with a detached gold arc sweeping just outside its
+ *   inner edge;
+ * - bottom-left: a green fin rising from the seam along the bottom,
+ *   with its own gold arc above it;
+ * - bottom-right: the outlined mortarboard watermark.
+ *
+ * The dark corner green matches the sample's sampled value (#0C5645
+ * territory) rather than the brighter action green.
+ */
 function Corners() {
   return (
     <>
+      {/* Top-right quarter-round with gold arc outside it. */}
       <svg
         aria-hidden="true"
-        viewBox="0 0 220 180"
-        className="pointer-events-none absolute -right-6 -top-8 h-28 w-32 sm:h-36 sm:w-44"
+        viewBox="0 0 260 160"
+        className="pointer-events-none absolute right-0 top-0 h-32 w-52 sm:h-36 sm:w-60"
+        preserveAspectRatio="xMaxYMin meet"
       >
-        <path d="M220 0 V128 C142 128 52 78 52 0 Z" fill="#0B6B57" />
+        <path d="M260 0 H96 C150 10 216 52 232 160 H260 Z" fill="#0C5645" />
         <path
-          d="M186 -12 C186 86 122 146 16 156"
+          d="M76 0 C136 12 202 58 220 160"
           fill="none"
-          stroke="#F4B740"
-          strokeWidth="5"
+          stroke="#E0A82E"
+          strokeWidth="4"
           strokeLinecap="round"
         />
       </svg>
 
+      {/* Bottom-left fin against the seam, gold arc above it. */}
       <svg
         aria-hidden="true"
-        viewBox="0 0 220 180"
-        className="pointer-events-none absolute -bottom-8 -right-6 h-28 w-32 sm:h-36 sm:w-44"
+        viewBox="0 0 200 140"
+        className="pointer-events-none absolute bottom-0 left-0 h-28 w-40 sm:h-32 sm:w-48"
+        preserveAspectRatio="xMinYMax meet"
       >
-        <path d="M220 180 V52 C142 52 52 102 52 180 Z" fill="#0B6B57" />
+        <path d="M0 140 V28 C10 92 62 128 118 140 Z" fill="#0C5645" />
+        <path
+          d="M4 8 C18 76 74 118 140 132"
+          fill="none"
+          stroke="#E0A82E"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
       </svg>
 
-      {/* The mortarboard watermark from the sample. */}
+      {/* The mortarboard watermark. */}
       <svg
         aria-hidden="true"
         viewBox="0 0 64 64"
