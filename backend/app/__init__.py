@@ -54,6 +54,24 @@ def create_app(config_name: str | None = None) -> Flask:
     app = Flask(__name__)
     app.config.from_object(get_config(config_name))
 
+    # Behind a proxy, remote_addr is the proxy. Everything that identifies
+    # a caller by address reads it: the rate limits that protect sign in,
+    # and the access log the NDPA record of processing depends on. Without
+    # this every request appeared to come from one address, so the login
+    # limit was shared by all users at once and the audit trail recorded
+    # the load balancer rather than the person.
+    #
+    # Applied only when the deployment says how many hops to believe,
+    # because the headers are client-settable and trusting them on a
+    # directly reachable service would let anyone forge an address.
+    hops = app.config.get("TRUSTED_PROXIES", 0)
+    if hops:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=hops, x_proto=hops, x_host=hops, x_prefix=0
+        )
+
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)

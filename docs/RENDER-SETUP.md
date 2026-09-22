@@ -68,6 +68,15 @@ Four of them decide whether this works at all:
 - **`WEB_CONCURRENCY=1`** — the free tier has no Redis, so rate limits
   are counted per process. Production refuses to boot with
   `memory://` and a higher count, which is deliberate.
+- **`TRUSTED_PROXIES=1`** — Render terminates TLS at one proxy, so
+  without this the application sees that proxy as the client. Every
+  caller then shares a single apparent address: the login limit becomes
+  global, so one person's failed attempts lock everybody out, and the
+  access log records the load balancer rather than the person who read a
+  complaint. Production refuses to boot without it. Set it to the number
+  of proxies actually in front of the service and no higher — the
+  forwarded header is client-settable, and over-trusting it lets a caller
+  forge an address.
 
 ## 3. First deploy
 
