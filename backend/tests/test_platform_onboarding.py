@@ -266,3 +266,22 @@ def test_only_a_platform_admin_may_onboard(client, alpha):
     )
 
     assert response.status_code == 403
+
+
+def test_the_listing_carries_what_the_picker_needs_to_tell_them_apart(client, alpha):
+    """Names collide; the acronym and ownership are what disambiguate.
+
+    The admin listing serialises with to_dict rather than the directory
+    payload, and those fields were missing from it, so the picker showed
+    a blank line under every name.
+    """
+    token = platform_token(client, alpha)
+    known_but_not_onboarded()
+
+    body = listed(client, token, scope="directory")
+    row = next(i for i in body["institutions"] if i["slug"] == "bayero-university")
+
+    assert row["short_name"] == "BUK"
+    assert row["state"] == "Kano"
+    assert row["ownership"] == "federal"
+    assert row["type"] == "university"

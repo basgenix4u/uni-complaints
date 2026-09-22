@@ -95,8 +95,14 @@ class Institution(TimestampMixin, db.Model):
             "name": self.name,
             "code": self.code,
             "slug": self.slug,
+            # Carried here as well as in the directory payload: the
+            # platform admin picks an institution out of several hundred
+            # and needs the same acronym and ownership to tell near
+            # identical names apart.
+            "short_name": self.short_name,
             "type": self.type,
             "state": self.state,
+            "ownership": self.ownership,
             "logo_url": self.logo_url,
             "brand_hue": self.brand_hue,
             "is_active": self.is_active,
