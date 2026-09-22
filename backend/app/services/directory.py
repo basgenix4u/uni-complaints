@@ -68,8 +68,14 @@ def search(query: str = "", state: str = "", onboarded_only: bool = False,
 
     if kind:
         # An unrecognised type must not quietly behave like no filter at
-        # all; it should return nothing, which is the honest answer.
-        rows = rows.filter(Institution.type == (canonical_type(kind) or "\x00"))
+        # all; it should return nothing, which is the honest answer. The
+        # empty match is expressed as FALSE rather than a sentinel value:
+        # the previous NUL-byte sentinel passed on SQLite and failed on
+        # PostgreSQL, which refuses NUL inside a string literal.
+        canonical = canonical_type(kind)
+        rows = rows.filter(
+            Institution.type == canonical if canonical else db.false()
+        )
 
     if onboarded_only:
         rows = rows.filter(Institution.is_onboarded.is_(True))
