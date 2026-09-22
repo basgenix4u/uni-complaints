@@ -29,7 +29,6 @@ const LoginPage = () => {
   const {
     register,
     handleSubmit,
-    setValue, // <--- Added this helper
     formState: { errors },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -59,12 +58,6 @@ const LoginPage = () => {
       console.error("Login error:", error);
       toast.error("An unexpected error occurred");
     }
-  };
-
-  // Helper to set demo data safely
-  const handleDemoLogin = (email, password) => {
-    setValue('email', email, { shouldValidate: true });
-    setValue('password', password, { shouldValidate: true });
   };
 
   return (
@@ -146,35 +139,6 @@ const LoginPage = () => {
           <span className="px-4 bg-white text-neutral-500">or</span>
         </div>
       </div>
-
-      {/* Demo Accounts */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="space-y-3"
-      >
-        <p className="text-center text-sm text-neutral-500 mb-3">
-          Quick login with demo accounts
-        </p>
-        
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('student1@university.edu.ng', 'Student@123')}
-            className="px-4 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 rounded-xl hover:bg-neutral-200 transition-colors"
-          >
-            Student Demo
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('superadmin@university.edu.ng', 'SuperAdmin@123')}
-            className="px-4 py-2.5 text-sm font-medium text-neutral-700 bg-neutral-100 rounded-xl hover:bg-neutral-200 transition-colors"
-          >
-            Admin Log
-          </button>
-        </div>
-      </motion.div>
 
       {/* Register Link */}
       <motion.p

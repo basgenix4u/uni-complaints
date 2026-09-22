@@ -110,24 +110,16 @@ afterwards.
 - CI runs the full suite against PostgreSQL 16 in both schema modes, so
   the code is known to work on the database it will actually meet.
 
-### What is blocking
+### Frontend: live, backend: not yet
 
-**The pooler password.** It is shown once when a Supabase project is
-created and cannot be read back through the Management API. Without it
-the application cannot connect, and no amount of schema verification
-substitutes for running the thing.
+The frontend is deployed at **https://uni-complaints.vercel.app**. It
+has no API behind it, so every `/api/*` request falls through the
+single-page rewrite and returns HTML. Signing in cannot work until the
+Render service exists.
 
-Retrieve it from Supabase (Project Settings → Database → reset the
-password if it was not kept), then it goes into Render as
-`DATABASE_URL`:
-
-```
-postgresql://postgres.<ref>:<password>@aws-1-eu-central-1.pooler.supabase.com:5432/postgres
-```
-
-Port **5432**, session mode — not 6543. Render runs a long-lived
-container, so transaction pooling buys nothing and breaks prepared
-statements.
+`docs/RENDER-SETUP.md` is the step by step. The environment values are
+generated into `/home/user/deploy/render-env.txt`, which is never
+committed, and the `DATABASE_URL` in it has been verified to connect.
 
 ### Environment variables Render needs
 

@@ -85,8 +85,8 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
             <span className="text-white font-bold text-lg">U</span>
           </div>
           <div>
-            <h1 className="font-bold text-neutral-900 text-lg leading-none">UniComplaint</h1>
-            <p className="text-xs text-neutral-500">Management System</p>
+            <h1 className="font-bold text-neutral-900 text-lg leading-none">Resolve</h1>
+            <p className="text-xs text-neutral-500">Complaint resolution</p>
           </div>
         </div>
         
