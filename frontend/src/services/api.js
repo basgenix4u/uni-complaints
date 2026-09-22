@@ -329,8 +329,12 @@ export const routingService = {
 };
 
 export const platformService = {
-  institutions: () => api.get('/platform/institutions').then(unwrap),
+  institutions: (params) => api.get('/platform/institutions', { params }).then(unwrap),
   createInstitution: (data) => api.post('/platform/institutions', data).then(unwrap),
+  onboardInstitution: (id, data) =>
+    api.post(`/platform/institutions/${id}/onboard`, data).then(unwrap),
+  setOnboarding: (id, data) =>
+    api.put(`/platform/institutions/${id}/onboarding`, data).then(unwrap),
   toggleInstitution: (id) => api.put(`/platform/institutions/${id}/toggle-active`).then(unwrap),
   stats: () => api.get('/platform/stats').then(unwrap),
   ignored: (days) => api.get('/platform/ignored', { params: { days } }).then(unwrap),
