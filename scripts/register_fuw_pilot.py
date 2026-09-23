@@ -34,10 +34,14 @@ from pathlib import Path
 
 API_URL = os.getenv("API_URL", "https://resolve-api-eadv.onrender.com").rstrip("/")
 TOKEN = os.getenv("PLATFORM_TOKEN") or os.getenv("TOKEN")
+FUW_ADMIN_PASSWORD = os.getenv("FUW_ADMIN_PASSWORD")
 EXCEL_PATH = Path(__file__).parent.parent / "docs" / "FUW_Pilot_Dataset_300_Students.xlsx"
 
 if not TOKEN:
     print("Set PLATFORM_TOKEN env var (platform_admin JWT)")
+    sys.exit(1)
+if not FUW_ADMIN_PASSWORD:
+    print("Set FUW_ADMIN_PASSWORD through a secure secret store")
     sys.exit(1)
 
 headers = {"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"}
@@ -81,7 +85,7 @@ fuw_payload = {
     "email_reply_to": "complaints@fuwukari.edu.ng",
     "admin_email": "admin@fuwukari.edu.ng",
     "admin_name": "FUW Admin",
-    "admin_password": "FUWAdmin123!",
+    "admin_password": FUW_ADMIN_PASSWORD,
 }
 
 print("\n=== 1. Register FUW Institution ===")
@@ -100,7 +104,7 @@ if r.status_code == 409:
                     onboard = post(f"/api/platform/institutions/{inst['id']}/onboard", {
                         "admin_email": "admin@fuwukari.edu.ng",
                         "admin_name": "FUW Admin",
-                        "admin_password": "FUWAdmin123!",
+                        "admin_password": FUW_ADMIN_PASSWORD,
                         "verification_mode": "register",
                         "allow_anonymous": False,
                     })
@@ -113,7 +117,7 @@ print("""
 After FUW is created, sign in as admin@fuwukari.edu.ng to get institution token:
 
   curl -X POST $API_URL/api/auth/login -H "Content-Type: application/json" \\
-    -d '{"email":"admin@fuwukari.edu.ng","password":"FUWAdmin123!","institution":"federal-university-wukari"}'
+    -d '{"email":"admin@fuwukari.edu.ng","password":"<FUW_ADMIN_PASSWORD>","institution":"federal-university-wukari"}'\
 
 Then:
 
