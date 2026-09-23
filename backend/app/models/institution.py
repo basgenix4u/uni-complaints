@@ -72,6 +72,14 @@ class Institution(TimestampMixin, db.Model):
 
     default_sla_hours = db.Column(db.Integer, default=72, nullable=False)
     acknowledge_sla_hours = db.Column(db.Integer, default=24, nullable=False)
+
+    # Optional per-priority policy. Null preserves the institution's old
+    # behaviour: one acknowledgement target, the existing resolution
+    # factors, and a 24-hour escalation rung. A populated policy can
+    # tighten urgent cases without silently changing every existing
+    # institution during migration.
+    priority_sla_policy = db.Column(db.JSON)
+
     # SLA clocks pause outside these hours so a Friday evening complaint is
     # not already breached by Monday morning.
     working_hours_start = db.Column(db.Integer, default=8, nullable=False)
@@ -162,6 +170,7 @@ class Institution(TimestampMixin, db.Model):
                     "contact_phone": self.contact_phone,
                     "default_sla_hours": self.default_sla_hours,
                     "acknowledge_sla_hours": self.acknowledge_sla_hours,
+                    "priority_sla_policy": self.priority_sla_policy,
                     "working_hours_start": self.working_hours_start,
                     "working_hours_end": self.working_hours_end,
                     "retention_months": self.retention_months,

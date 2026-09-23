@@ -15,6 +15,19 @@ const TABS = [
   { key: 'departments', label: 'Departments' },
 ];
 
+// An institution with no saved matrix keeps the pre-feature behaviour.
+// The FUW pilot will deliberately replace these with its approved
+// priority timings rather than changing every existing institution by
+// migration.
+const FALLBACK_PRIORITY_POLICY = {
+  low: { acknowledge_hours: 24, resolution_hours: 144, escalation_step_hours: 24 },
+  medium: { acknowledge_hours: 24, resolution_hours: 72, escalation_step_hours: 24 },
+  high: { acknowledge_hours: 24, resolution_hours: 36, escalation_step_hours: 24 },
+  urgent: { acknowledge_hours: 24, resolution_hours: 18, escalation_step_hours: 24 },
+};
+
+const PRIORITY_LABELS = { low: 'Low', medium: 'Medium', high: 'High', urgent: 'Urgent' };
+
 export default function InstitutionSettings() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -59,6 +72,21 @@ export default function InstitutionSettings() {
   const set = (field, value) => {
     setDraft({ ...form, [field]: value });
     setErrors((current) => ({ ...current, [field]: undefined }));
+  };
+
+  const setPriority = (priority, field, value) => {
+    const policy = form.priority_sla_policy || FALLBACK_PRIORITY_POLICY;
+    setDraft({
+      ...form,
+      priority_sla_policy: {
+        ...policy,
+        [priority]: { ...policy[priority], [field]: value },
+      },
+    });
+    setErrors((current) => ({
+      ...current,
+      [`priority_sla_policy.${priority}.${field}`]: undefined,
+    }));
   };
 
   if (isLoading) {
@@ -239,6 +267,93 @@ export default function InstitutionSettings() {
               onChange={(event) => set('default_sla_hours', Number(event.target.value))}
               hint="Urgent halves twice; low doubles."
             />
+          </div>
+
+          <div>
+            <h2 className="text-sm font-bold text-ink-900">Priority deadlines</h2>
+            <p className="mt-1 text-sm text-ink-600">
+              A safety report should not wait behind a routine card request. Each row controls
+              how quickly it is acknowledged, how the base resolution target is multiplied, and
+              how long each escalation rung gets before the next person is told.
+            </p>
+            <div className="mt-4 overflow-x-auto rounded-md border border-line">
+              <table className="w-full min-w-[42rem] text-sm">
+                <thead className="bg-canvas text-left text-caption uppercase tracking-wide text-ink-500">
+                  <tr>
+                    <th className="px-3 py-2">Priority</th>
+                    <th className="px-3 py-2">Acknowledge (working hours)</th>
+                    <th className="px-3 py-2">Resolve (working hours)</th>
+                    <th className="px-3 py-2">Each escalation rung (hours)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {Object.keys(PRIORITY_LABELS).map((priority) => {
+                    const policy = form.priority_sla_policy || FALLBACK_PRIORITY_POLICY;
+                    const row = policy[priority];
+                    return (
+                      <tr key={priority}>
+                        <td className="px-3 py-3 font-semibold text-ink-900">
+                          {PRIORITY_LABELS[priority]}
+                        </td>
+                        <td className="px-3 py-3">
+                          <Input
+                            label={`${PRIORITY_LABELS[priority]} acknowledgement hours`}
+                            labelHidden
+                            className="max-w-28"
+                            type="number"
+                            min="1"
+                            max="720"
+                            value={row.acknowledge_hours}
+                            onChange={(event) =>
+                              setPriority(priority, 'acknowledge_hours', Number(event.target.value))
+                            }
+                            error={
+                              errors[`priority_sla_policy.${priority}.acknowledge_hours`]
+                            }
+                          />
+                        </td>
+                        <td className="px-3 py-3">
+                          <Input
+                            label={`${PRIORITY_LABELS[priority]} resolution hours`}
+                            labelHidden
+                            className="max-w-28"
+                            type="number"
+                            min="1"
+                            max="1440"
+                            value={row.resolution_hours}
+                            onChange={(event) =>
+                              setPriority(priority, 'resolution_hours', Number(event.target.value))
+                            }
+                            error={errors[`priority_sla_policy.${priority}.resolution_hours`]}
+                          />
+                        </td>
+                        <td className="px-3 py-3">
+                          <Input
+                            label={`${PRIORITY_LABELS[priority]} escalation hours`}
+                            labelHidden
+                            className="max-w-28"
+                            type="number"
+                            min="1"
+                            max="720"
+                            value={row.escalation_step_hours}
+                            onChange={(event) =>
+                              setPriority(
+                                priority,
+                                'escalation_step_hours',
+                                Number(event.target.value),
+                              )
+                            }
+                            error={
+                              errors[`priority_sla_policy.${priority}.escalation_step_hours`]
+                            }
+                          />
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
