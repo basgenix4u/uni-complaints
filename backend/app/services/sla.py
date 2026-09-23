@@ -105,13 +105,26 @@ def deadline_for(institution, department, priority: str, start: datetime | None 
     close_hour = institution.working_hours_end
 
     return (
-        add_working_hours(start, institution.acknowledge_sla_hours, open_hour, close_hour),
+        # Acknowledgement is part of the same promise as resolution. An
+        # urgent safety report that resolves four times faster but waits
+        # the same full day to be acknowledged is not urgent in any
+        # meaningful sense.
+        add_working_hours(
+            start, institution.acknowledge_sla_hours * factor, open_hour, close_hour
+        ),
         add_working_hours(start, base_hours * factor, open_hour, close_hour),
     )
 
 
-# Working hours a rung is given to respond before the next one is told.
+# Base working hours a rung is given before the next one is told. The
+# priority factor applies here as it does to acknowledgement and
+# resolution: urgent cases climb in six hours, medium in twenty-four,
+# and low-priority work is allowed forty-eight.
 ESCALATION_STEP_HOURS = 24
+
+
+def escalation_step_hours(priority: str) -> float:
+    return ESCALATION_STEP_HOURS * PRIORITY_SLA_FACTOR.get(priority, 1.0)
 
 
 def escalation_ladder(complaint) -> list[tuple[str, list]]:
@@ -234,7 +247,7 @@ def _escalate_one(complaint, now) -> bool:
         institution = db.session.get(Institution, complaint.institution_id)
         complaint.next_escalation_at = add_working_hours(
             now,
-            ESCALATION_STEP_HOURS,
+            escalation_step_hours(complaint.priority),
             institution.working_hours_start if institution else 8,
             institution.working_hours_end if institution else 17,
         )

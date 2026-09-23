@@ -1,6 +1,12 @@
 from datetime import datetime, timedelta, timezone
 
-from app.services.sla import WAT, add_working_hours, fixed_holidays, run_escalation_sweep
+from app.services.sla import (
+    WAT,
+    add_working_hours,
+    escalation_step_hours,
+    fixed_holidays,
+    run_escalation_sweep,
+)
 from tests.conftest import auth, login, make_user
 
 COMPLAINT = {
@@ -84,6 +90,21 @@ def test_urgent_complaints_get_a_shorter_deadline(client, alpha):
     ).get_json()["data"]["complaint"]
 
     assert urgent["resolve_due_at"] < normal["resolve_due_at"]
+    # Before dynamic escalation, every priority got the same full-day
+    # acknowledgement deadline. That contradicted the word "urgent".
+    assert urgent["acknowledge_due_at"] < normal["acknowledge_due_at"]
+
+
+def test_each_escalation_rung_is_priority_based():
+    assert escalation_step_hours("low") == 48
+    assert escalation_step_hours("medium") == 24
+    assert escalation_step_hours("high") == 12
+    assert escalation_step_hours("urgent") == 6
+
+
+def test_unknown_priority_falls_back_to_the_standard_rung():
+    """Old rows or imported data must not produce a zero-hour loop."""
+    assert escalation_step_hours("not-a-priority") == 24
 
 
 def test_sweep_escalates_an_overdue_complaint(client, alpha, db):
