@@ -147,7 +147,13 @@ def parse_csv(payload: bytes) -> tuple[list[dict], list[str]]:
 
 
 def parse_xlsx(payload: bytes) -> tuple[list[dict], list[str]]:
-    """Read XLSX payload using openpyxl."""
+    """Read the first workbook sheet containing the register columns.
+
+    An institution's workbook commonly contains several sheets: branding,
+    faculties, departments, offices, and finally the student register. The
+    active sheet is not a reliable choice, so locate the sheet by its
+    required headers instead of silently rejecting a valid workbook.
+    """
     problems: list[str] = []
     try:
         import openpyxl
@@ -156,57 +162,47 @@ def parse_xlsx(payload: bytes) -> tuple[list[dict], list[str]]:
 
     try:
         wb = openpyxl.load_workbook(io.BytesIO(payload), read_only=True, data_only=True)
-        ws = wb.active
-        if ws is None:
-            return [], ["That Excel file appears to be empty."]
+        selected_rows = None
+        selected_headers = None
 
-        rows_iter = ws.iter_rows(values_only=True)
-        try:
-            header_row = next(rows_iter)
-        except StopIteration:
-            return [], ["That Excel file appears to be empty."]
+        for ws in wb.worksheets:
+            rows_iter = ws.iter_rows(values_only=True)
+            try:
+                header_row = next(rows_iter)
+            except StopIteration:
+                continue
+            if not header_row:
+                continue
 
-        if not header_row:
-            return [], ["That Excel file appears to be empty."]
+            headers = [
+                str(value).strip().lower().replace(" ", "_") if value is not None else ""
+                for value in header_row
+            ]
+            if set(REQUIRED_COLUMNS).issubset(headers):
+                selected_headers = headers
+                selected_rows = rows_iter
+                break
 
-        # Normalise headers
-        headers = []
-        for h in header_row:
-            if h is None:
-                headers.append("")
-            else:
-                headers.append(str(h).strip().lower().replace(" ", "_"))
-        
-        # Check required
-        headers_set = set(headers)
-        missing = [c for c in REQUIRED_COLUMNS if c not in headers_set]
-        if missing:
-            return [], [f"The file needs a {' and a '.join(missing)} column."]
+        if selected_rows is None or selected_headers is None:
+            required = " and a ".join(REQUIRED_COLUMNS)
+            return [], [f"The workbook needs a sheet containing a {required} column."]
 
         rows = []
-        for number, raw_values in enumerate(rows_iter, start=2):
+        for number, raw_values in enumerate(selected_rows, start=2):
             if raw_values is None:
                 continue
-            # Build dict
+
             row = {}
-            for idx, header in enumerate(headers):
-                if idx < len(raw_values):
-                    val = raw_values[idx]
-                    if val is None:
-                        row[header] = ""
-                    else:
-                        row[header] = str(val).strip()
-                else:
-                    row[header] = ""
+            for index, header in enumerate(selected_headers):
+                value = raw_values[index] if index < len(raw_values) else None
+                row[header] = "" if value is None else str(value).strip()
 
             matric_raw = row.get("matric_number", "")
             matric = normalise_matric(matric_raw)
             name = row.get("full_name", "")
 
             if not matric and not name:
-                # Skip empty rows
                 continue
-
             if not matric or not name:
                 problems.append(f"Row {number}: matric number and name are both required.")
                 continue
