@@ -126,14 +126,7 @@ fuw.verification_mode = "register"
 db.session.commit()
 ```
 
-**If emergency-seed endpoint is deployed** (after Render finishes), you can also call:
-```bash
-curl -X POST https://resolve-api-eadv.onrender.com/api/platform/emergency-seed \
-  -H "Content-Type: application/json" \
-  -d '{"emergency_token":"fuw-emergency-2024-seed-token-xyz","platform_email":"admin@resolve.ng","platform_password":"Olaleke4u@","verification_mode":"open"}'
-```
-
-This does same as shell script.
+There is deliberately no public emergency-seeding endpoint. Account recovery and data seeding must be performed from the protected Render Shell, where the service environment and database schema are controlled.
 
 **Local preview that already works** (no need to wait):
 - Frontend preview: https://5173-...e2b.app
