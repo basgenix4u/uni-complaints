@@ -33,6 +33,8 @@ from app.models.message import OutboundMessage  # noqa: F401
 from app.models.reset import PasswordReset  # noqa: F401
 from app.models.routing import DEFAULT_ROUTING, DEFAULT_UNITS, RoutingRule  # noqa: F401
 from app.models.verification import EmailVerification  # noqa: F401
+from app.models.email_template import EmailTemplate  # noqa: F401
+from app.models.register_import import RegisterImport  # noqa: F401
 from app.models.user import (  # noqa: F401
     INVITABLE_ROLES,
     ROLES,

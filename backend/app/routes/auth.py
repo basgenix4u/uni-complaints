@@ -20,10 +20,44 @@ from app.services.verification import (
     verify_token,
 )
 
+try:
+    from app.services.email_templating import queue_templated_email
+except ImportError:
+    queue_templated_email = None
+
 bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-MATRIC_RE = re.compile(r"^[A-Z]{2,5}/[A-Z]{2,5}/\d{2,4}/\d{3,6}$")
+
+# Fallback pattern when institution has no custom pattern. Still not hardcoded
+# as the only rule – per-institution pattern takes precedence.
+FALLBACK_MATRIC_RE = re.compile(r"^[A-Z]{2,5}/[A-Z]{2,5}/\d{2,4}/\d{3,6}$")
+
+
+def _validate_matric_for_institution(matric: str, institution) -> str | None:
+    """Validate matric against institution's pattern if present.
+
+    Returns error message or None if valid.
+    Matric format is not hardcoded: each institution defines its own.
+    """
+    if not matric:
+        return None
+    pattern_str = getattr(institution, "matric_pattern", None) if institution else None
+    example = getattr(institution, "matric_example", None) if institution else None
+    if pattern_str:
+        try:
+            pat = re.compile(pattern_str, re.IGNORECASE)
+            if pat.match(matric):
+                return None
+            # Also try normalised? matric already normalised upper
+            return f"Check the format, for example {example or 'ENG/COE/21/013'}."
+        except re.error:
+            # Invalid regex in DB – fall back
+            pass
+    # Fallback
+    if FALLBACK_MATRIC_RE.match(matric):
+        return None
+    return f"Check the format, for example {example or 'ENG/COE/21/013'}."
 
 
 def ok(data=None, message="OK", status=200):
@@ -98,8 +132,10 @@ def register():
     needs_matric = bool(institution and institution.verification_mode == "register")
     if needs_matric and not matric:
         errors["matric_number"] = "Enter your matric number so we can check the student register."
-    if matric and not MATRIC_RE.match(matric):
-        errors["matric_number"] = "Check the format, for example ENG/COE/21/013."
+    if matric:
+        matric_error = _validate_matric_for_institution(matric, institution)
+        if matric_error:
+            errors["matric_number"] = matric_error
 
     if errors:
         return fail("Please check the highlighted fields.", 422, errors)
@@ -300,19 +336,50 @@ def forgot_password():
     base = current_app.config.get("APP_URL", "").rstrip("/")
     link = f"{base}/reset-password?token={raw_token}"
 
-    queue_email(
-        user.institution_id,
-        user.email,
-        "Reset your password",
-        (
-            f"Hello {user.full_name},\n\n"
-            f"Use the link below to choose a new password. It expires in an hour.\n\n"
-            f"{link}\n\n"
-            "If you did not ask for this, you can ignore this message and your "
-            "password stays as it is."
-        ),
-        user_id=user.id,
-    )
+    # Templated email – per-institution branding
+    if queue_templated_email and user.institution:
+        try:
+            queue_templated_email(
+                user.institution,
+                user.email,
+                "password_reset",
+                {
+                    "student_name": user.full_name,
+                    "recipient_name": user.full_name,
+                    "token": raw_token,
+                    "link": link,
+                    "app_url": base,
+                },
+                user_id=user.id,
+            )
+        except Exception:
+            queue_email(
+                user.institution_id,
+                user.email,
+                "Reset your password",
+                (
+                    f"Hello {user.full_name},\n\n"
+                    f"Use the link below to choose a new password. It expires in an hour.\n\n"
+                    f"{link}\n\n"
+                    "If you did not ask for this, you can ignore this message and your "
+                    "password stays as it is."
+                ),
+                user_id=user.id,
+            )
+    else:
+        queue_email(
+            user.institution_id,
+            user.email,
+            "Reset your password",
+            (
+                f"Hello {user.full_name},\n\n"
+                f"Use the link below to choose a new password. It expires in an hour.\n\n"
+                f"{link}\n\n"
+                "If you did not ask for this, you can ignore this message and your "
+                "password stays as it is."
+            ),
+            user_id=user.id,
+        )
     db.session.commit()
 
     return ok(message=confirmation)
@@ -350,17 +417,43 @@ def reset_password():
         PasswordReset.used_at.is_(None),
     ).update({PasswordReset.used_at: utcnow()}, synchronize_session=False)
 
-    queue_email(
-        user.institution_id,
-        user.email,
-        "Your password was changed",
-        (
-            f"Hello {user.full_name},\n\n"
-            "Your password has just been changed. If this was not you, contact your "
-            "institution immediately."
-        ),
-        user_id=user.id,
-    )
+    if queue_templated_email and user.institution:
+        try:
+            queue_templated_email(
+                user.institution,
+                user.email,
+                "password_changed",
+                {
+                    "student_name": user.full_name,
+                    "recipient_name": user.full_name,
+                    "institution_name": user.institution.name if user.institution else "",
+                },
+                user_id=user.id,
+            )
+        except Exception:
+            queue_email(
+                user.institution_id,
+                user.email,
+                "Your password was changed",
+                (
+                    f"Hello {user.full_name},\n\n"
+                    "Your password has just been changed. If this was not you, contact your "
+                    "institution immediately."
+                ),
+                user_id=user.id,
+            )
+    else:
+        queue_email(
+            user.institution_id,
+            user.email,
+            "Your password was changed",
+            (
+                f"Hello {user.full_name},\n\n"
+                "Your password has just been changed. If this was not you, contact your "
+                "institution immediately."
+            ),
+            user_id=user.id,
+        )
     db.session.commit()
 
     return ok(message="Your password has been changed. You can sign in with it now.")

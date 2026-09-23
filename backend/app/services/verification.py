@@ -20,6 +20,12 @@ from app.models.base import as_aware, utcnow
 from app.models.verification import EmailVerification
 from app.services.delivery import queue_email
 
+# Templating – not hardcoded, per-institution branding
+try:
+    from app.services.email_templating import queue_templated_email
+except ImportError:
+    queue_templated_email = None
+
 # A person who did not receive the first email will press the button
 # again immediately. Anything shorter than this is a way to have us send
 # mail on demand to an arbitrary address.
@@ -33,6 +39,8 @@ def send_verification(user, institution=None) -> EmailVerification | None:
 
     Any earlier unused token is retired, so a forwarded old message
     cannot be replayed once a newer one exists.
+
+    Uses per-institution templating – not hardcoded.
     """
     EmailVerification.query.filter_by(user_id=user.id, used_at=None).update(
         {EmailVerification.used_at: utcnow()}, synchronize_session=False
@@ -42,8 +50,29 @@ def send_verification(user, institution=None) -> EmailVerification | None:
 
     base = (current_app.config.get("APP_URL") or "").rstrip("/")
     link = f"{base}/verify-email?token={raw}"
-    where = f" at {institution.name}" if institution else ""
 
+    if queue_templated_email and institution:
+        try:
+            queue_templated_email(
+                institution,
+                user.email,
+                "verification",
+                {
+                    "student_name": user.full_name,
+                    "recipient_name": user.full_name,
+                    "token": raw,
+                    "link": link,
+                    "app_url": base,
+                    "expiry_hours": 72,
+                    "institution_name": institution.name if institution else "",
+                },
+                user_id=user.id,
+            )
+            return record
+        except Exception:
+            pass
+
+    where = f" at {institution.name}" if institution else ""
     queue_email(
         user.institution_id,
         user.email,

@@ -156,13 +156,42 @@ def create_institution():
             {"code": "Already in use.", "existing": clash.to_directory_dict()},
         )
 
+    # Matric format is not hardcoded – per institution regex
+    matric_pattern = (payload.get("matric_pattern") or "").strip() or None
+    matric_example = (payload.get("matric_example") or "").strip() or None
+    matric_desc = (payload.get("matric_format_description") or "").strip() or None
+
+    # Validate matric_pattern is a valid regex if provided
+    if matric_pattern:
+        try:
+            re.compile(matric_pattern, re.IGNORECASE)
+        except re.error:
+            errors["matric_pattern"] = "That pattern is not a valid regular expression."
+
+    # Email branding – not hardcoded, per institution
+    email_sender_name = (payload.get("email_sender_name") or "").strip() or None
+    email_footer = (payload.get("email_footer") or "").strip() or None
+    email_reply_to = (payload.get("email_reply_to") or "").strip() or None
+
+    if errors:
+        return fail("Please check the highlighted fields.", 422, errors)
+
     institution = Institution(
         name=name,
         code=code,
         slug=slug,
         type=institution_type,
         state=(payload.get("state") or "").strip() or None,
+        short_name=(payload.get("short_name") or "").strip()[:20] or None,
         contact_email=(payload.get("contact_email") or "").strip() or None,
+        contact_phone=(payload.get("contact_phone") or "").strip() or None,
+        logo_url=(payload.get("logo_url") or "").strip() or None,
+        matric_pattern=matric_pattern,
+        matric_example=matric_example,
+        matric_format_description=matric_desc,
+        email_sender_name=email_sender_name,
+        email_footer=email_footer,
+        email_reply_to=email_reply_to,
         # Provisioning an institution is the deliberate act of bringing it
         # into service, so it is in service. The column defaults to false
         # because the directory also holds institutions we merely know of

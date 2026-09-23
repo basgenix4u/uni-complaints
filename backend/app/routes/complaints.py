@@ -152,6 +152,7 @@ def create_complaint():
     )
 
     where = f" It is with {department.name}." if department else ""
+    # Templated notification with variables ticket, deadline, officer
     notify(
         user.id,
         institution.id,
@@ -159,6 +160,16 @@ def create_complaint():
         f"Your complaint {complaint.ticket_number} has been logged.{where}",
         complaint.id,
         "submitted",
+        template_vars={
+            "ticket_number": complaint.ticket_number,
+            "complaint_title": complaint.title,
+            "category": complaint.category,
+            "priority": complaint.priority,
+            "department": department.name if department else "",
+            "officer_name": department.name if department else "Support",
+            "deadline": complaint.resolve_due_at,
+            "student_name": user.full_name,
+        },
     )
     db.session.commit()
 
@@ -307,6 +318,17 @@ def add_response(complaint_id):
                 f"There is a new reply on {complaint.ticket_number}.",
                 complaint.id,
                 "response",
+                template_vars={
+                    "ticket_number": complaint.ticket_number,
+                    "complaint_title": complaint.title,
+                    "message": message[:500],
+                    "author_name": user.full_name,
+                    "student_name": complaint.student.full_name if complaint.student else "",
+                    "officer_name": user.full_name,
+                    "category": complaint.category,
+                    "priority": complaint.priority,
+                    "deadline": complaint.resolve_due_at,
+                },
             )
 
     record_event(complaint, user.id, "replied", note="private note" if is_internal else None)
@@ -384,6 +406,18 @@ def update_status(complaint_id):
         "Complaint updated",
         f"{complaint.ticket_number} is now {new_status.replace('_', ' ')}.",
         complaint.id,
+        new_status,
+        template_vars={
+            "ticket_number": complaint.ticket_number,
+            "complaint_title": complaint.title,
+            "status": new_status,
+            "category": complaint.category,
+            "priority": complaint.priority,
+            "deadline": complaint.resolve_due_at,
+            "officer_name": user.full_name,
+            "student_name": complaint.student.full_name if complaint.student else "",
+            "message": payload.get("note") or payload.get("reason") or "",
+        },
     )
     db.session.commit()
 
@@ -419,6 +453,16 @@ def assign(complaint_id):
             f"You now own {complaint.ticket_number}.",
             complaint.id,
             "assignment",
+            template_vars={
+                "ticket_number": complaint.ticket_number,
+                "complaint_title": complaint.title,
+                "category": complaint.category,
+                "priority": complaint.priority,
+                "deadline": complaint.resolve_due_at,
+                "officer_name": assignee.full_name,
+                "student_name": complaint.student.full_name if complaint.student else "",
+                "department": complaint.department.name if complaint.department else "",
+            },
         )
     else:
         complaint.assigned_to_id = None

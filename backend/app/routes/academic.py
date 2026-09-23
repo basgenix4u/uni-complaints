@@ -11,6 +11,11 @@ Two hierarchies are kept apart deliberately. `Department` in
 resolve complaints. `Faculty` and `AcademicDepartment` here are where a
 student actually sits. A fee query goes to the former; a disputed grade
 goes to the latter.
+
+Now supports both CSV and XLSX (openpyxl) for structure and register
+imports. Matric format is not hardcoded – each institution defines its
+own pattern (e.g. FUW: eng/coe/21/013). Register files are archived to
+Cloudinary when available (free tier 25GB, authenticated raw).
 """
 
 import csv
@@ -28,10 +33,11 @@ from app.models.academic import (
     StudentRecord,
 )
 from app.models.institution import Institution
+from app.models.register_import import RegisterImport
 from app.routes.admin import slugify
 from app.routes.auth import fail, ok
 from app.security import staff_required, tenant_query
-from app.services.register import MAX_ROWS, import_register, normalise_matric
+from app.services.register import MAX_ROWS, import_register, normalise_matric, parse_register_file
 
 bp = Blueprint("academic", __name__, url_prefix="/api/academic")
 
@@ -39,6 +45,77 @@ bp = Blueprint("academic", __name__, url_prefix="/api/academic")
 # at roughly 80 bytes a row. Held below the 6 MB request cap so the
 # failure is a clear message rather than a truncated read.
 MAX_REGISTER_BYTES = 4 * 1024 * 1024
+
+
+# -- helpers for structure bulk (CSV+XLSX) -------------------------------
+
+def _parse_structure_file(raw: bytes, filename: str = "") -> tuple[list[dict], list[str]]:
+    """Parse faculty/department structure from CSV or XLSX.
+
+    Returns (rows, problems). Each row is dict with faculty, department, code, etc.
+    """
+    name_lower = (filename or "").lower()
+    is_xlsx = name_lower.endswith(".xlsx") or name_lower.endswith(".xls") or raw[:2] == b"PK"
+
+    rows = []
+    problems = []
+
+    if is_xlsx:
+        try:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+            ws = wb.active
+            if ws is None:
+                return [], ["That Excel file appears to be empty."]
+            iter_rows = ws.iter_rows(values_only=True)
+            try:
+                header_row = next(iter_rows)
+            except StopIteration:
+                return [], ["That Excel file appears to be empty."]
+            if not header_row:
+                return [], ["That Excel file appears to be empty."]
+            headers = [str(h).strip().lower().replace(" ", "_") if h else "" for h in header_row]
+            for number, vals in enumerate(iter_rows, start=2):
+                if not vals:
+                    continue
+                row = {}
+                for idx, h in enumerate(headers):
+                    if idx < len(vals):
+                        v = vals[idx]
+                        row[h] = str(v).strip() if v is not None else ""
+                    else:
+                        row[h] = ""
+                if not any(row.values()):
+                    continue
+                rows.append(row)
+            return rows, problems
+        except ImportError:
+            problems.append("XLSX support requires openpyxl. Install it or upload CSV.")
+            # fall through to CSV
+        except Exception as e:
+            return [], [f"Could not read Excel file: {str(e)[:200]}"]
+
+    # CSV path
+    try:
+        text = raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        try:
+            text = raw.decode("latin-1")
+        except UnicodeDecodeError:
+            return [], ["We could not read that file. Save it as CSV and try again."]
+
+    reader = csv.DictReader(io.StringIO(text))
+    if not reader.fieldnames:
+        return [], ["That file appears to be empty."]
+
+    for raw_row in reader:
+        row = {
+            (k or "").strip().lower().replace(" ", "_"): (v or "").strip()
+            for k, v in raw_row.items()
+        }
+        rows.append(row)
+
+    return rows, problems
 
 
 # -- sessions ---------------------------------------------------------
@@ -83,8 +160,6 @@ def create_session():
     )
 
     if make_current:
-        # Exactly one session is current. Cleared in the same transaction
-        # as the new one is set, so there is no window with two or none.
         tenant_query(AcademicSession).update(
             {AcademicSession.is_current: False}, synchronize_session=False
         )
@@ -184,7 +259,6 @@ def update_faculty(faculty_id):
             if not dean or dean.role != "dean":
                 return fail("Choose somebody with the dean role.", 422)
             faculty.dean_user_id = dean.id
-            # A dean's remit is this faculty, so the link is set both ways.
             dean.faculty_id = faculty.id
         else:
             faculty.dean_user_id = None
@@ -243,6 +317,9 @@ def update_academic_department(department_id):
             return fail("Enter the department name.", 422, {"name": "Enter the department name."})
         department.name = name
 
+    if "code" in payload:
+        department.code = (payload["code"] or "").strip()[:20] or None
+
     if "is_active" in payload:
         department.is_active = bool(payload["is_active"])
 
@@ -266,7 +343,7 @@ def update_academic_department(department_id):
 @staff_required("institution_admin")
 @limiter.limit("20 per hour")
 def import_structure():
-    """Load the academic tree from a spreadsheet.
+    """Load the academic tree from a spreadsheet (CSV or XLSX).
 
     A university has dozens of departments across a dozen faculties.
     Typing them one at a time is not a product, and the registry already
@@ -274,6 +351,9 @@ def import_structure():
 
     Expects `faculty` and `department` columns. Faculties are created as
     they are encountered, so one file describes the whole tree.
+    Supports both CSV and XLSX – format is detected from filename or
+    file magic. Matric format awareness: faculty_code and department_code
+    columns are respected when present (e.g. FUW eng/coe/21/013).
     """
     upload = request.files.get("file")
     if not upload:
@@ -282,44 +362,41 @@ def import_structure():
     raw = upload.read(MAX_REGISTER_BYTES + 1)
     if len(raw) > MAX_REGISTER_BYTES:
         return fail("That file is too large. Split it and try again.", 413)
+    if not raw:
+        return fail("That file is empty.", 422)
 
-    try:
-        text = raw.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        try:
-            text = raw.decode("latin-1")
-        except UnicodeDecodeError:
-            return fail("We could not read that file. Save it as CSV and try again.", 422)
+    filename = upload.filename or ""
+    rows, problems = _parse_structure_file(raw, filename)
 
-    reader = csv.DictReader(io.StringIO(text))
-    if not reader.fieldnames:
-        return fail("That file appears to be empty.", 422)
+    if not rows and problems:
+        return fail(problems[0], 422)
 
-    headers = {(h or "").strip().lower().replace(" ", "_") for h in reader.fieldnames}
+    headers = set()
+    for r in rows:
+        headers.update(r.keys())
     if "faculty" not in headers:
         return fail("The file needs a faculty column.", 422)
 
     dry_run = (request.form.get("dry_run") or "").lower() in ("1", "true", "yes")
 
     faculties = {f.slug: f for f in tenant_query(Faculty).all()}
+    faculties_by_code = {(f.code or "").lower(): f for f in tenant_query(Faculty).all() if f.code}
     departments = {d.slug for d in tenant_query(AcademicDepartment).all()}
 
     summary = {
         "faculties_created": 0,
         "departments_created": 0,
         "skipped": 0,
-        "problems": [],
+        "problems": problems[:20],
         "dry_run": dry_run,
+        "detected_type": "xlsx" if filename.lower().endswith((".xlsx", ".xls")) else "csv",
     }
 
-    for number, raw_row in enumerate(reader, start=2):
-        row = {
-            (k or "").strip().lower().replace(" ", "_"): (v or "").strip()
-            for k, v in raw_row.items()
-        }
-
+    for number, row in enumerate(rows, start=2):
         faculty_name = row.get("faculty", "")
         department_name = row.get("department", "")
+        faculty_code = row.get("faculty_code", "") or row.get("code", "")
+        dept_code = row.get("department_code", "") or row.get("dept_code", "")
 
         if not faculty_name:
             summary["problems"].append(f"Row {number}: no faculty given.")
@@ -333,15 +410,22 @@ def import_structure():
 
         faculty_slug = slugify(faculty_name)
         faculty = faculties.get(faculty_slug)
+        if faculty is None and faculty_code:
+            faculty = faculties_by_code.get(faculty_code.lower())
 
         if faculty is None:
             faculty = Faculty(
-                institution_id=g.institution_id, name=faculty_name[:150], slug=faculty_slug
+                institution_id=g.institution_id,
+                name=faculty_name[:150],
+                slug=faculty_slug,
+                code=faculty_code[:20] if faculty_code else None,
             )
             if not dry_run:
                 db.session.add(faculty)
                 db.session.flush()
             faculties[faculty_slug] = faculty
+            if faculty_code:
+                faculties_by_code[faculty_code.lower()] = faculty
             summary["faculties_created"] += 1
 
         if not department_name:
@@ -359,13 +443,13 @@ def import_structure():
                     faculty_id=faculty.id,
                     name=department_name[:150],
                     slug=department_slug,
+                    code=dept_code[:20] if dept_code else None,
                 )
             )
         departments.add(department_slug)
         summary["departments_created"] += 1
 
     if dry_run:
-        # Nothing was written, but flush() above may have staged rows.
         db.session.rollback()
     else:
         db.session.commit()
@@ -452,6 +536,7 @@ def register_summary():
                 "imported."
             )
 
+    # Include matric pattern info
     return ok(
         {
             "summary": {
@@ -460,8 +545,33 @@ def register_summary():
                 "active": base.filter(StudentRecord.status == "active").count(),
                 "current_session": current.to_dict() if current else None,
                 "verification_mode": institution.verification_mode,
+                "matric_pattern": institution.matric_pattern,
+                "matric_example": institution.matric_example,
+                "matric_format_description": institution.matric_format_description,
                 "advice": advice,
             }
+        }
+    )
+
+
+@bp.get("/register/imports")
+@staff_required("institution_admin")
+def list_register_imports():
+    """List archived register imports (Cloudinary or local)."""
+    query = tenant_query(RegisterImport).order_by(RegisterImport.created_at.desc())
+    per_page = min(max(request.args.get("per_page", 25, type=int), 1), 100)
+    result = query.paginate(
+        page=max(request.args.get("page", 1, type=int), 1), per_page=per_page, error_out=False
+    )
+    return ok(
+        {
+            "imports": [r.to_dict() for r in result.items],
+            "pagination": {
+                "page": result.page,
+                "per_page": result.per_page,
+                "total_items": result.total,
+                "total_pages": result.pages or 1,
+            },
         }
     )
 
@@ -475,6 +585,9 @@ def import_student_register():
     A dry run is the expected first call: an administrator should see
     what a file will do before it does it, and a register import touches
     every student's ability to sign up.
+
+    Now accepts CSV and XLSX, validates against institution's matric_pattern,
+    and archives the file to Cloudinary (free tier) when enabled.
     """
     upload = request.files.get("file")
     if not upload:
@@ -508,7 +621,16 @@ def import_student_register():
     dry_run = (request.form.get("dry_run") or "").lower() in ("1", "true", "yes")
     institution = db.session.get(Institution, g.institution_id)
 
-    summary = import_register(institution, session, raw, dry_run=dry_run)
+    filename = upload.filename or f"register_{session.name}.csv"
+
+    summary = import_register(
+        institution,
+        session,
+        raw,
+        dry_run=dry_run,
+        filename=filename,
+        uploaded_by=g.current_user,
+    )
 
     if not dry_run:
         structlog.get_logger().info(
@@ -518,6 +640,8 @@ def import_student_register():
             session=session.name,
             created=summary["created"],
             updated=summary["updated"],
+            storage_backend=summary.get("storage_backend", "local"),
+            detected_type=summary.get("detected_type", "csv"),
         )
 
     return ok({"summary": summary}, "Checked." if dry_run else "Register imported.")

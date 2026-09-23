@@ -105,6 +105,7 @@ def create_app(config_name: str | None = None) -> Flask:
     from app.routes.privacy import bp as privacy_bp
     from app.routes.routing import bp as routing_bp, platform_bp as routing_platform_bp
     from app.routes.tasks import bp as tasks_bp
+    from app.routes.email_templates import bp as email_templates_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(complaints_bp)
@@ -123,6 +124,7 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(routing_bp)
     app.register_blueprint(routing_platform_bp)
     app.register_blueprint(tasks_bp)
+    app.register_blueprint(email_templates_bp)
 
     logger = configure_logging(app)
     configure_sentry(app)

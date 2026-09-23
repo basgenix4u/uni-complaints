@@ -99,8 +99,18 @@ class Institution(TimestampMixin, db.Model):
 
     # Matriculation formats differ between institutions, so the pattern
     # is data rather than a single regex in code.
+    # Example FUW: eng/coe/21/013 => faculty/dept/year/number
+    # Stored as regex, validated case-insensitively. Not hardcoded.
     matric_pattern = db.Column(db.String(200))
     matric_example = db.Column(db.String(60))
+    # Optional human-readable description of the matric format, shown
+    # to students during registration. e.g. "faculty/dept/year/number"
+    matric_format_description = db.Column(db.String(200))
+
+    # Email branding – not hardcoded, per-institution
+    email_sender_name = db.Column(db.String(100))  # e.g. "FUW Resolve"
+    email_footer = db.Column(db.Text)  # e.g. "Federal University Wukari - Student Complaint Resolution System"
+    email_reply_to = db.Column(db.String(255))
 
     # Last time the head was sent the list of complaints the institution
     # has ignored. Recorded so a scheduler running every quarter of an
@@ -158,6 +168,10 @@ class Institution(TimestampMixin, db.Model):
                     "verification_mode": self.verification_mode,
                     "matric_pattern": self.matric_pattern,
                     "matric_example": self.matric_example,
+                    "matric_format_description": self.matric_format_description,
+                    "email_sender_name": self.email_sender_name,
+                    "email_footer": self.email_footer,
+                    "email_reply_to": self.email_reply_to,
                 }
             )
         return data

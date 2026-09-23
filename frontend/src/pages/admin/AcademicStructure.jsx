@@ -16,15 +16,10 @@ import { academicService, errorMessage } from '../../services/api';
 /**
  * The academic tree and the student register.
  *
- * This is the screen that makes `verification_mode="register"` real.
- * Without it the tables existed, the import logic existed, and neither
- * could be reached — so every institution silently fell back to an
- * administrator approving every single registration by hand.
- *
- * The register import is the highest-consequence action an administrator
- * can take here: it decides who is allowed to sign up. It is therefore
- * always previewed before it is applied, and the preview is not
- * skippable.
+ * Now supports CSV and XLSX (openpyxl backend). Matric format is not
+ * hardcoded – each institution defines its own pattern (e.g. FUW
+ * eng/coe/21/013 = faculty/dept/year/number). Register files are
+ * archived to Cloudinary (free tier, authenticated raw) when enabled.
  */
 export default function AcademicStructure() {
   const queryClient = useQueryClient();
@@ -73,8 +68,8 @@ export default function AcademicStructure() {
         Academic structure
       </h1>
       <p className="mt-1 max-w-xl text-ink-600">
-        Where your students actually sit, and the register used to confirm they are yours. This is
-        separate from the units that resolve complaints.
+        Where your students actually sit, and the register used to confirm they are yours. Supports
+        CSV and XLSX. Matric format is per-institution, not hardcoded.
       </p>
 
       {summary?.advice && (
@@ -228,14 +223,14 @@ function Structure({ faculties, isLoading, onDone, onError }) {
 
       <details className="rounded-lg border border-line bg-surface p-5">
         <summary className="cursor-pointer font-semibold text-ink-900">
-          Or paste the whole tree at once
+          Or paste the whole tree at once (CSV or XLSX file also supported via API)
         </summary>
         <div className="mt-4 space-y-3">
           <Textarea
             label="Faculties and departments"
             rows={6}
-            placeholder={'faculty,department\nEngineering,Computer Engineering\nScience,Microbiology'}
-            hint="One per line, with a header row. Faculties are created as they appear."
+            placeholder={'faculty,department,faculty_code,department_code\nEngineering,Computer Engineering,ENG,COE\nScience,Microbiology,BIO,MCB'}
+            hint="One per line, with header. Supports faculty_code and department_code for FUW-style matric eng/coe/21/013. Faculties created as they appear."
             value={bulk}
             onChange={(event) => {
               setBulk(event.target.value);
@@ -249,6 +244,7 @@ function Structure({ faculties, isLoading, onDone, onError }) {
                 {preview.faculties_created} new facult
                 {preview.faculties_created === 1 ? 'y' : 'ies'},{' '}
                 {preview.departments_created} new department(s), {preview.skipped} already there.
+                Detected: {preview.detected_type || 'csv'}
               </p>
               {(preview.problems ?? []).slice(0, 6).map((line) => (
                 <p key={line} className="mt-1 text-caption text-[#B45309]">
@@ -284,7 +280,7 @@ function Structure({ faculties, isLoading, onDone, onError }) {
           <div>
             <p className="font-medium text-ink-900">No faculties yet.</p>
             <p className="mt-1 text-sm text-ink-600">
-              Academic complaints route to a student&apos;s own department, so this has to exist
+              Academic complaints route to a student's own department, so this has to exist
               before that can work.
             </p>
           </div>
@@ -297,6 +293,7 @@ function Structure({ faculties, isLoading, onDone, onError }) {
                 <span className="font-medium text-ink-900">{faculty.name}</span>
                 <span className="text-caption text-ink-500">
                   {(faculty.departments ?? []).length} department(s)
+                  {faculty.code ? ` · code ${faculty.code}` : ''}
                   {faculty.dean ? ` · dean ${faculty.dean}` : ''}
                 </span>
                 <Button
@@ -311,7 +308,7 @@ function Structure({ faculties, isLoading, onDone, onError }) {
 
               {(faculty.departments ?? []).length > 0 && (
                 <p className="mt-2 text-sm text-ink-600">
-                  {faculty.departments.map((d) => d.name).join(' · ')}
+                  {faculty.departments.map((d) => `${d.name}${d.code ? ` (${d.code})` : ''}`).join(' · ')}
                 </p>
               )}
 
@@ -365,7 +362,7 @@ function Register({ sessions, summary, onDone, onError }) {
       setFile(null);
       if (fileInput.current) fileInput.current.value = '';
       onDone(
-        `${result.summary.created} added, ${result.summary.updated} updated, ${result.summary.skipped} unchanged.`,
+        `${result.summary.created} added, ${result.summary.updated} updated, ${result.summary.skipped} unchanged. Stored via ${result.summary.storage_backend || 'local'} as ${result.summary.detected_type || 'csv'}.`,
       );
     },
     onError,
@@ -381,19 +378,29 @@ function Register({ sessions, summary, onDone, onError }) {
         <Stat label="Current session" value={summary?.current_session?.name ?? 'None open'} />
       </div>
 
+      {summary?.matric_pattern && (
+        <div className="rounded-lg border border-line bg-surface p-4 text-sm">
+          <p className="font-semibold text-ink-900">Matric format for this institution</p>
+          <p className="mt-1 text-ink-600">
+            Pattern: <code className="rounded bg-canvas px-1 py-0.5">{summary.matric_pattern}</code>
+          </p>
+          <p className="text-ink-600">
+            Example: <code>{summary.matric_example || 'eng/coe/21/013'}</code> –{' '}
+            {summary.matric_format_description || 'faculty/dept/year/number'}
+          </p>
+        </div>
+      )}
+
       <div className="space-y-4 rounded-lg border border-line bg-surface p-5">
         <div>
-          <label
-            htmlFor="register-file"
-            className="block text-sm font-semibold text-ink-700"
-          >
-            The register, as a CSV
+          <label htmlFor="register-file" className="block text-sm font-semibold text-ink-700">
+            The register, as CSV or Excel (XLSX)
           </label>
           <input
             id="register-file"
             ref={fileInput}
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             className="mt-1.5 block w-full rounded-md border border-line bg-surface px-3.5 py-2.5 text-sm text-ink-900 file:mr-3 file:rounded file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-800"
             onChange={(event) => {
               setFile(event.target.files?.[0] ?? null);
@@ -401,8 +408,12 @@ function Register({ sessions, summary, onDone, onError }) {
             }}
           />
           <p className="mt-1.5 text-caption text-ink-500">
-            Needs <code>matric_number</code> and <code>full_name</code>. Optionally faculty,
-            department, programme, level and status.
+            Accepts CSV and XLSX. Needs <code>matric_number</code> and <code>full_name</code>.
+            Optionally faculty, faculty_code, department, department_code, programme, level, status.
+            Matric format is per-institution (e.g. FUW{' '}
+            <code>{summary?.matric_example || 'eng/coe/21/013'}</code> ={' '}
+            {summary?.matric_format_description || 'faculty/dept/year/number'}). Files are archived
+            to Cloudinary (free tier, authenticated raw) when enabled, otherwise local disk.
           </p>
         </div>
 
@@ -427,7 +438,8 @@ function Register({ sessions, summary, onDone, onError }) {
           <div className="rounded-md border border-line bg-canvas p-4 text-sm">
             <p className="font-semibold text-ink-900">
               {preview.rows_read} row(s) read into {preview.session}: {preview.created} new,{' '}
-              {preview.updated} updated, {preview.skipped} unchanged.
+              {preview.updated} updated, {preview.skipped} unchanged. Type:{' '}
+              {preview.detected_type} {preview.storage_backend ? `· would store via ${preview.storage_backend}` : ''}
             </p>
             <p className="mt-1 text-caption text-ink-600">
               Nothing has been written yet. Students already registered keep their accounts.
@@ -450,8 +462,6 @@ function Register({ sessions, summary, onDone, onError }) {
             <ArrowUpTrayIcon className="h-5 w-5" aria-hidden="true" />
             Check the file
           </Button>
-          {/* Applying is deliberately gated behind the preview: this decides
-              who may sign up, and it is not an action to take blind. */}
           <Button
             disabled={!preview || preview.rows_read === 0}
             loading={runImport.isPending && Boolean(preview)}
