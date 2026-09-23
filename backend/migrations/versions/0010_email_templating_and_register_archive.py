@@ -5,7 +5,7 @@ Adds:
 - email_templates table (per-institution templating, not hardcoded, variables ticket/deadline/officer)
 - register_imports table (archive of student register uploads, Cloudinary free tier)
 
-Revision ID: 0010_email_templating_and_register_archive
+Revision ID: 0010_email_register_archive
 Revises: 0009_pilot_provenance
 """
 
@@ -14,7 +14,8 @@ import os
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0010_email_templating_and_register_archive"
+# Keep this under Alembic's 32-character version_num column.
+revision = "0010_email_register_archive"
 down_revision = "0009_pilot_provenance"
 branch_labels = None
 depends_on = None
