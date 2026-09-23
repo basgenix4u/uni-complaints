@@ -10,11 +10,13 @@ Last verified against production on 23 September 2026.
 | API | `https://resolve-api-eadv.onrender.com` | Healthy, CORS correct; live admin and student API flows verified |
 | Database | Supabase `resolve` schema | At `0011_schema_security`; RLS enabled on all 22 application tables |
 
-The browser path works end to end. Live production authentication was
-verified for both administrator roles, and the deployed API accepted a
-student login and complaint submission. The multi-sheet XLSX register
-parser is deployed and selects the sheet containing `matric_number` and
-`full_name` rather than assuming the active sheet.
+The deployed Vercel shell served correctly, its API base was checked, and
+CORS from the Vercel origin returned the expected header. Live production
+API authentication was verified for both administrator roles, and the
+production API accepted a student login and complaint submission. The
+multi-sheet XLSX register parser is deployed and selects the sheet
+containing `matric_number` and `full_name` rather than assuming the active
+sheet. A manual browser click-through remains a separate optional check.
 
 ## FUW production pilot state
 
