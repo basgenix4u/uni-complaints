@@ -32,10 +32,38 @@ def resolve_destination(institution, category: str, student):
     ).first()
 
     if record and record.academic_department:
-        # The academic department is not an administrative unit, so it is
-        # matched to one by name where the institution has created it.
-        unit = Department.query.filter_by(
-            institution_id=institution.id, slug=record.academic_department.slug
+        # The academic department is not the administrative unit itself.
+        # FUW's processing units use the stable
+        # `department-{faculty-code}-{department-code}` slug, while the
+        # academic tree uses a descriptive slug. Try the exact slug first
+        # (useful for smaller institutions), then the code-based convention
+        # and finally the human-readable name.
+        academic = record.academic_department
+        candidates = [academic.slug]
+        faculty_code = getattr(academic.faculty, "code", None) if academic.faculty else None
+        if faculty_code and academic.code:
+            candidates.append(
+                f"department-{faculty_code.strip().lower()}-{academic.code.strip().lower()}"
+            )
+        candidates.extend(
+            [
+                academic.name,
+                f"Department of {academic.name}",
+            ]
+        )
+        for candidate in candidates:
+            unit = Department.query.filter_by(
+                institution_id=institution.id, slug=candidate
+            ).first()
+            if unit:
+                return unit, rule
+
+        # Names are not guaranteed to be unique in an institution's
+        # administrative table, so only use an exact case-insensitive name
+        # as a final compatibility path.
+        unit = Department.query.filter(
+            Department.institution_id == institution.id,
+            db.func.lower(Department.name) == academic.name.strip().lower(),
         ).first()
         if unit:
             return unit, rule
