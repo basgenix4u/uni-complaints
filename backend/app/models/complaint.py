@@ -70,7 +70,11 @@ class Complaint(TimestampMixin, db.Model):
     # otherwise a controlled account could remove its marker and pollute
     # the operational evidence simply by changing a JSON field.
     data_origin = db.Column(
-        db.String(30), default="operational", nullable=False, index=True
+        db.String(30),
+        default="operational",
+        server_default="operational",
+        nullable=False,
+        index=True,
     )
     pilot_scenario_id = db.Column(db.String(40), index=True)
 

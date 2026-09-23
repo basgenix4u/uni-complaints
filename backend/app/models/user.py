@@ -91,7 +91,11 @@ class User(TimestampMixin, db.Model):
     # in one wipe and must never silently become genuine participant
     # outcomes in a research export.
     data_origin = db.Column(
-        db.String(30), default="operational", nullable=False, index=True
+        db.String(30),
+        default="operational",
+        server_default="operational",
+        nullable=False,
+        index=True,
     )
     pilot_cohort_id = db.Column(db.String(40), index=True)
     pilot_scenario_id = db.Column(db.String(40), index=True)
