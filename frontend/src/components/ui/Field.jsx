@@ -19,10 +19,16 @@ const base =
   'focus:outline-2 focus:outline-offset-2 focus:outline-brand-700 ' +
   'disabled:opacity-60 disabled:cursor-not-allowed';
 
-function Shell({ label, hint, error, required, children, ids }) {
+function Shell({ label, hint, error, required, children, ids, labelHidden = false }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={ids.id} className="block text-sm font-semibold text-ink-700">
+      <label
+        htmlFor={ids.id}
+        className={cn(
+          'block text-sm font-semibold text-ink-700',
+          labelHidden && 'sr-only',
+        )}
+      >
         {label}
         {required && (
           <span className="text-[#B91C1C]" aria-hidden="true">
@@ -47,7 +53,18 @@ function Shell({ label, hint, error, required, children, ids }) {
 }
 
 export const Input = forwardRef(function Input(
-  { label, hint, error, required, id, className, leftIcon, rightSlot, ...props },
+  {
+    label,
+    labelHidden = false,
+    hint,
+    error,
+    required,
+    id,
+    className,
+    leftIcon,
+    rightSlot,
+    ...props
+  },
   ref,
 ) {
   const ids = useFieldIds(id);
@@ -72,7 +89,14 @@ export const Input = forwardRef(function Input(
   );
 
   return (
-    <Shell label={label} hint={hint} error={error} required={required} ids={ids}>
+    <Shell
+      label={label}
+      labelHidden={labelHidden}
+      hint={hint}
+      error={error}
+      required={required}
+      ids={ids}
+    >
       {leftIcon || rightSlot ? (
         <div className="relative">
           {leftIcon && (
