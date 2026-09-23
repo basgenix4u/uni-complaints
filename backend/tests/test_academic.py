@@ -221,9 +221,9 @@ def test_the_default_units_are_created(client, alpha):
     created = seed_units(alpha)
     db.session.commit()
 
-    assert created == 9
+    assert created == 10
     slugs = {d.slug for d in Department.query.filter_by(institution_id=alpha.id).all()}
-    assert {"bursary", "registry", "student-affairs", "ict"} <= slugs
+    assert {"bursary", "registry", "student-affairs", "sug", "ict"} <= slugs
 
 
 def test_seeding_units_twice_creates_nothing_extra(client, alpha):

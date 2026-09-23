@@ -322,6 +322,9 @@ export const invitationService = {
 
 export const routingService = {
   rules: () => api.get('/routing/rules').then(unwrap),
+  slaPolicies: () => api.get('/routing/sla-policies').then(unwrap),
+  saveSlaPolicies: (policies) =>
+    api.put('/routing/sla-policies', { policies }).then(unwrap),
   saveRule: (data) => api.post('/routing/rules', data).then(unwrap),
   deleteRule: (id) => api.delete(`/routing/rules/${id}`).then(unwrap),
   seed: () => api.post('/routing/seed').then(unwrap),

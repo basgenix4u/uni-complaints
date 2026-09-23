@@ -16,7 +16,12 @@ from flask import Blueprint, g, request
 from app.extensions import db
 from app.models.complaint import Complaint
 from app.models.institution import Department, Institution
-from app.models.routing import TARGET_TYPES, RoutingRule
+from app.models.routing import (
+    SLA_PRIORITIES,
+    TARGET_TYPES,
+    PrioritySlaPolicy,
+    RoutingRule,
+)
 from app.routes.auth import fail, ok
 from app.security import staff_required, tenant_query
 from app.services.routing import ignored_complaints, seed_routing, seed_units
@@ -26,6 +31,81 @@ bp = Blueprint("routing", __name__, url_prefix="/api/routing")
 # Beyond this a deadline is no longer a deadline. Three months of working
 # hours is already far longer than any complaint should take.
 MAX_SLA_HOURS = 2000
+
+# What an institution sees before it has chosen its own matrix. These are
+# suggestions only and are persisted solely by an explicit save.
+DEFAULT_PRIORITY_POLICIES = {
+    "low": {"acknowledge_hours": 48, "resolve_hours": 120, "escalation_step_hours": 48},
+    "medium": {"acknowledge_hours": 24, "resolve_hours": 72, "escalation_step_hours": 24},
+    "high": {"acknowledge_hours": 4, "resolve_hours": 24, "escalation_step_hours": 8},
+    "urgent": {"acknowledge_hours": 2, "resolve_hours": 8, "escalation_step_hours": 2},
+}
+
+
+@bp.get("/sla-policies")
+@staff_required("institution_admin")
+def list_sla_policies():
+    saved = {
+        p.priority: p.to_dict()
+        for p in tenant_query(PrioritySlaPolicy).all()
+    }
+    policies = []
+    for priority in SLA_PRIORITIES:
+        policies.append(
+            saved.get(priority)
+            or {"priority": priority, **DEFAULT_PRIORITY_POLICIES[priority], "is_active": False}
+        )
+    return ok({"policies": policies})
+
+
+@bp.put("/sla-policies")
+@staff_required("institution_admin")
+def save_sla_policies():
+    """Replace the four-priority matrix atomically."""
+    payload = request.get_json(silent=True) or {}
+    rows = payload.get("policies")
+    if not isinstance(rows, list):
+        return fail("Send the four priority policies.", 422)
+
+    supplied = {str(row.get("priority", "")).strip(): row for row in rows if isinstance(row, dict)}
+    if set(supplied) != set(SLA_PRIORITIES):
+        return fail(
+            "Set one policy for low, medium, high and urgent.",
+            422,
+            {"priorities": "Each priority must appear exactly once."},
+        )
+
+    errors = {}
+    for priority, row in supplied.items():
+        for field in ("acknowledge_hours", "resolve_hours", "escalation_step_hours"):
+            value = row.get(field)
+            if not isinstance(value, int) or not 1 <= value <= MAX_SLA_HOURS:
+                errors[f"{priority}.{field}"] = (
+                    f"Use a whole number between 1 and {MAX_SLA_HOURS}."
+                )
+        ack = row.get("acknowledge_hours")
+        resolve = row.get("resolve_hours")
+        if isinstance(ack, int) and isinstance(resolve, int) and ack > resolve:
+            errors[f"{priority}.acknowledge_hours"] = "Acknowledgement cannot be due after resolution."
+
+    if errors:
+        return fail("Please check the highlighted fields.", 422, errors)
+
+    result = []
+    for priority in SLA_PRIORITIES:
+        row = supplied[priority]
+        policy = tenant_query(PrioritySlaPolicy).filter_by(priority=priority).first()
+        if not policy:
+            policy = PrioritySlaPolicy(institution_id=g.institution_id, priority=priority)
+            db.session.add(policy)
+        policy.acknowledge_hours = row["acknowledge_hours"]
+        policy.resolve_hours = row["resolve_hours"]
+        policy.escalation_step_hours = row["escalation_step_hours"]
+        policy.is_active = row.get("is_active", True) is not False
+        result.append(policy)
+
+    db.session.commit()
+    return ok({"policies": [p.to_dict() for p in result]}, "Priority deadlines saved.")
 
 
 @bp.get("/rules")

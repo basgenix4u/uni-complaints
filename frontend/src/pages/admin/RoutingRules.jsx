@@ -31,6 +31,11 @@ export default function RoutingRules() {
     queryKey: ['routing-rules'],
     queryFn: () => routingService.rules(),
   });
+  const { data: slaData, isLoading: slaLoading } = useQuery({
+    queryKey: ['priority-sla-policies'],
+    queryFn: () => routingService.slaPolicies(),
+  });
+  const [slaDraft, setSlaDraft] = useState(null);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['routing-rules'] });
 
@@ -50,6 +55,16 @@ export default function RoutingRules() {
     onError: (error) => setProblem(errorMessage(error)),
   });
 
+  const saveSla = useMutation({
+    mutationFn: (policies) => routingService.saveSlaPolicies(policies),
+    onSuccess: () => {
+      setSlaDraft(null);
+      announce('Priority deadlines saved. New complaints will use them.');
+      queryClient.invalidateQueries({ queryKey: ['priority-sla-policies'] });
+    },
+    onError: (error) => setProblem(errorMessage(error)),
+  });
+
   const seed = useMutation({
     mutationFn: () => routingService.seed(),
     onSuccess: (result) => {
@@ -65,6 +80,15 @@ export default function RoutingRules() {
 
   const units = data?.units ?? [];
   const rules = data?.rules ?? [];
+  const policies = slaDraft ?? slaData?.policies ?? [];
+  const updatePolicy = (priority, field, value) => {
+    const base = policies.map((policy) => ({ ...policy }));
+    setSlaDraft(
+      base.map((policy) =>
+        policy.priority === priority ? { ...policy, [field]: Number(value) } : policy,
+      ),
+    );
+  };
   const byCategory = Object.fromEntries(rules.map((rule) => [rule.category, rule]));
   const unrouted = ALL_CATEGORIES.filter((item) => !byCategory[item.value]);
 
@@ -112,6 +136,96 @@ export default function RoutingRules() {
           </p>
         )}
       </div>
+
+      <section className="mt-6 rounded-lg border border-line bg-surface p-5 shadow-e1">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="font-semibold text-ink-900">Deadlines by priority</h2>
+            <p className="mt-1 max-w-2xl text-sm text-ink-600">
+              A safety report should not wait as long as a routine document request. Hours count
+              only while the institution is open. Changes apply to new complaints, not ones
+              already filed.
+            </p>
+          </div>
+          {policies.some((policy) => !policy.is_active) && (
+            <span className="rounded-full bg-canvas px-2.5 py-1 text-caption font-semibold text-ink-600">
+              Suggested, not active
+            </span>
+          )}
+        </div>
+
+        {slaLoading ? (
+          <Skeleton className="mt-4 h-32 w-full" />
+        ) : (
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            {policies.map((policy) => (
+              <div key={policy.priority} className="rounded-md border border-line bg-canvas p-4">
+                <p className="font-semibold capitalize text-ink-900">{policy.priority}</p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <Input
+                    label="Acknowledge"
+                    type="number"
+                    min="1"
+                    max="2000"
+                    value={policy.acknowledge_hours}
+                    onChange={(event) =>
+                      updatePolicy(policy.priority, 'acknowledge_hours', event.target.value)
+                    }
+                    hint="working hours"
+                  />
+                  <Input
+                    label="Resolve"
+                    type="number"
+                    min="1"
+                    max="2000"
+                    value={policy.resolve_hours}
+                    onChange={(event) =>
+                      updatePolicy(policy.priority, 'resolve_hours', event.target.value)
+                    }
+                    hint="working hours"
+                  />
+                  <Input
+                    label="Next rung"
+                    type="number"
+                    min="1"
+                    max="2000"
+                    value={policy.escalation_step_hours}
+                    onChange={(event) =>
+                      updatePolicy(policy.priority, 'escalation_step_hours', event.target.value)
+                    }
+                    hint="after escalation"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 flex justify-end gap-2">
+          {slaDraft && (
+            <Button variant="ghost" onClick={() => setSlaDraft(null)}>
+              Undo changes
+            </Button>
+          )}
+          <Button
+            onClick={() =>
+              saveSla.mutate(
+                policies.map((policy) => ({
+                  priority: policy.priority,
+                  acknowledge_hours: policy.acknowledge_hours,
+                  resolve_hours: policy.resolve_hours,
+                  escalation_step_hours: policy.escalation_step_hours,
+                  is_active: true,
+                })),
+              )
+            }
+            loading={saveSla.isPending}
+            disabled={slaLoading || policies.length !== 4}
+          >
+            Save deadline policy
+          </Button>
+        </div>
+      </section>
 
       {units.length === 0 && (
         <p className="mt-6 flex items-start gap-2 rounded-md border border-line bg-surface p-4 text-sm text-ink-600">

@@ -20,6 +20,44 @@ from app.models.base import TimestampMixin, fk, new_uuid
 #               the time of filing. Used for academic matters, where the
 #               correct destination depends on who is complaining.
 TARGET_TYPES = ("unit", "department")
+SLA_PRIORITIES = ("low", "medium", "high", "urgent")
+
+
+class PrioritySlaPolicy(TimestampMixin, db.Model):
+    """Deadlines attached to urgency rather than a one-size institution default.
+
+    A stolen bag after dark and a routine certificate enquiry should not
+    receive the same acknowledgement window. The policy is data because
+    the institution, not the software, owns those promises.
+    """
+
+    __tablename__ = "priority_sla_policies"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "institution_id", "priority", name="uq_sla_priority_per_institution"
+        ),
+    )
+
+    id = db.Column(db.String(36), primary_key=True, default=new_uuid)
+    institution_id = db.Column(
+        db.String(36), db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    priority = db.Column(db.String(20), nullable=False)
+    acknowledge_hours = db.Column(db.Integer, nullable=False)
+    resolve_hours = db.Column(db.Integer, nullable=False)
+    escalation_step_hours = db.Column(db.Integer, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "priority": self.priority,
+            "acknowledge_hours": self.acknowledge_hours,
+            "resolve_hours": self.resolve_hours,
+            "escalation_step_hours": self.escalation_step_hours,
+            "is_active": self.is_active,
+        }
 
 
 class RoutingRule(TimestampMixin, db.Model):
@@ -90,6 +128,8 @@ DEFAULT_ROUTING = (
     ("examination", "exams-records", "unit", "registry", False),
     ("course_registration", None, "department", "registry", False),
     ("academic_advising", None, "department", None, False),
+    ("department_issue", None, "department", "registry", False),
+    ("faculty_issue", None, "department", "registry", False),
     ("transcript", "registry", "unit", None, False),
     ("certificate", "registry", "unit", None, False),
     ("id_card", "registry", "unit", None, False),
@@ -99,7 +139,10 @@ DEFAULT_ROUTING = (
     ("transfer", "registry", "unit", None, False),
     ("fees_payment", "bursary", "unit", None, False),
     ("scholarship", "bursary", "unit", "student-affairs", False),
+    ("ict_portal", "ict", "unit", "registry", False),
     ("accommodation", "student-affairs", "unit", None, False),
+    ("student_welfare", "student-affairs", "unit", None, False),
+    ("sug_support", "sug", "unit", "student-affairs", False),
     ("facilities", "works", "unit", None, False),
     ("library", "library", "unit", None, False),
     ("medical", "health-services", "unit", None, False),
@@ -116,7 +159,8 @@ DEFAULT_UNITS = (
     ("Exams and Records", "exams-records", "Results, examinations and transcripts"),
     ("Admissions", "admissions", "Admission and matriculation"),
     ("Bursary", "bursary", "Fees, receipts, refunds and scholarships"),
-    ("Student Affairs", "student-affairs", "Hostel, welfare, discipline and student union"),
+    ("Student Affairs", "student-affairs", "Hostel, welfare and discipline"),
+    ("Students' Union Government", "sug", "Peer support and student representation"),
     ("ICT", "ict", "Portal, email and network faults"),
     ("Security", "security", "Safety, theft and harassment reports"),
     ("Health Services", "health-services", "Clinic and medical matters"),

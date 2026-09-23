@@ -84,29 +84,47 @@ def add_working_hours(start: datetime, hours: float, open_hour: int, close_hour:
     return cursor.astimezone(timezone.utc)
 
 
+def priority_policy(institution_id: str, priority: str):
+    """The active policy for one urgency, if the institution has one."""
+    from app.models.routing import PrioritySlaPolicy
+
+    return PrioritySlaPolicy.query.filter_by(
+        institution_id=institution_id,
+        priority=priority,
+        is_active=True,
+    ).first()
+
+
 def deadline_for(institution, department, priority: str, start: datetime | None = None,
                  override_hours: int | None = None):
     """Acknowledgement and resolution deadlines in working hours.
 
-    Three settings can supply the base figure, and the most specific one
-    wins: the routing rule for this category, then the handling unit,
-    then the institution. A missing result and a broken tap are both
-    Registry's problem and are not the same kind of wait.
+    A configured priority policy is the institution's explicit promise
+    and therefore wins. Institutions without one retain the previous
+    category/unit/default hierarchy and priority factor, so this migration
+    changes no existing deadline until an administrator opts in.
     """
     start = start or utcnow()
-    base_hours = (
-        override_hours
-        or (department.sla_hours if department and department.sla_hours else None)
-        or institution.default_sla_hours
-    )
-    factor = PRIORITY_SLA_FACTOR.get(priority, 1.0)
+    policy = priority_policy(institution.id, priority)
+
+    if policy:
+        acknowledge_hours = policy.acknowledge_hours
+        resolve_hours = policy.resolve_hours
+    else:
+        base_hours = (
+            override_hours
+            or (department.sla_hours if department and department.sla_hours else None)
+            or institution.default_sla_hours
+        )
+        acknowledge_hours = institution.acknowledge_sla_hours
+        resolve_hours = base_hours * PRIORITY_SLA_FACTOR.get(priority, 1.0)
 
     open_hour = institution.working_hours_start
     close_hour = institution.working_hours_end
 
     return (
-        add_working_hours(start, institution.acknowledge_sla_hours, open_hour, close_hour),
-        add_working_hours(start, base_hours * factor, open_hour, close_hour),
+        add_working_hours(start, acknowledge_hours, open_hour, close_hour),
+        add_working_hours(start, resolve_hours, open_hour, close_hour),
     )
 
 
@@ -232,9 +250,14 @@ def _escalate_one(complaint, now) -> bool:
         complaint.escalation_level = level + 1
 
         institution = db.session.get(Institution, complaint.institution_id)
+        policy = priority_policy(complaint.institution_id, complaint.priority)
+        # Each rung gets the window approved for this urgency. Without a
+        # configured policy the old 24-hour behaviour remains exactly as
+        # it was.
+        step_hours = policy.escalation_step_hours if policy else ESCALATION_STEP_HOURS
         complaint.next_escalation_at = add_working_hours(
             now,
-            ESCALATION_STEP_HOURS,
+            step_hours,
             institution.working_hours_start if institution else 8,
             institution.working_hours_end if institution else 17,
         )

@@ -102,6 +102,8 @@ export const CATEGORY_GROUPS = [
       { value: 'examination', label: 'Examinations' },
       { value: 'course_registration', label: 'Course registration' },
       { value: 'academic_advising', label: 'Academic advising' },
+      { value: 'department_issue', label: 'Department administration' },
+      { value: 'faculty_issue', label: 'Faculty administration' },
     ],
   },
   {
@@ -127,6 +129,9 @@ export const CATEGORY_GROUPS = [
     icon: '🏠',
     items: [
       { value: 'accommodation', label: 'Accommodation' },
+      { value: 'student_welfare', label: 'Student welfare' },
+      { value: 'sug_support', label: 'Students’ Union support' },
+      { value: 'ict_portal', label: 'Portal, email and ICT' },
       { value: 'facilities', label: 'Facilities and maintenance' },
       { value: 'library', label: 'Library' },
       { value: 'medical', label: 'Medical and health' },
