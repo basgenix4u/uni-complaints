@@ -394,7 +394,7 @@ function Register({ sessions, summary, onDone, onError }) {
       <div className="space-y-4 rounded-lg border border-line bg-surface p-5">
         <div>
           <label htmlFor="register-file" className="block text-sm font-semibold text-ink-700">
-            The register, as CSV or Excel (XLSX)
+            The register, as a CSV or Excel (XLSX)
           </label>
           <input
             id="register-file"
