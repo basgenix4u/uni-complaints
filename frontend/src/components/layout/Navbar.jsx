@@ -8,6 +8,7 @@ import {
   UserCircleIcon,
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { motion } from 'framer-motion';
 import { cn } from '../../utils/cn';
@@ -22,7 +23,7 @@ const ROLE_LABELS = {
   platform_admin: 'Platform owner',
 };
 
-const Navbar = ({ onMenuClick, title }) => {
+const Navbar = ({ isMenuOpen = false, onMenuClick, title }) => {
   const { user, logout, isAdmin } = useAuthStore();
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -40,10 +41,14 @@ const Navbar = ({ onMenuClick, title }) => {
         <div className="flex items-center gap-4">
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={onMenuClick}
+            aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={isMenuOpen}
+            aria-controls="mobile-navigation"
             className="p-2 rounded-xl text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 transition-colors lg:hidden"
           >
-            <Bars3Icon className="w-6 h-6" />
+            {isMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
           </button>
 
           {/* Page Title */}

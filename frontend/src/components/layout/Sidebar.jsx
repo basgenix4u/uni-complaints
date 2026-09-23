@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,6 +28,17 @@ import useAuthStore from '../../stores/authStore';
 const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
   const location = useLocation();
   const { user, logout, isAdmin } = useAuthStore();
+
+  useEffect(() => {
+    if (!isMobile || !isOpen) return undefined;
+
+    const closeOnEscape = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [isMobile, isOpen, onClose]);
 
   const studentNavItems = [
     { name: 'Dashboard', href: '/student/dashboard', icon: HomeIcon },
@@ -97,7 +108,9 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
         
         {isMobile && (
           <button
+            type="button"
             onClick={onClose}
+            aria-label="Close navigation menu"
             className="p-2 rounded-lg hover:bg-neutral-100 transition-colors lg:hidden"
           >
             <XMarkIcon className="w-5 h-5 text-neutral-500" />
@@ -199,6 +212,10 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              id="mobile-navigation"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile navigation"
               className="fixed left-0 top-0 h-full w-72 bg-white shadow-soft-xl z-50 flex flex-col lg:hidden"
             >
               {sidebarContent}

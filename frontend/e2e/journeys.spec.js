@@ -86,6 +86,24 @@ test.describe('public access', () => {
   });
 });
 
+test.describe('mobile navigation', () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test('the drawer closes after navigation and does not cover the next page', async ({ page }) => {
+    await signIn(page, STUDENT);
+    await page.goto('/student/dashboard');
+
+    await page.getByRole('button', { name: /open navigation menu/i }).click();
+    await expect(page.getByRole('dialog', { name: /mobile navigation/i })).toBeVisible();
+
+    await page.getByRole('link', { name: 'My Complaints' }).click();
+
+    await expect(page).toHaveURL(/\/student\/complaints$/);
+    await expect(page.getByRole('dialog', { name: /mobile navigation/i })).toBeHidden();
+    await expect(page.getByRole('heading', { name: /my complaints/i })).toBeVisible();
+  });
+});
+
 test.describe('student journey', () => {
   test('a complaint can be filed and produces a receipt', async ({ page }) => {
     await signIn(page, STUDENT);

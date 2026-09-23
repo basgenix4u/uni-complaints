@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Sidebar from './Sidebar';
@@ -51,6 +51,47 @@ const DashboardLayout = () => {
 
   const pageTitle = getPageTitle(location.pathname, isAdmin());
 
+  // A navigation click can change the route before the drawer's own click
+  // handler runs (for example when a link is activated by the keyboard).
+  // Closing from the route change as well makes the mobile overlay
+  // impossible to strand over the next page.
+  useEffect(() => {
+    // This is an intentional UI reset: route changes must dismiss the
+    // mobile drawer even when navigation came from the keyboard or history.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSidebarOpen(false);
+  }, [location.pathname]);
+
+  // Keep the page from scrolling underneath an open drawer, and always
+  // restore the body's state when the drawer closes or the component
+  // unmounts. The previous implementation left a locked page behind on
+  // some mobile browsers after the overlay had visually disappeared.
+  useEffect(() => {
+    if (!sidebarOpen) {
+      document.body.style.overflow = '';
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sidebarOpen]);
+
+  // If a phone is rotated or resized to desktop while the drawer is open,
+  // close it so the hidden mobile layer cannot keep intercepting input.
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = (event) => {
+      if (event.matches) setSidebarOpen(false);
+    };
+
+    closeOnDesktop(media);
+    media.addEventListener?.('change', closeOnDesktop);
+    return () => media.removeEventListener?.('change', closeOnDesktop);
+  }, []);
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {/* Desktop Sidebar */}
@@ -66,8 +107,9 @@ const DashboardLayout = () => {
       {/* Main Content */}
       <div className="lg:pl-72">
         {/* Navbar */}
-        <Navbar 
-          onMenuClick={() => setSidebarOpen(true)} 
+        <Navbar
+          isMenuOpen={sidebarOpen}
+          onMenuClick={() => setSidebarOpen((open) => !open)}
           title={pageTitle}
         />
 
