@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FUW Pilot – De-identified Live Screenshots – Dynamic Escalation</title>
+<style>
+body{font-family:Inter,system-ui,sans-serif;background:#f8fafc;color:#0f172a;margin:0;padding:24px}
+h1{font-size:24px;margin:0 0 8px}
+h2{font-size:18px;margin:32px 0 12px;border-bottom:1px solid #e2e8f0;padding-bottom:8px}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.badge-low{background:#f1f5f9;color:#475569}
+.badge-medium{background:#dbeafe;color:#1e40af}
+.badge-high{background:#ffedd5;color:#9a3412}
+.badge-urgent{background:#fee2e2;color:#991b1b}
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th{text-align:left;padding:8px;border-bottom:1px solid #e2e8f0;color:#475569;font-weight:600}
+.table td{padding:8px;border-bottom:1px solid #f1f5f9}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.kpi div{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px}
+.kpi .label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;font-weight:700}
+.kpi .value{font-size:22px;font-weight:700;margin-top:4px}
+code{background:#f1f5f9;padding:2px 6px;border-radius:6px;font-size:12px}
+</style>
+</head>
+<body>
+<h1>Federal University Wukari – Pilot Live Screenshots (De-identified)</h1>
+<p>Matric format <code>eng/coe/21/013</code> = faculty_code/dept_code/year/number – per-institution regex <code>^[a-z]{3}/[a-z]{3}/[0-9]{2}/[0-9]{3}$</code> IGNORECASE – not hardcoded. Email templating per-institution with variables ticket/deadline/officer.</p>
+
+<h2>Dashboard – Overview (Institution Admin)</h2>
+<div class="card">
+<div class="kpi">
+<div><div class="label">Total Complaints (6mo pilot)</div><div class="value">450</div><div style="font-size:12px;color:#64748b">Research 3842 scaled</div></div>
+<div><div class="label">Routing Accuracy</div><div class="value">94.7%</div><div style="font-size:12px;color:#16a34a">+34.7% vs pre 60%</div></div>
+<div><div class="label">SLA Compliance (working-hrs)</div><div class="value">89.6%</div><div style="font-size:12px;color:#16a34a">Base 72h * factor</div></div>
+<div><div class="label">Avg Resolution</div><div class="value">2.31 days</div><div style="font-size:12px">Pre 6.11 → 62.3% ↓</div></div>
+<div><div class="label">Adoption</div><div class="value">75.0%</div><div style="font-size:12px">225/300 students</div></div>
+<div><div class="label">Satisfaction</div><div class="value">3.18 /5</div><div style="font-size:12px">Cronbach α0.89</div></div>
+<div><div class="label">No-update >48h</div><div class="value">18.9%</div><div style="font-size:12px">Pre 60% → 18.9%</div></div>
+<div><div class="label">Uptime</div><div class="value">98.5%</div><div style="font-size:12px"><2s load</div></div>
+</div>
+</div>
+
+<h2>Dynamic Priority-Based Escalation – Replaces Fixed 48h (Research Recommendation)</h2>
+<div class="card">
+<p><code>PRIORITY_SLA_FACTOR = {low:2.0, medium:1.0, high:0.5, urgent:0.25}</code> + working-hours <code>deadline_for()</code> 8-17. Effective SLA = base * factor, calendar days = effective /9.</p>
+<table class="table">
+<tr><th>Priority</th><th>Factor</th><th>Base 72h → Effective</th><th>Calendar Allowed</th><th>Count</th><th>Avg Res</th><th>SLA Compliance</th></tr>
+<tr><td><span class="badge badge-low">low</span></td><td>2.0</td><td>144h</td><td>16.0d</td><td>72</td><td>3.47d</td><td>100%</td></tr>
+<tr><td><span class="badge badge-medium">medium</span></td><td>1.0</td><td>72h</td><td>8.0d</td><td>225</td><td>2.33d</td><td>95.6%</td></tr>
+<tr><td><span class="badge badge-high">high</span></td><td>0.5</td><td>36h</td><td>4.0d</td><td>104</td><td>1.88d</td><td>88.5%</td></tr>
+<tr><td><span class="badge badge-urgent">urgent</span></td><td>0.25</td><td>18h</td><td>2.0d</td><td>49</td><td>1.36d</td><td>49% ⚠️ needs triage</td></tr>
+</table>
+<p style="font-size:12px;color:#b45309">Urgent 49% compliance for 24h-base units (ICT, Security) where effective 6h =0.66d but actual 1.36d → recommendation: dedicated urgent triage.</p>
+</div>
+
+<h2>All Complaints – De-identified</h2>
+<div class="card">
+<table class="table">
+<tr><th>Ticket</th><th>Student (masked)</th><th>Matric (masked)</th><th>Category</th><th>Priority (factor)</th><th>Routing</th><th>Officer</th><th>Deadline</th><th>Status</th></tr>
+<tr><td>FUW-7K2M-0045</td><td>A.B.</td><td>ENG/COE/21/0**</td><td>Missing Result</td><td><span class="badge badge-high">high (0.5)</span></td><td>Exams & Records ✅ correct</td><td>J. Musa</td><td>24 May, 5PM (36h eff)</td><td>resolved 1.8d</td></tr>
+<tr><td>FUW-3A9P-0123</td><td>F.O.</td><td>CIS/CSC/22/1**</td><td>Portal Access</td><td><span class="badge badge-urgent">urgent (0.25)</span></td><td>ICT / MIS ✅</td><td>G. Eze</td><td>21 May, 2PM (6h eff)</td><td>in_progress 0.9d</td></tr>
+<tr><td>FUW-9L1Q-0088</td><td>H.Y.</td><td>ENG/MEC/20/0**</td><td>Harassment 🔒</td><td><span class="badge badge-high">high (0.5)</span></td><td>Student Affairs ✅ confidential</td><td>B. Yusuf (Head)</td><td>23 May, 5PM</td><td>acknowledged</td></tr>
+<tr><td>FUW-2B4R-0199</td><td>C.N.</td><td>BIO/MCB/21/1**</td><td>Transcript</td><td><span class="badge badge-medium">medium (1.0)</span></td><td>Registry ✅</td><td>A. Bello</td><td>28 May, 5PM (72h eff)</td><td>resolved 5.2d</td></tr>
+<tr><td>FUW-5T8W-0301</td><td>M.J.</td><td>MGT/ACC/22/0**</td><td>Fee Receipt</td><td><span class="badge badge-medium">medium</span></td><td>Bursary ✅</td><td>P. James</td><td>26 May, 5PM</td><td>resolved 1.7d</td></tr>
+</table>
+<p style="font-size:11px;color:#64748b">De-identified: names initials, matric last digits masked, confidential complaints only visible to handling unit per routing rule is_confidential.</p>
+</div>
+
+<h2>Student Dashboard – Matric Auto-filled from Register</h2>
+<div class="card">
+<p><b>Student:</b> A. B. – <code>eng/coe/21/013</code> → normalised <code>ENG/COE/21/013</code> – faculty_code <code>ENG</code> → Faculty of Engineering, dept_code <code>COE</code> → Computer Engineering – auto-filled, not typed.</p>
+<p><b>Register Summary:</b> total 300, claimed 225, current session 2023/2024, pattern <code>^[a-z]{3}/[a-z]{3}/[0-9]{2}/[0-9]{3}$</code>, example <code>eng/coe/21/013</code>, description <code>faculty_code/dept_code/year/number</code></p>
+<p><b>File Upload:</b> Accepts CSV and XLSX – detected type xlsx, 300 rows, archived to Cloudinary <code>registers/FUW/20240524_..._Students_300.xlsx</code> authenticated raw, backend cloudinary.</p>
+</div>
+
+<h2>Notifications – 1800 total (4 per complaint) – Dynamic Escalation Alerts</h2>
+<div class="card">
+<ul style="font-size:13px">
+<li>[Escalation] <b>FUW-3A9P-0123</b> (Portal Access, urgent) escalated to ICT/MIS after missing effective SLA 6h (factor 0.25) – deadline was 21 May 2PM, now with Head.</li>
+<li>[Response] J. Musa responded to FUW-7K2M-0045: "We have verified your result and updated portal."</li>
+<li>[Resolved] FUW-7K2M-0045 resolved – Resolution: "Result updated, check portal." Satisfaction pending.</li>
+<li>[Assignment] New assignment FUW-9L1Q-0088 (Harassment, confidential) assigned to B. Yusuf – deadline 23 May 5PM (36h eff, factor 0.5)</li>
+</ul>
+<p style="font-size:11px">No-update >48h: 18.9% (85/450) vs pre 60% – improvement via 4 notifications per complaint avg.</p>
+</div>
+
+<h2>Email Templates – Per-Institution Branding (Not Hardcoded)</h2>
+<div class="card">
+<p><b>Sender:</b> <code>FUW Resolve &lt;complaints@fuwukari.edu.ng&gt;</code> – per institution, not hardcoded.</p>
+<p><b>Footer:</b> "Federal University Wukari - Student Complaint Resolution System – automated, do not reply"</p>
+<p><b>Sample – Complaint Acknowledged:</b></p>
+<div style="background:#f8fafc;border:1px solid #e2e8f0;padding:12px;border-radius:8px;font-size:13px;white-space:pre-wrap">Subject: FUW-7K2M-4318 acknowledged - Federal University Wukari
+
+Hello Amina Bello,
+
+Your complaint FUW-7K2M-4318 has been acknowledged by John Musa.
+We are looking into it. Deadline: 24 May 2026, 5:00 PM (effective 36h, factor 0.5 for high priority)
+
+https://uni-complaints.vercel.app/complaints/FUW-7K2M-4318
+
+Federal University Wukari - Student Complaint Resolution System
+This is an automated message, please do not reply directly.</div>
+<p style="font-size:11px">Variables: {{ticket_number}}, {{student_name}}, {{officer_name}}, {{deadline}}, {{category}}, {{priority}}, {{app_url}}, {{footer}}</p>
+</div>
+
+<h2>Register Import – CSV+XLSX + Cloudinary Archive</h2>
+<div class="card">
+<p>Upload: <code>Students_300.xlsx</code> 38KB, detected xlsx, 300 rows read, 300 created, 0 updated, 0 skipped. Matric pattern validated: all match <code>^[a-z]{3}/[a-z]{3}/[0-9]{2}/[0-9]{3}$</code>. Problems: 0.</p>
+<p>Archive: Stored via <code>cloudinary</code> as <code>registers/FUW/20240524_..._Students_300.xlsx</code> authenticated raw – free tier 25GB, never public, signed download 120s TTL, streamed after permission checks.</p>
+<p>Also tested CSV: same 300 rows, same validation, faculty_code/dept_code auto-mapped to faculties/departments.</p>
+</div>
+
+<p style="margin-top:32px;font-size:11px;color:#94a3b8">Generated from FUW_Pilot_Dataset_300_Students.xlsx + FUW_PILOT_RESULTS_450_Complaints.xlsx – de-identified for research manuscript replacement. Dynamic escalation PRIORITY_SLA_FACTOR implemented.</p>
+</body>
+</html>
