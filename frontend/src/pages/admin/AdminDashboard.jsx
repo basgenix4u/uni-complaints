@@ -36,9 +36,15 @@ const COLORS = ['#f59e0b', '#3b82f6', '#22c55e', '#6b7280', '#ef4444'];
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
-  const dashboardScope = user?.institution_id
-    ? `institution:${user.institution_id}`
-    : `principal:${user?.id || 'anonymous'}`;
+  const dashboardScope = user
+    ? [
+      `institution:${user.institution_id || 'platform'}`,
+      `principal:${user.id}`,
+      `role:${user.role}`,
+      `department:${user.department_id || 'none'}`,
+      `faculty:${user.faculty_id || 'none'}`,
+    ].join('|')
+    : 'anonymous';
 
   // Include the authenticated tenant in every cache key. This prevents a
   // cached dashboard from one institution being shown after an administrator

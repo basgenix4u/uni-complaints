@@ -40,9 +40,15 @@ const timeRangeOptions = [
 const AdminAnalytics = () => {
   const [trendDays, setTrendDays] = useState('30');
   const { user } = useAuthStore();
-  const dashboardScope = user?.institution_id
-    ? `institution:${user.institution_id}`
-    : `principal:${user?.id || 'anonymous'}`;
+  const dashboardScope = user
+    ? [
+      `institution:${user.institution_id || 'platform'}`,
+      `principal:${user.id}`,
+      `role:${user.role}`,
+      `department:${user.department_id || 'none'}`,
+      `faculty:${user.faculty_id || 'none'}`,
+    ].join('|')
+    : 'anonymous';
 
   // Include the authenticated tenant in every cache key. This prevents a
   // cached dashboard from one institution being shown after an administrator
