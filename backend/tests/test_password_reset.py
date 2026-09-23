@@ -194,4 +194,4 @@ def test_a_confirmation_is_sent_after_the_change(client, alpha):
     )
 
     subjects = [m.subject for m in OutboundMessage.query.all()]
-    assert "Your password was changed" in subjects
+    assert "Your password was changed - Alpha University" in subjects

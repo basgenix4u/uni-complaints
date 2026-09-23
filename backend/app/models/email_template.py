@@ -55,7 +55,7 @@ DEFAULT_TEMPLATES = {
         "body": (
             "Hello {{student_name}},\n\n"
             "Confirm your email address to start using {{institution_name}} Resolve.\n\n"
-            "{{app_url}}/verify?token={{token}}\n\n"
+            "{{app_url}}/verify-email?token={{token}}\n\n"
             "This link expires in {{expiry_hours}} hour(s).\n\n"
             "{{footer}}"
         ),
