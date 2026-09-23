@@ -26,6 +26,7 @@ import {
 } from 'recharts';
 import { Card, Button, Select, Spinner, PageHeader } from '../../components/ui';
 import { dashboardService } from '../../services/api';
+import useAuthStore from '../../stores/authStore';
 
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -38,36 +39,48 @@ const timeRangeOptions = [
 
 const AdminAnalytics = () => {
   const [trendDays, setTrendDays] = useState('30');
+  const { user } = useAuthStore();
+  const dashboardScope = user?.institution_id
+    ? `institution:${user.institution_id}`
+    : `principal:${user?.id || 'anonymous'}`;
 
-  // Fetch data
+  // Include the authenticated tenant in every cache key. This prevents a
+  // cached dashboard from one institution being shown after an administrator
+  // changes accounts, while the API remains the authority for access control.
   const { data: overviewData, isLoading: overviewLoading } = useQuery({
-    queryKey: ['dashboardOverview'],
+    queryKey: ['dashboard', dashboardScope, 'overview'],
     queryFn: () => dashboardService.getOverview(),
+    enabled: Boolean(user),
   });
 
   const { data: statusChartData } = useQuery({
-    queryKey: ['statusChart'],
+    queryKey: ['dashboard', dashboardScope, 'status'],
     queryFn: () => dashboardService.getStatusChart(),
+    enabled: Boolean(user),
   });
 
   const { data: categoryChartData } = useQuery({
-    queryKey: ['categoryChart'],
+    queryKey: ['dashboard', dashboardScope, 'category'],
     queryFn: () => dashboardService.getCategoryChart(),
+    enabled: Boolean(user),
   });
 
   const { data: priorityChartData } = useQuery({
-    queryKey: ['priorityChart'],
+    queryKey: ['dashboard', dashboardScope, 'priority'],
     queryFn: () => dashboardService.getPriorityChart(),
+    enabled: Boolean(user),
   });
 
   const { data: trendChartData } = useQuery({
-    queryKey: ['trendChart', trendDays],
-    queryFn: () => dashboardService.getTrendChart(parseInt(trendDays)),
+    queryKey: ['dashboard', dashboardScope, 'trend', trendDays],
+    queryFn: () => dashboardService.getTrendChart(parseInt(trendDays, 10)),
+    enabled: Boolean(user),
   });
 
   const { data: monthlyChartData } = useQuery({
-    queryKey: ['monthlyChart'],
+    queryKey: ['dashboard', dashboardScope, 'monthly'],
     queryFn: () => dashboardService.getMonthlyChart(),
+    enabled: Boolean(user),
   });
 
   const overview = overviewData?.overview || {};

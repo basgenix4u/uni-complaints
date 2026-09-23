@@ -36,26 +36,35 @@ const COLORS = ['#f59e0b', '#3b82f6', '#22c55e', '#6b7280', '#ef4444'];
 
 const AdminDashboard = () => {
   const { user } = useAuthStore();
+  const dashboardScope = user?.institution_id
+    ? `institution:${user.institution_id}`
+    : `principal:${user?.id || 'anonymous'}`;
 
-  // Fetch dashboard data
+  // Include the authenticated tenant in every cache key. This prevents a
+  // cached dashboard from one institution being shown after an administrator
+  // changes accounts, while the API remains the authority for access control.
   const { data: overviewData, isLoading: overviewLoading } = useQuery({
-    queryKey: ['dashboardOverview'],
+    queryKey: ['dashboard', dashboardScope, 'overview'],
     queryFn: () => dashboardService.getOverview(),
+    enabled: Boolean(user),
   });
 
   const { data: statusChartData } = useQuery({
-    queryKey: ['statusChart'],
+    queryKey: ['dashboard', dashboardScope, 'status'],
     queryFn: () => dashboardService.getStatusChart(),
+    enabled: Boolean(user),
   });
 
   const { data: categoryChartData } = useQuery({
-    queryKey: ['categoryChart'],
+    queryKey: ['dashboard', dashboardScope, 'category'],
     queryFn: () => dashboardService.getCategoryChart(),
+    enabled: Boolean(user),
   });
 
   const { data: trendChartData } = useQuery({
-    queryKey: ['trendChart'],
+    queryKey: ['dashboard', dashboardScope, 'trend', 14],
     queryFn: () => dashboardService.getTrendChart(14),
+    enabled: Boolean(user),
   });
 
   const overview = overviewData?.overview || {};

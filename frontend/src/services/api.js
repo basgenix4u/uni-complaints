@@ -211,16 +211,39 @@ export const attachmentService = {
   },
 };
 
+// Keep the service method names aligned with the dashboard pages. The
+// pages call the explicit `get...` names; the shorter aliases remain for
+// older student/admin screens that already use them.
+const getDashboardOverview = () => api.get('/dashboard/overview').then(unwrap);
+const getStudentStats = () => api.get('/dashboard/student-stats').then(unwrap);
+const getStatusChart = () => api.get('/dashboard/charts/status').then(unwrap);
+const getCategoryChart = () => api.get('/dashboard/charts/category').then(unwrap);
+const getPriorityChart = () => api.get('/dashboard/charts/priority').then(unwrap);
+const getTrendChart = (days = 30) =>
+  api.get('/dashboard/charts/trend', { params: { days } }).then(unwrap);
+const getMonthlyChart = () => api.get('/dashboard/charts/monthly').then(unwrap);
+const getSummary = () => api.get('/dashboard/reports/summary').then(unwrap);
+const getStaffPerformance = () => api.get('/dashboard/reports/staff-performance').then(unwrap);
+
 export const dashboardService = {
-  overview: () => api.get('/dashboard/overview').then(unwrap),
-  studentStats: () => api.get('/dashboard/student-stats').then(unwrap),
-  statusChart: () => api.get('/dashboard/charts/status').then(unwrap),
-  categoryChart: () => api.get('/dashboard/charts/category').then(unwrap),
-  priorityChart: () => api.get('/dashboard/charts/priority').then(unwrap),
-  trendChart: (days = 30) => api.get('/dashboard/charts/trend', { params: { days } }).then(unwrap),
-  monthlyChart: () => api.get('/dashboard/charts/monthly').then(unwrap),
-  summary: () => api.get('/dashboard/reports/summary').then(unwrap),
-  staffPerformance: () => api.get('/dashboard/reports/staff-performance').then(unwrap),
+  getOverview: getDashboardOverview,
+  overview: getDashboardOverview,
+  getStudentStats,
+  studentStats: getStudentStats,
+  getStatusChart,
+  statusChart: getStatusChart,
+  getCategoryChart,
+  categoryChart: getCategoryChart,
+  getPriorityChart,
+  priorityChart: getPriorityChart,
+  getTrendChart,
+  trendChart: getTrendChart,
+  getMonthlyChart,
+  monthlyChart: getMonthlyChart,
+  getSummary,
+  summary: getSummary,
+  getStaffPerformance,
+  staffPerformance: getStaffPerformance,
 
   /** Downloads a register as a spreadsheet file. */
   exportCsv: async (kind, params = {}) => {
