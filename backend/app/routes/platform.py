@@ -13,7 +13,7 @@ from app.models.user import User
 from app.routes.auth import EMAIL_RE, fail, ok, validate_password
 
 from app.security import staff_required
-from app.services.routing import seed_routing, seed_units
+from app.services.routing import seed_priority_policies, seed_routing, seed_units
 
 bp = Blueprint("platform", __name__, url_prefix="/api/platform")
 
@@ -193,6 +193,7 @@ def create_institution():
     units_created = seed_units(institution)
     db.session.flush()
     rules_created = seed_routing(institution)
+    policies_created = seed_priority_policies(institution)
 
     admin = User(
         institution_id=institution.id,
@@ -211,6 +212,7 @@ def create_institution():
             "admin": admin.to_dict(),
             "units_created": units_created,
             "rules_created": rules_created,
+            "priority_policies_created": policies_created,
         },
         "Institution created.",
         201,
@@ -307,6 +309,7 @@ def onboard_existing(institution_id):
     units_created = seed_units(institution)
     db.session.flush()
     rules_created = seed_routing(institution)
+    policies_created = seed_priority_policies(institution)
 
     admin = User(
         institution_id=institution.id,
@@ -325,6 +328,7 @@ def onboard_existing(institution_id):
             "admin": admin.to_dict(),
             "units_created": units_created,
             "rules_created": rules_created,
+            "priority_policies_created": policies_created,
         },
         f"{institution.name} is now in service.",
         201,

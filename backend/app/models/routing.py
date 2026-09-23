@@ -21,6 +21,60 @@ from app.models.base import TimestampMixin, fk, new_uuid
 #               correct destination depends on who is complaining.
 TARGET_TYPES = ("unit", "department")
 
+# Sensible starting policy, offered for review rather than treated as a
+# universal truth. Each institution can change these under Routing. The
+# resolution factor multiplies the category/unit SLA; the other figures
+# are working hours.
+DEFAULT_PRIORITY_POLICIES = (
+    ("urgent", 1, 0.25, 2, 2),
+    ("high", 4, 0.50, 8, 4),
+    ("medium", 8, 1.00, 24, 12),
+    ("low", 24, 2.00, 48, 24),
+)
+
+
+class PriorityPolicy(TimestampMixin, db.Model):
+    """How quickly one institution treats a complaint at this priority.
+
+    Priority behaviour used to be half data and half constants: the
+    resolution target changed, acknowledgement never did, and every
+    rung of escalation got the same day regardless of urgency. Keeping
+    the four figures together makes the policy visible, tenant-specific
+    and measurable.
+    """
+
+    __tablename__ = "priority_policies"
+    __table_args__ = (
+        db.UniqueConstraint(
+            "institution_id", "priority", name="uq_priority_policy_institution_priority"
+        ),
+        db.Index("ix_priority_policy_institution", "institution_id"),
+    )
+
+    id = db.Column(db.String(36), primary_key=True, default=new_uuid)
+    institution_id = db.Column(
+        db.String(36),
+        db.ForeignKey(fk("institutions.id"), ondelete="CASCADE"),
+        nullable=False,
+    )
+    priority = db.Column(db.String(20), nullable=False)
+    acknowledge_hours = db.Column(db.Integer, nullable=False)
+    resolution_factor = db.Column(db.Float, nullable=False)
+    escalation_step_hours = db.Column(db.Integer, nullable=False)
+    reminder_hours_before_due = db.Column(db.Integer, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "priority": self.priority,
+            "acknowledge_hours": self.acknowledge_hours,
+            "resolution_factor": self.resolution_factor,
+            "escalation_step_hours": self.escalation_step_hours,
+            "reminder_hours_before_due": self.reminder_hours_before_due,
+            "is_active": self.is_active,
+        }
+
 
 class RoutingRule(TimestampMixin, db.Model):
     __tablename__ = "routing_rules"

@@ -99,13 +99,24 @@ def deadline_for(institution, department, priority: str, start: datetime | None 
         or (department.sla_hours if department and department.sla_hours else None)
         or institution.default_sla_hours
     )
-    factor = PRIORITY_SLA_FACTOR.get(priority, 1.0)
+
+    from app.services.routing import priority_policy
+
+    policy = priority_policy(institution.id, priority)
+    factor = (
+        policy.resolution_factor
+        if policy is not None
+        else PRIORITY_SLA_FACTOR.get(priority, 1.0)
+    )
+    acknowledge_hours = (
+        policy.acknowledge_hours if policy is not None else institution.acknowledge_sla_hours
+    )
 
     open_hour = institution.working_hours_start
     close_hour = institution.working_hours_end
 
     return (
-        add_working_hours(start, institution.acknowledge_sla_hours, open_hour, close_hour),
+        add_working_hours(start, acknowledge_hours, open_hour, close_hour),
         add_working_hours(start, base_hours * factor, open_hour, close_hour),
     )
 
@@ -232,9 +243,17 @@ def _escalate_one(complaint, now) -> bool:
         complaint.escalation_level = level + 1
 
         institution = db.session.get(Institution, complaint.institution_id)
+        from app.services.routing import priority_policy
+
+        # Once it has missed a deadline the case becomes urgent; the next
+        # rung should therefore get the urgent window, not the old medium
+        # or low one. Later rungs read the priority now stored on the case.
+        effective_priority = "urgent" if first_time else complaint.priority
+        policy = priority_policy(complaint.institution_id, effective_priority)
+        step_hours = policy.escalation_step_hours if policy else ESCALATION_STEP_HOURS
         complaint.next_escalation_at = add_working_hours(
             now,
-            ESCALATION_STEP_HOURS,
+            step_hours,
             institution.working_hours_start if institution else 8,
             institution.working_hours_end if institution else 17,
         )
@@ -331,7 +350,11 @@ def run_escalation_sweep(institution_id: str | None = None) -> dict:
     reminded = 0
     for complaint in approaching.limit(500).all():
         due = as_aware(complaint.resolve_due_at)
-        if due is None or (due - now) > timedelta(hours=12):
+        from app.services.routing import priority_policy
+
+        policy = priority_policy(complaint.institution_id, complaint.priority)
+        reminder_hours = policy.reminder_hours_before_due if policy else 12
+        if due is None or (due - now) > timedelta(hours=reminder_hours):
             continue
         complaint.reminder_sent_at = now
         notify(

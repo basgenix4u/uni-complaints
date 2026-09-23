@@ -16,10 +16,16 @@ from flask import Blueprint, g, request
 from app.extensions import db
 from app.models.complaint import Complaint
 from app.models.institution import Department, Institution
-from app.models.routing import TARGET_TYPES, RoutingRule
+from app.models.complaint import PRIORITIES
+from app.models.routing import TARGET_TYPES, PriorityPolicy, RoutingRule
 from app.routes.auth import fail, ok
 from app.security import staff_required, tenant_query
-from app.services.routing import ignored_complaints, seed_routing, seed_units
+from app.services.routing import (
+    ignored_complaints,
+    seed_priority_policies,
+    seed_routing,
+    seed_units,
+)
 
 bp = Blueprint("routing", __name__, url_prefix="/api/routing")
 
@@ -120,6 +126,58 @@ def delete_rule(rule_id):
     return ok(message="Rule removed.")
 
 
+@bp.get("/priority-policies")
+@staff_required("institution_admin")
+def list_priority_policies():
+    """The visible SLA and escalation behaviour for all four priorities."""
+    rows = tenant_query(PriorityPolicy).order_by(PriorityPolicy.acknowledge_hours).all()
+    return ok({"policies": [row.to_dict() for row in rows]})
+
+
+@bp.put("/priority-policies/<priority>")
+@staff_required("institution_admin")
+def upsert_priority_policy(priority):
+    """Change one priority without affecting any other tenant."""
+    priority = priority.strip().lower()
+    if priority not in PRIORITIES:
+        return fail("Choose low, medium, high or urgent.", 422)
+
+    payload = request.get_json(silent=True) or {}
+    errors = {}
+
+    def integer(field, minimum=1, maximum=MAX_SLA_HOURS):
+        value = payload.get(field)
+        if isinstance(value, bool) or not isinstance(value, int) or not minimum <= value <= maximum:
+            errors[field] = f"Give a whole number between {minimum} and {maximum}."
+            return None
+        return value
+
+    ack = integer("acknowledge_hours")
+    step = integer("escalation_step_hours")
+    reminder = integer("reminder_hours_before_due", minimum=0)
+
+    factor = payload.get("resolution_factor")
+    if isinstance(factor, bool) or not isinstance(factor, (int, float)) or not 0.05 <= factor <= 10:
+        errors["resolution_factor"] = "Give a multiplier between 0.05 and 10."
+
+    if errors:
+        return fail("Please check the highlighted fields.", 422, errors)
+
+    policy = tenant_query(PriorityPolicy).filter_by(priority=priority).first()
+    if policy is None:
+        policy = PriorityPolicy(institution_id=g.institution_id, priority=priority)
+        db.session.add(policy)
+
+    policy.acknowledge_hours = ack
+    policy.resolution_factor = float(factor)
+    policy.escalation_step_hours = step
+    policy.reminder_hours_before_due = reminder
+    policy.is_active = payload.get("is_active", True) is not False
+    db.session.commit()
+
+    return ok({"policy": policy.to_dict()}, "Priority policy updated.")
+
+
 @bp.post("/seed")
 @staff_required("institution_admin")
 def seed():
@@ -133,12 +191,18 @@ def seed():
         return fail("Your account is not linked to an institution.", 400)
 
     units = seed_units(institution)
-    db.session.commit()
+    db.session.flush()
     rules = seed_routing(institution)
+    policies = seed_priority_policies(institution)
+    db.session.commit()
 
     return ok(
-        {"units_created": units, "rules_created": rules},
-        f"Added {units} units and {rules} routing rules.",
+        {
+            "units_created": units,
+            "rules_created": rules,
+            "priority_policies_created": policies,
+        },
+        f"Added {units} units, {rules} routing rules and {policies} priority policies.",
     )
 
 

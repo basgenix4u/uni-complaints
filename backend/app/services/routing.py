@@ -3,7 +3,13 @@
 from app.extensions import db
 from app.models.academic import StudentRecord
 from app.models.institution import Department
-from app.models.routing import DEFAULT_ROUTING, DEFAULT_UNITS, RoutingRule
+from app.models.routing import (
+    DEFAULT_PRIORITY_POLICIES,
+    DEFAULT_ROUTING,
+    DEFAULT_UNITS,
+    PriorityPolicy,
+    RoutingRule,
+)
 
 
 def resolve_destination(institution, category: str, student):
@@ -112,6 +118,40 @@ def seed_routing(institution) -> int:
 
     db.session.flush()
     return created
+
+
+def seed_priority_policies(institution) -> int:
+    """Create the four visible priority policies, without overwriting edits."""
+    existing = {
+        row.priority
+        for row in PriorityPolicy.query.filter_by(institution_id=institution.id).all()
+    }
+    created = 0
+    for priority, ack, factor, step, reminder in DEFAULT_PRIORITY_POLICIES:
+        if priority in existing:
+            continue
+        db.session.add(
+            PriorityPolicy(
+                institution_id=institution.id,
+                priority=priority,
+                acknowledge_hours=ack,
+                resolution_factor=factor,
+                escalation_step_hours=step,
+                reminder_hours_before_due=reminder,
+            )
+        )
+        created += 1
+    db.session.flush()
+    return created
+
+
+def priority_policy(institution_id: str, priority: str) -> PriorityPolicy | None:
+    """The active policy for one priority, or None for legacy behaviour."""
+    return PriorityPolicy.query.filter_by(
+        institution_id=institution_id,
+        priority=priority,
+        is_active=True,
+    ).first()
 
 
 def ignored_complaints(institution, days: int = 7):

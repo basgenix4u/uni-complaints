@@ -375,11 +375,16 @@ def register_cli(app: Flask) -> None:
                 # The standard units and a working routing table, so the
                 # demo behaves like a real institution rather than
                 # dropping every complaint into one unassigned pile.
-                from app.services.routing import seed_routing, seed_units
+                from app.services.routing import (
+                    seed_priority_policies,
+                    seed_routing,
+                    seed_units,
+                )
 
                 seed_units(institution)
                 db.session.flush()
                 seed_routing(institution)
+                seed_priority_policies(institution)
                 db.session.flush()
 
                 staff = User(

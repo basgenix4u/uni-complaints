@@ -13,6 +13,13 @@ import Skeleton from '../../components/ui/Skeleton';
 import { ALL_CATEGORIES, categoryLabel } from '../../utils/status';
 import { errorMessage, routingService } from '../../services/api';
 
+const PRIORITY_LABELS = {
+  urgent: 'Urgent',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+};
+
 /**
  * Who answers what.
  *
@@ -24,6 +31,7 @@ import { errorMessage, routingService } from '../../services/api';
 export default function RoutingRules() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(null);
+  const [policyEditing, setPolicyEditing] = useState(null);
   const [notice, setNotice] = useState('');
   const [problem, setProblem] = useState('');
 
@@ -32,7 +40,15 @@ export default function RoutingRules() {
     queryFn: () => routingService.rules(),
   });
 
-  const refresh = () => queryClient.invalidateQueries({ queryKey: ['routing-rules'] });
+  const { data: policyData, isLoading: policiesLoading } = useQuery({
+    queryKey: ['priority-policies'],
+    queryFn: () => routingService.priorityPolicies(),
+  });
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['routing-rules'] });
+    queryClient.invalidateQueries({ queryKey: ['priority-policies'] });
+  };
 
   const announce = (message) => {
     setNotice(message);
@@ -50,12 +66,23 @@ export default function RoutingRules() {
     onError: (error) => setProblem(errorMessage(error)),
   });
 
+  const savePolicy = useMutation({
+    mutationFn: ({ priority, ...payload }) =>
+      routingService.savePriorityPolicy(priority, payload),
+    onSuccess: () => {
+      setPolicyEditing(null);
+      announce('Priority policy updated. New complaints will use it.');
+      refresh();
+    },
+    onError: (error) => setProblem(errorMessage(error)),
+  });
+
   const seed = useMutation({
     mutationFn: () => routingService.seed(),
     onSuccess: (result) => {
       announce(
-        result.rules_created
-          ? `Added ${result.units_created} unit(s) and ${result.rules_created} rule(s).`
+        result.rules_created || result.units_created || result.priority_policies_created
+          ? `Added ${result.units_created} unit(s), ${result.rules_created} rule(s) and ${result.priority_policies_created} priority policy row(s).`
           : 'Everything was already in place.',
       );
       refresh();
@@ -65,10 +92,11 @@ export default function RoutingRules() {
 
   const units = data?.units ?? [];
   const rules = data?.rules ?? [];
+  const policies = policyData?.policies ?? [];
   const byCategory = Object.fromEntries(rules.map((rule) => [rule.category, rule]));
   const unrouted = ALL_CATEGORIES.filter((item) => !byCategory[item.value]);
 
-  if (isLoading) {
+  if (isLoading || policiesLoading) {
     return (
       <div className="mx-auto max-w-4xl space-y-4 px-4 py-8">
         <Skeleton className="h-8 w-56" />
@@ -112,6 +140,130 @@ export default function RoutingRules() {
           </p>
         )}
       </div>
+
+      <section className="mt-6 rounded-lg border border-line bg-surface p-5 shadow-e1">
+        <div>
+          <h2 className="font-display text-lg font-semibold text-ink-900">
+            What each priority means
+          </h2>
+          <p className="mt-1 max-w-2xl text-sm text-ink-600">
+            These are working hours, not clock hours. They decide when a complaint must be
+            acknowledged, how its category deadline is shortened or extended, and how long each
+            rung of the escalation ladder gets before the next person is told.
+          </p>
+        </div>
+
+        {policies.length === 0 ? (
+          <p className="mt-4 rounded-md bg-canvas px-4 py-3 text-sm text-ink-600">
+            No priority policy is recorded yet. Use “Fill in the usual” to add a reviewable
+            starting point; legacy deadlines remain in force until then.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {policies.map((policy) => {
+              const isEditing = policyEditing?.priority === policy.priority;
+              return (
+                <div key={policy.priority} className="rounded-md border border-line p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold text-ink-900">
+                        {PRIORITY_LABELS[policy.priority] || policy.priority}
+                      </h3>
+                      <p className="mt-1 text-caption leading-relaxed text-ink-500">
+                        Acknowledge in {policy.acknowledge_hours}h · resolve at{' '}
+                        {policy.resolution_factor}× category SLA · next rung in{' '}
+                        {policy.escalation_step_hours}h · remind {policy.reminder_hours_before_due}h
+                        before due
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setPolicyEditing(isEditing ? null : { ...policy })}
+                    >
+                      {isEditing ? 'Cancel' : 'Change'}
+                    </Button>
+                  </div>
+
+                  {isEditing && (
+                    <form
+                      className="mt-4 grid grid-cols-2 gap-3 border-t border-line pt-4"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        savePolicy.mutate({
+                          ...policyEditing,
+                          acknowledge_hours: Number(policyEditing.acknowledge_hours),
+                          resolution_factor: Number(policyEditing.resolution_factor),
+                          escalation_step_hours: Number(policyEditing.escalation_step_hours),
+                          reminder_hours_before_due: Number(
+                            policyEditing.reminder_hours_before_due,
+                          ),
+                        });
+                      }}
+                    >
+                      <Input
+                        label="Hours to acknowledge"
+                        type="number"
+                        min="1"
+                        value={policyEditing.acknowledge_hours}
+                        onChange={(event) =>
+                          setPolicyEditing({
+                            ...policyEditing,
+                            acknowledge_hours: event.target.value,
+                          })
+                        }
+                      />
+                      <Input
+                        label="Resolution multiplier"
+                        type="number"
+                        min="0.05"
+                        max="10"
+                        step="0.05"
+                        value={policyEditing.resolution_factor}
+                        onChange={(event) =>
+                          setPolicyEditing({
+                            ...policyEditing,
+                            resolution_factor: event.target.value,
+                          })
+                        }
+                      />
+                      <Input
+                        label="Hours before next rung"
+                        type="number"
+                        min="1"
+                        value={policyEditing.escalation_step_hours}
+                        onChange={(event) =>
+                          setPolicyEditing({
+                            ...policyEditing,
+                            escalation_step_hours: event.target.value,
+                          })
+                        }
+                      />
+                      <Input
+                        label="Reminder hours before due"
+                        type="number"
+                        min="0"
+                        value={policyEditing.reminder_hours_before_due}
+                        onChange={(event) =>
+                          setPolicyEditing({
+                            ...policyEditing,
+                            reminder_hours_before_due: event.target.value,
+                          })
+                        }
+                      />
+                      <div className="col-span-2">
+                        <Button type="submit" size="sm" loading={savePolicy.isPending}>
+                          Save {policy.priority}
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {units.length === 0 && (
         <p className="mt-6 flex items-start gap-2 rounded-md border border-line bg-surface p-4 text-sm text-ink-600">

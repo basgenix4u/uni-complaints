@@ -31,7 +31,13 @@ from app.models.institution import Department, Institution  # noqa: F401
 from app.models.invitation import Invitation  # noqa: F401
 from app.models.message import OutboundMessage  # noqa: F401
 from app.models.reset import PasswordReset  # noqa: F401
-from app.models.routing import DEFAULT_ROUTING, DEFAULT_UNITS, RoutingRule  # noqa: F401
+from app.models.routing import (  # noqa: F401
+    DEFAULT_PRIORITY_POLICIES,
+    DEFAULT_ROUTING,
+    DEFAULT_UNITS,
+    PriorityPolicy,
+    RoutingRule,
+)
 from app.models.verification import EmailVerification  # noqa: F401
 from app.models.user import (  # noqa: F401
     INVITABLE_ROLES,
@@ -49,6 +55,7 @@ __all__ = [
     "InstitutionInterest",
     "Invitation",
     "RoutingRule",
+    "PriorityPolicy",
     "StudentRecord",
     "Attachment",
     "Institution",
