@@ -86,6 +86,20 @@ class User(TimestampMixin, db.Model):
     role = db.Column(db.String(30), default="student", nullable=False, index=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
 
+    # Provenance is deliberately not shown in the ordinary UI. It is a
+    # data-integrity boundary: controlled pilot accounts must be removable
+    # in one wipe and must never silently become genuine participant
+    # outcomes in a research export.
+    data_origin = db.Column(
+        db.String(30),
+        default="operational",
+        server_default="operational",
+        nullable=False,
+        index=True,
+    )
+    pilot_cohort_id = db.Column(db.String(40), index=True)
+    pilot_scenario_id = db.Column(db.String(40), index=True)
+
     # Null until the address is confirmed. Staff arrive through an
     # invitation sent to the address itself, which already proves it, so
     # only self-registration leaves this unset.

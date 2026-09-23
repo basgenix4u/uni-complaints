@@ -128,6 +128,10 @@ def create_complaint():
         description=description,
         category=category,
         priority=priority,
+        # Provenance is inherited from the authenticated account; a
+        # caller cannot claim an operational case by editing the payload.
+        data_origin=user.data_origin,
+        pilot_scenario_id=user.pilot_scenario_id,
         is_anonymous=wants_anonymity,
         is_confidential=bool(rule and rule.is_confidential),
         status="submitted",

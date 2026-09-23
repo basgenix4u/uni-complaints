@@ -66,6 +66,18 @@ class Complaint(TimestampMixin, db.Model):
     priority = db.Column(db.String(20), default="medium", nullable=False, index=True)
     status = db.Column(db.String(30), default="submitted", nullable=False, index=True)
 
+    # Inherited from the author rather than accepted from the request,
+    # otherwise a controlled account could remove its marker and pollute
+    # the operational evidence simply by changing a JSON field.
+    data_origin = db.Column(
+        db.String(30),
+        default="operational",
+        server_default="operational",
+        nullable=False,
+        index=True,
+    )
+    pilot_scenario_id = db.Column(db.String(40), index=True)
+
     is_anonymous = db.Column(db.Boolean, default=False, nullable=False)
 
     # Copied from the routing rule when the complaint is filed rather than
