@@ -72,9 +72,13 @@ routed, including confidential cases, but staff acknowledgement,
 responses, resolution, escalation, and satisfaction journeys still need
 an authorised staff session if those metrics are required.
 
-**Credential hygiene.** The setup credentials used for verification were
-exposed in shared materials. They must be rotated and retained only in a
-secure secret manager; values are intentionally not recorded here.
+**Credential hygiene.** The two production administrator passwords were
+rotated after verification; replacement values were generated in memory,
+verified, and intentionally not recorded here. The shared Supabase
+Management API token and GitHub fine-grained token require revocation and
+reissue in their provider consoles/account security settings; the public
+management APIs available to this workspace do not provide a safe
+self-service rotation endpoint. Do not reuse the shared values.
 
 ## Verifying it yourself
 
