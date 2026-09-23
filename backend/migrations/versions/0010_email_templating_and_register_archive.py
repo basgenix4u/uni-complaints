@@ -28,6 +28,20 @@ def _schema():
     return _CONFIGURED_SCHEMA if op.get_bind().dialect.name == "postgresql" else None
 
 
+def _fk(target: str) -> str:
+    """Qualify a foreign-key target when the app uses an isolated schema.
+
+    The table being created can be in ``resolve`` while PostgreSQL still
+    resolves an unqualified FK target through ``search_path``. Render's
+    session starts with ``public`` first, so ``REFERENCES institutions``
+    fails even though ``resolve.institutions`` exists. The earlier
+    revisions already use this rule; this revision must do the same for
+    both newly added tables.
+    """
+    schema = _schema()
+    return f"{schema}.{target}" if schema else target
+
+
 def upgrade():
     schema = _schema()
 
@@ -48,7 +62,7 @@ def upgrade():
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(["institution_id"], ["institutions.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["institution_id"], [_fk("institutions.id")], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("institution_id", "event_type", name="uq_email_template_per_institution_event"),
         schema=schema,
@@ -75,9 +89,9 @@ def upgrade():
         sa.Column("dry_run", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=True),
-        sa.ForeignKeyConstraint(["institution_id"], ["institutions.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["session_id"], ["academic_sessions.id"], ondelete="SET NULL"),
-        sa.ForeignKeyConstraint(["uploaded_by_user_id"], ["users.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["institution_id"], [_fk("institutions.id")], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["session_id"], [_fk("academic_sessions.id")], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["uploaded_by_user_id"], [_fk("users.id")], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
         schema=schema,
     )
