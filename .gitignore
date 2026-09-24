@@ -62,3 +62,9 @@ media/
 
 # Test upload artefacts
 /backend/uploads_test/
+
+# Pilot workbooks contain temporary credentials and research operations data.
+# They belong in the private wipeable sandbox, never in this public repository.
+FUW_Pilot_*Dataset*.xlsx
+fuw-pilot-sandbox/
+*pilot*credentials*.xlsx
