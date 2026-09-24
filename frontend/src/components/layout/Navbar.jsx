@@ -72,7 +72,10 @@ const Navbar = ({ isMenuOpen = false, onMenuClick, title }) => {
           </button>
 
           <div className="min-w-0 max-w-[34vw] sm:max-w-none">
-            <h1 className="truncate text-sm font-semibold text-ink-900 sm:text-xl">{title}</h1>
+            {/* The routed page owns the document h1. Repeating the same
+                title here created two page headings — confusing to
+                screen readers and ambiguous to strict browser locators. */}
+            <p className="truncate text-sm font-semibold text-ink-900 sm:text-xl">{title}</p>
           </div>
         </div>
 
