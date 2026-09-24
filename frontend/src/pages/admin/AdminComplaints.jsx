@@ -78,7 +78,7 @@ export default function AdminComplaints() {
           <p className="mt-1 text-ink-600">Triage, assign and respond.</p>
         </div>
 
-        {['dept_head', 'institution_admin', 'platform_admin'].includes(user?.role) && (
+        {['dept_head', 'dean', 'institution_admin', 'platform_admin'].includes(user?.role) && (
           <Button
             variant="secondary"
             loading={exporting}

@@ -176,6 +176,26 @@ def create_complaint():
     return ok({"complaint": complaint.to_dict(viewer=user)}, "Your complaint is logged.", 201)
 
 
+@bp.get("/staff")
+@staff_required("dept_head")
+def list_staff():
+    """Return active staff who can own a complaint.
+
+    User management is intentionally restricted to institution
+    administrators, but department heads and deans are allowed to assign
+    work. Keep that workflow on a smaller, contact-free endpoint instead
+    of widening the people-management route just to populate a select.
+    """
+    staff = (
+        tenant_query(User)
+        .filter(User.role.in_(("officer", "dept_head", "dean", "institution_admin", "platform_admin")))
+        .filter(User.is_active.is_(True))
+        .order_by(User.full_name.asc())
+        .all()
+    )
+    return ok({"staff": [member.to_dict(include_contact=False) for member in staff]})
+
+
 @bp.get("")
 @auth_required()
 def list_complaints():

@@ -129,6 +129,7 @@ export const directoryService = {
 
 export const complaintService = {
   list: (params) => api.get('/complaints', { params }).then(unwrap),
+  staff: () => api.get('/complaints/staff').then(unwrap),
   get: (id) => api.get(`/complaints/${id}`).then(unwrap),
   create: (data) => api.post('/complaints', data).then(unwrap),
   reply: (id, data) => api.post(`/complaints/${id}/responses`, data).then(unwrap),

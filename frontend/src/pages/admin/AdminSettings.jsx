@@ -90,6 +90,7 @@ const AdminSettings = () => {
       platform_admin: 'Platform owner',
       institution_admin: 'Administrator',
       dept_head: 'Department head',
+      dean: 'Dean',
       officer: 'Officer',
     };
     return labels[role] || role;

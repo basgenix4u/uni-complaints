@@ -14,7 +14,7 @@ import PriorityBadge from '../../components/ui/PriorityBadge';
 import ProgressRail from '../../components/ui/ProgressRail';
 import { SkeletonList } from '../../components/ui/Skeleton';
 import AttachmentList from '../../components/complaints/AttachmentList';
-import { adminService, complaintService, errorMessage } from '../../services/api';
+import { complaintService, errorMessage } from '../../services/api';
 import { PRIORITY, categoryLabel } from '../../utils/status';
 import { formatDateTime, formatDeadline, formatRelative, initials } from '../../utils/format';
 import useAuthStore from '../../stores/authStore';
@@ -57,13 +57,13 @@ export default function AdminComplaintDetails() {
   });
 
   const { data: staffData } = useQuery({
-    queryKey: ['staff'],
-    queryFn: () => adminService.users({ staff: true, per_page: 50 }),
-    enabled: Boolean(user && ['dept_head', 'institution_admin', 'platform_admin'].includes(user.role)),
+    queryKey: ['complaint-staff', user?.id],
+    queryFn: () => complaintService.staff(),
+    enabled: Boolean(user && ['dept_head', 'dean', 'institution_admin', 'platform_admin'].includes(user.role)),
   });
 
   const complaint = data?.complaint;
-  const staff = staffData?.users || [];
+  const staff = staffData?.staff || [];
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['complaint', id] });
 
   const reply = useMutation({
@@ -128,7 +128,7 @@ export default function AdminComplaintDetails() {
 
   const options = NEXT_STATUS[complaint.status] || [];
   const needsNote = ['resolved', 'declined'].includes(statusTarget);
-  const canAssign = ['dept_head', 'institution_admin', 'platform_admin'].includes(user?.role);
+  const canAssign = ['dept_head', 'dean', 'institution_admin', 'platform_admin'].includes(user?.role);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
