@@ -489,6 +489,14 @@ def update_settings():
     if "allow_anonymous" in payload:
         institution.allow_anonymous = bool(payload["allow_anonymous"])
 
+    if "priority_sla_policy" in payload:
+        from app.services.sla import validate_priority_policy
+
+        policy, policy_errors = validate_priority_policy(payload["priority_sla_policy"])
+        if policy_errors:
+            return fail("Please check the priority deadlines.", 422, policy_errors)
+        institution.priority_sla_policy = policy
+
     if institution.working_hours_start >= institution.working_hours_end:
         return fail("The working day must end after it starts.", 422)
 

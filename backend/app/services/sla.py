@@ -9,7 +9,7 @@ from datetime import date, datetime, time, timedelta, timezone
 
 from app.extensions import db
 from app.models.base import as_aware, utcnow
-from app.models.complaint import Complaint, PRIORITY_SLA_FACTOR
+from app.models.complaint import Complaint
 from app.services.delivery import queue_sms
 from app.services.notifications import notify, record_event
 
@@ -99,19 +99,107 @@ def deadline_for(institution, department, priority: str, start: datetime | None 
         or (department.sla_hours if department and department.sla_hours else None)
         or institution.default_sla_hours
     )
-    factor = PRIORITY_SLA_FACTOR.get(priority, 1.0)
+    policy = priority_policy(institution, priority)
 
     open_hour = institution.working_hours_start
     close_hour = institution.working_hours_end
 
     return (
-        add_working_hours(start, institution.acknowledge_sla_hours, open_hour, close_hour),
-        add_working_hours(start, base_hours * factor, open_hour, close_hour),
+        add_working_hours(
+            start, policy["acknowledge_hours"], open_hour, close_hour
+        ),
+        add_working_hours(
+            start,
+            policy["resolution_hours"]
+            if policy["resolution_hours"] is not None
+            else base_hours * policy["resolution_factor"],
+            open_hour,
+            close_hour,
+        ),
     )
 
 
-# Working hours a rung is given to respond before the next one is told.
+# Working hours a rung is given to respond before the next one is told
+# where no institution-specific policy has been saved.
 ESCALATION_STEP_HOURS = 24
+
+
+DEFAULT_RESOLUTION_FACTORS = {
+    "low": 2.0,
+    "medium": 1.0,
+    "high": 0.5,
+    "urgent": 0.25,
+}
+
+
+def validate_priority_policy(value) -> tuple[dict | None, dict]:
+    """Validate an institution-supplied policy.
+
+    Returns (clean policy, field errors). Integers are required for hour
+    values because the scheduler operates at hour granularity; resolution
+    factors may be fractional.
+    """
+    errors = {}
+    if not isinstance(value, dict):
+        return None, {"priority_sla_policy": "Provide one row for each priority."}
+
+    cleaned = {}
+    for priority in ("low", "medium", "high", "urgent"):
+        row = value.get(priority)
+        if not isinstance(row, dict):
+            errors[f"priority_sla_policy.{priority}"] = "This priority needs a policy."
+            continue
+
+        ack = row.get("acknowledge_hours")
+        resolution = row.get("resolution_hours")
+        step = row.get("escalation_step_hours")
+        if not isinstance(ack, int) or not 1 <= ack <= 720:
+            errors[f"priority_sla_policy.{priority}.acknowledge_hours"] = (
+                "Use 1 to 720 working hours."
+            )
+        if not isinstance(resolution, int) or not 1 <= resolution <= 1440:
+            errors[f"priority_sla_policy.{priority}.resolution_hours"] = (
+                "Use 1 to 1,440 working hours."
+            )
+        if not isinstance(step, int) or not 1 <= step <= 720:
+            errors[f"priority_sla_policy.{priority}.escalation_step_hours"] = (
+                "Use 1 to 720 working hours."
+            )
+        if not any(key.startswith(f"priority_sla_policy.{priority}.") for key in errors):
+            cleaned[priority] = {
+                "acknowledge_hours": ack,
+                "resolution_hours": resolution,
+                "escalation_step_hours": step,
+            }
+
+    return (None if errors else cleaned), errors
+
+
+def priority_policy(institution, priority: str) -> dict:
+    """The effective timings for one priority.
+
+    A missing policy must preserve the behaviour institutions had before
+    this feature: their single acknowledgement target, the original
+    resolution factors and a 24-hour escalation rung. This makes the
+    migration inert until an administrator deliberately configures it.
+    """
+    saved = institution.priority_sla_policy or {}
+    row = saved.get(priority) if isinstance(saved, dict) else None
+    row = row if isinstance(row, dict) else {}
+    return {
+        "acknowledge_hours": row.get(
+            "acknowledge_hours", institution.acknowledge_sla_hours
+        ),
+        # Configured institutions use an absolute target, which is what
+        # their service policy approves and what a participant can
+        # understand. Unconfigured institutions retain the old category
+        # base multiplied by the original priority factor.
+        "resolution_hours": row.get("resolution_hours"),
+        "resolution_factor": DEFAULT_RESOLUTION_FACTORS.get(priority, 1.0),
+        "escalation_step_hours": row.get(
+            "escalation_step_hours", ESCALATION_STEP_HOURS
+        ),
+    }
 
 
 def escalation_ladder(complaint) -> list[tuple[str, list]]:
@@ -232,9 +320,14 @@ def _escalate_one(complaint, now) -> bool:
         complaint.escalation_level = level + 1
 
         institution = db.session.get(Institution, complaint.institution_id)
+        step_hours = (
+            priority_policy(institution, complaint.priority)["escalation_step_hours"]
+            if institution
+            else ESCALATION_STEP_HOURS
+        )
         complaint.next_escalation_at = add_working_hours(
             now,
-            ESCALATION_STEP_HOURS,
+            step_hours,
             institution.working_hours_start if institution else 8,
             institution.working_hours_end if institution else 17,
         )
