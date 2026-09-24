@@ -37,7 +37,7 @@ const Card = React.forwardRef(
           'bg-white rounded-2xl shadow-soft border border-neutral-100 overflow-hidden',
           hover && 'transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 hover:border-primary-100',
           interactive && 'cursor-pointer active:scale-[0.98]',
-          padding && 'p-6',
+          padding && 'p-4 sm:p-6',
           className
         )}
         {...animationProps}

@@ -93,19 +93,19 @@ const DashboardLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen min-w-0 overflow-x-clip bg-canvas">
       {/* Desktop Sidebar */}
       <Sidebar isOpen={true} onClose={() => {}} isMobile={false} />
 
       {/* Mobile Sidebar */}
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
-        isMobile={true} 
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        isMobile={true}
       />
 
       {/* Main Content */}
-      <div className="lg:pl-72">
+      <div className="min-w-0 lg:pl-64">
         {/* Navbar */}
         <Navbar
           isMenuOpen={sidebarOpen}
@@ -116,8 +116,13 @@ const DashboardLayout = () => {
         <VerificationBanner />
 
         {/* Page Content. Bottom padding on phones clears the tab bar. */}
-        <main className={`p-4 sm:p-6 lg:p-8 ${isStudent ? 'pb-24 lg:pb-8' : ''}`}>
+        <main
+          className={`mx-auto min-w-0 max-w-[1680px] px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 ${
+            isStudent ? 'pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8' : ''
+          }`}
+        >
           <motion.div
+            className="min-w-0"
             key={location.pathname}
             initial="initial"
             animate="animate"

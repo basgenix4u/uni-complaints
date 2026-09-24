@@ -57,13 +57,13 @@ const Modal = ({
             >
               <Dialog.Panel
                 className={cn(
-                  'w-full transform overflow-hidden rounded-2xl bg-white shadow-soft-xl transition-all',
+                  'flex max-h-[calc(100dvh-2rem)] w-full transform flex-col overflow-hidden rounded-xl bg-surface shadow-e4 transition-all sm:rounded-2xl',
                   sizeClasses[size],
                   className
                 )}
               >
                 {(title || showCloseButton) && (
-                  <div className="flex items-start justify-between p-6 border-b border-neutral-100">
+                  <div className="flex flex-none items-start justify-between gap-4 border-b border-line p-4 sm:p-6">
                     <div>
                       {title && (
                         <Dialog.Title className="text-xl font-semibold text-neutral-900">
@@ -81,8 +81,7 @@ const Modal = ({
                       <button
                         type="button"
                         onClick={onClose}
-                        className="p-2 rounded-lg text-neutral-400 hover:text-neutral-600 
-                                   hover:bg-neutral-100 transition-colors -mr-2 -mt-2"
+                        className="-mr-2 -mt-2 inline-flex min-h-touch min-w-touch items-center justify-center rounded-md text-ink-500 transition-colors hover:bg-canvas hover:text-ink-900"
                       >
                         <XMarkIcon className="w-5 h-5" />
                       </button>
@@ -90,7 +89,7 @@ const Modal = ({
                   </div>
                 )}
 
-                <div className="p-6">{children}</div>
+                <div className="min-h-0 overflow-y-auto p-4 sm:p-6">{children}</div>
               </Dialog.Panel>
             </Transition.Child>
           </div>

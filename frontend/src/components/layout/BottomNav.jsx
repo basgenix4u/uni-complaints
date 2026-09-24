@@ -31,7 +31,7 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] shadow-e3 backdrop-blur-xl lg:hidden"
     >
       <ul className="grid grid-cols-4">
         {ITEMS.map(({ name, href, icon: Icon, active: ActiveIcon, end }) => (

@@ -6,7 +6,9 @@ const VARIANTS = {
   // nothing is.
   primary: 'bg-brand-700 text-white shadow-e1 hover:bg-brand-800 hover:shadow-e2',
   secondary: 'bg-surface text-ink-700 border border-line hover:border-brand-600 hover:text-brand-700',
+  outline: 'bg-surface text-ink-700 border border-line hover:bg-canvas hover:border-ink-500',
   ghost: 'bg-transparent text-ink-600 hover:bg-brand-50 hover:text-brand-700',
+  success: 'bg-[#046C4E] text-white hover:bg-[#065F46]',
   danger: 'bg-[#B91C1C] text-white hover:bg-[#991B1B]',
 };
 
@@ -18,7 +20,18 @@ const SIZES = {
 };
 
 const Button = forwardRef(function Button(
-  { variant = 'primary', size = 'md', loading = false, fullWidth = false, disabled, className, children, ...props },
+  {
+    variant = 'primary',
+    size = 'md',
+    loading = false,
+    fullWidth = false,
+    disabled,
+    className,
+    children,
+    leftIcon,
+    rightIcon,
+    ...props
+  },
   ref,
 ) {
   return (
@@ -41,13 +54,16 @@ const Button = forwardRef(function Button(
       )}
       {...props}
     >
-      {loading && (
+      {loading ? (
         <span
           className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
           aria-hidden="true"
         />
+      ) : (
+        leftIcon
       )}
       {children}
+      {!loading && rightIcon}
     </button>
   );
 });

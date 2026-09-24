@@ -59,7 +59,7 @@ export default function ComplaintDetails() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8">
+      <div className="mx-auto max-w-3xl px-1 py-5 sm:px-4 sm:py-8">
         <SkeletonList rows={4} />
       </div>
     );
@@ -67,7 +67,7 @@ export default function ComplaintDetails() {
 
   if (!complaint) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+      <div className="mx-auto max-w-3xl px-1 py-12 text-center sm:px-4 sm:py-16">
         <h1 className="font-display text-xl font-semibold text-ink-900">
           We could not find that complaint.
         </h1>
@@ -81,7 +81,7 @@ export default function ComplaintDetails() {
   const closed = ['resolved', 'closed', 'declined'].includes(complaint.status);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="mx-auto max-w-3xl px-1 py-5 sm:px-4 sm:py-8">
       <Link
         to="/student/complaints"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-700"
@@ -90,7 +90,7 @@ export default function ComplaintDetails() {
         My complaints
       </Link>
 
-      <header className="mt-4 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <header className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <button

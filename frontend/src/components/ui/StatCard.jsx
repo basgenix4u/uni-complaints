@@ -40,18 +40,18 @@ const StatCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={cn(
-        'bg-white rounded-2xl shadow-soft border border-neutral-100 p-6 hover:shadow-soft-xl transition-shadow',
+        'bg-white rounded-xl shadow-e1 border border-line p-4 sm:p-5 hover:shadow-e2 transition-shadow',
         className
       )}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-neutral-500 mb-1">{title}</p>
+          <p className="text-caption font-semibold text-neutral-500 sm:text-sm">{title}</p>
           <motion.p
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: delay + 0.2, type: 'spring', stiffness: 200 }}
-            className="text-3xl font-bold text-neutral-900"
+            className="text-2xl font-bold text-neutral-900 sm:text-3xl"
           >
             {typeof value === 'number' ? formatNumber(value) : value}
           </motion.p>
@@ -78,7 +78,7 @@ const StatCard = ({
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: delay + 0.1, type: 'spring', stiffness: 200 }}
             className={cn(
-              'w-12 h-12 rounded-xl flex items-center justify-center',
+              'h-10 w-10 rounded-md flex items-center justify-center sm:h-12 sm:w-12 sm:rounded-xl',
               iconBgColors[color]
             )}
           >

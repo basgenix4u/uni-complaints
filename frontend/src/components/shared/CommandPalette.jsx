@@ -59,8 +59,14 @@ export default function CommandPalette() {
         setOpen((current) => !current);
       }
     };
+    const onOpenRequest = () => setOpen(true);
+
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    window.addEventListener('resolve:open-command-palette', onOpenRequest);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resolve:open-command-palette', onOpenRequest);
+    };
   }, []);
 
   const isStaff = STAFF_ROLES.includes(user?.role);
@@ -68,7 +74,7 @@ export default function CommandPalette() {
   // Only searched once there is enough to be worth a request, and the
   // result is cached briefly so repeated opens are instant.
   const { data } = useQuery({
-    queryKey: ['palette-search', query],
+    queryKey: ['palette-search', user?.id, query],
     queryFn: () => complaintService.list({ search: query, per_page: 6 }),
     enabled: open && query.trim().length >= 2,
     staleTime: 30_000,

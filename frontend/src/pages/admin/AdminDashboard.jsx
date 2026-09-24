@@ -110,29 +110,29 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+        className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
       >
-        <div>
-          <h1 className="text-3xl font-bold text-neutral-900">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold text-neutral-900 sm:text-3xl">
             Welcome back, {user?.full_name?.split(' ')[0]}! 👋
           </h1>
           <p className="text-neutral-500 mt-1">
             Here's what's happening with complaints today.
           </p>
         </div>
-        <div className="flex gap-3">
-          <Card padding={false} className="px-4 py-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
+          <Card padding={false} className="px-3 py-2.5 sm:px-4 sm:py-3">
             <div className="text-center">
               <p className="text-2xl font-bold text-primary-600">{todayStats.new || 0}</p>
               <p className="text-xs text-neutral-500">New Today</p>
             </div>
           </Card>
-          <Card padding={false} className="px-4 py-3">
+          <Card padding={false} className="px-3 py-2.5 sm:px-4 sm:py-3">
             <div className="text-center">
               <p className="text-2xl font-bold text-success-600">{todayStats.resolved || 0}</p>
               <p className="text-xs text-neutral-500">Resolved Today</p>
@@ -143,13 +143,13 @@ const AdminDashboard = () => {
 
       {/* Stats Grid */}
       {overviewLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-32 rounded-2xl bg-neutral-100 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {statCards.map((stat, index) => (
             <StatCard
               key={stat.title}
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         {/* Status Distribution */}
         <Card>
           <Card.Header>
@@ -319,11 +319,11 @@ const AdminDashboard = () => {
                 >
                   <Link
                     to={`/admin/complaints/${complaint.id}`}
-                    className="block p-4 rounded-xl border border-neutral-100 hover:border-primary-200 hover:bg-primary-50/50 transition-all group"
+                    className="block rounded-md border border-line p-3 transition-all group hover:border-brand-200 hover:bg-brand-50 sm:p-4"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
                           <span className="text-xs font-mono text-primary-600 bg-primary-50 px-2 py-0.5 rounded">
                             {complaint.ticket_number}
                           </span>
@@ -333,7 +333,7 @@ const AdminDashboard = () => {
                         <h4 className="font-medium text-neutral-900 group-hover:text-primary-700 transition-colors truncate">
                           {complaint.title}
                         </h4>
-                        <div className="flex items-center gap-3 mt-1 text-sm text-neutral-500">
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-500">
                           <span>{complaint.student?.full_name}</span>
                           <span>•</span>
                           <span>{getCategoryLabel(complaint.category)}</span>
@@ -351,7 +351,7 @@ const AdminDashboard = () => {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:gap-6">
         <Card className="text-center">
           <div className="w-14 h-14 mx-auto rounded-2xl bg-primary-100 flex items-center justify-center mb-4">
             <UsersIcon className="w-7 h-7 text-primary-600" />

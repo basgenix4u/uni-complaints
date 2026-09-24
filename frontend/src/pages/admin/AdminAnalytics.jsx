@@ -126,21 +126,21 @@ const AdminAnalytics = () => {
 
   if (overviewLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex min-h-[320px] items-center justify-center sm:min-h-[400px]">
         <Spinner size="xl" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 lg:space-y-8">
       <PageHeader
         title="Analytics & Reports"
         description="Insights and statistics about complaint management"
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -148,7 +148,7 @@ const AdminAnalytics = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="text-center">
+            <Card className="p-4 text-center sm:p-6">
               <div className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4 ${stat.color}`}>
                 <stat.icon className="w-7 h-7" />
               </div>
@@ -160,18 +160,18 @@ const AdminAnalytics = () => {
       </div>
 
       {/* Trend Chart */}
-      <Card>
-        <Card.Header>
+      <Card className="p-4 sm:p-6">
+        <Card.Header className="flex-wrap gap-3">
           <Card.Title>Complaints Trend</Card.Title>
           <Select
             options={timeRangeOptions}
             value={trendDays}
             onChange={setTrendDays}
-            className="w-40"
+            className="w-full sm:w-40"
           />
         </Card.Header>
         <Card.Content>
-          <div className="h-80">
+          <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trendChart}>
                 <defs>
@@ -213,14 +213,14 @@ const AdminAnalytics = () => {
       </Card>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
         {/* Status Distribution */}
-        <Card>
-          <Card.Header>
+        <Card className="p-4 sm:p-6">
+          <Card.Header className="flex-wrap gap-3">
             <Card.Title>Status Distribution</Card.Title>
           </Card.Header>
           <Card.Content>
-            <div className="h-72">
+            <div className="h-64 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -232,7 +232,7 @@ const AdminAnalytics = () => {
                     paddingAngle={2}
                     dataKey="count"
                     nameKey="label"
-                    label={({ label, percent }) => `${label} (${(percent * 100).toFixed(0)}%)`}
+                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
                     labelLine={false}
                   >
                     {statusChart.map((entry, index) => (
@@ -247,12 +247,12 @@ const AdminAnalytics = () => {
         </Card>
 
         {/* Priority Distribution */}
-        <Card>
-          <Card.Header>
+        <Card className="p-4 sm:p-6">
+          <Card.Header className="flex-wrap gap-3">
             <Card.Title>Priority Distribution</Card.Title>
           </Card.Header>
           <Card.Content>
-            <div className="h-72">
+            <div className="h-64 sm:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={priorityChart}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -279,12 +279,12 @@ const AdminAnalytics = () => {
       </div>
 
       {/* Category Chart */}
-      <Card>
-        <Card.Header>
+      <Card className="p-4 sm:p-6">
+        <Card.Header className="flex-wrap gap-3">
           <Card.Title>Complaints by Category</Card.Title>
         </Card.Header>
         <Card.Content>
-          <div className="h-80">
+          <div className="h-64 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryChart} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -292,7 +292,7 @@ const AdminAnalytics = () => {
                 <YAxis
                   type="category"
                   dataKey="label"
-                  width={150}
+                  width={100}
                   tick={{ fontSize: 11 }}
                 />
                 <Tooltip
@@ -310,12 +310,12 @@ const AdminAnalytics = () => {
       </Card>
 
       {/* Monthly Chart */}
-      <Card>
-        <Card.Header>
+      <Card className="p-4 sm:p-6">
+        <Card.Header className="flex-wrap gap-3">
           <Card.Title>Monthly Complaints ({monthlyChartData?.year})</Card.Title>
         </Card.Header>
         <Card.Content>
-          <div className="h-72">
+          <div className="h-64 sm:h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={monthlyChart}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

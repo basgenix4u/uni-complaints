@@ -46,7 +46,7 @@ export default function TrackPage() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16">
+    <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
       <div className="text-center">
         <h1 className="font-display text-3xl font-semibold tracking-tight text-ink-900">
           Track a complaint
@@ -77,7 +77,7 @@ export default function TrackPage() {
 
       {result && (
         <section className="mt-8 animate-fade-up overflow-hidden rounded-xl border border-line bg-surface shadow-e2">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-canvas px-6 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-4 sm:px-6 sm:py-5">
             <div>
               <p className="text-caption font-bold uppercase tracking-wider text-ink-500">Ticket</p>
               <p className="font-mono text-lg font-semibold text-ink-900">{result.ticket_number}</p>
@@ -85,7 +85,7 @@ export default function TrackPage() {
             <StatusBadge status={result.status} overdue={result.is_overdue} />
           </div>
 
-          <div className="px-6 py-5">
+          <div className="px-4 py-4 sm:px-6 sm:py-5">
             <ProgressRail status={result.status} />
           </div>
 
@@ -102,7 +102,7 @@ export default function TrackPage() {
             />
           </dl>
 
-          <p className="border-t border-line bg-canvas px-6 py-4 text-caption text-ink-500">
+          <p className="border-t border-line bg-canvas px-4 py-3 text-caption text-ink-500 sm:px-6 sm:py-4">
             Sign in to read replies, add information, or respond to questions.
           </p>
         </section>

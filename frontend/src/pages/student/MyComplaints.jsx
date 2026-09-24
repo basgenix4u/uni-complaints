@@ -28,8 +28,8 @@ export default function MyComplaints() {
   const pagination = data?.pagination || {};
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-4xl px-1 py-5 sm:px-4 sm:py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
             My complaints

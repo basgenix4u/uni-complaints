@@ -27,7 +27,8 @@ export default function StudentNotifications() {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ['notifications'] });
-    queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+    queryClient.invalidateQueries({ queryKey: ['nav-notifications'] });
+    queryClient.invalidateQueries({ queryKey: ['nav-unread-count'] });
   };
 
   const markOne = useMutation({
@@ -61,8 +62,8 @@ export default function StudentNotifications() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+    <div className="mx-auto max-w-2xl px-1 py-5 sm:px-4 sm:py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
             Notifications

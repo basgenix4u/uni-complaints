@@ -114,7 +114,7 @@ const AdminUsers = () => {
       admin: 'badge-primary',
       institution_admin: 'badge-success',
       dept_head: 'badge-info',
-      officer: 'badge-neutral',
+      officer: 'badge-secondary',
     };
     const labels = {
       student: 'Student',
@@ -204,12 +204,12 @@ const AdminUsers = () => {
             <table className="w-full">
               <thead className="bg-neutral-50 border-b border-neutral-100">
                 <tr>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase">User</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase hidden md:table-cell">Role</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase hidden lg:table-cell">Department</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase hidden xl:table-cell">Joined</th>
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-neutral-500 uppercase">Status</th>
-                  <th className="text-right px-6 py-4 text-xs font-semibold text-neutral-500 uppercase">Action</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold sm:px-6 sm:py-4 text-neutral-500 uppercase">User</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold sm:px-6 sm:py-4 text-neutral-500 uppercase hidden md:table-cell">Role</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold sm:px-6 sm:py-4 text-neutral-500 uppercase hidden lg:table-cell">Department</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold sm:px-6 sm:py-4 text-neutral-500 uppercase hidden xl:table-cell">Joined</th>
+                  <th className="text-left px-3 py-3 text-xs font-semibold sm:px-6 sm:py-4 text-neutral-500 uppercase">Status</th>
+                  <th className="text-right px-3 py-3 text-xs font-semibold sm:px-6 sm:py-4 text-neutral-500 uppercase">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-100">
@@ -221,12 +221,12 @@ const AdminUsers = () => {
                     transition={{ delay: index * 0.03 }}
                     className="hover:bg-neutral-50 transition-colors"
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-3 py-3 sm:px-6 sm:py-4">
+                      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                         <Avatar name={user.full_name} size="md" />
-                        <div>
-                          <p className="font-medium text-neutral-900">{user.full_name}</p>
-                          <p className="text-sm text-neutral-500">{user.email}</p>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium text-neutral-900">{user.full_name}</p>
+                          <p className="truncate text-sm text-neutral-500">{user.email}</p>
                           {user.matric_number && (
                             <p className="text-xs text-neutral-400">{user.matric_number}</p>
                           )}
@@ -242,7 +242,7 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 hidden xl:table-cell">
                       <p className="text-sm text-neutral-600">{formatDate(user.created_at, 'MMM dd, yyyy')}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 sm:px-6 sm:py-4">
                       {user.is_active ? (
                         <span className="inline-flex items-center gap-1 text-sm text-success-600">
                           <CheckCircleIcon className="w-4 h-4" />
@@ -255,12 +255,13 @@ const AdminUsers = () => {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-3 py-3 text-right sm:px-6 sm:py-4">
                       <Button
                         variant={user.is_active ? 'outline' : 'success'}
                         size="sm"
                         onClick={() => toggleActiveMutation.mutate(user.id)}
                         loading={toggleActiveMutation.isPending}
+                        className="whitespace-nowrap"
                       >
                         {user.is_active ? 'Deactivate' : 'Activate'}
                       </Button>

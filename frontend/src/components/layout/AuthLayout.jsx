@@ -162,7 +162,7 @@ export default function AuthLayout() {
 
       {/* Right: the form, on a panel whose inner edge curves over the
           photograph. */}
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-surface px-6 py-12 sm:px-10">
+      <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-surface px-4 py-8 sm:px-10 sm:py-12">
         {/* The curved edge, drawn only where there is a photograph to
             curve over. */}
         <Corners />

@@ -31,7 +31,7 @@ export default function ProgressRail({ status }) {
         return (
           <li
             key={key}
-            className="relative min-w-[92px] flex-1 text-center"
+            className="relative min-w-[72px] flex-1 px-0.5 text-center sm:min-w-[92px]"
             aria-current={active ? 'step' : undefined}
           >
             {index < RAIL.length - 1 && (

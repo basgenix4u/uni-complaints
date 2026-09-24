@@ -100,7 +100,7 @@ export default function NewComplaint() {
   const next = () => validateStep() && setStep((current) => current + 1);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-1 py-5 sm:px-4 sm:py-8">
       <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
         File a complaint
       </h1>
@@ -168,7 +168,7 @@ export default function NewComplaint() {
         ))}
       </ol>
 
-      <div className="mt-7 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <div className="mt-6 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-7 sm:p-6">
         {step === 0 && (
           <div className="space-y-5">
             <Input
