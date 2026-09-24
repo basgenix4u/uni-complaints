@@ -6,8 +6,8 @@ acknowledgement hours, resolution factor and escalation cadence per priority.
 The column is nullable so migrating an existing institution preserves its
 previous behaviour until somebody deliberately saves a policy.
 
-Revision ID: 0009_priority_sla_policy
-Revises: 0008_normalise_institution_type
+Revision ID: 0012_priority_sla_policy
+Revises: 0011_schema_security
 """
 
 import os
@@ -15,8 +15,8 @@ import os
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0009_priority_sla_policy"
-down_revision = "0008_normalise_institution_type"
+revision = "0012_priority_sla_policy"
+down_revision = "0011_schema_security"
 branch_labels = None
 depends_on = None
 
