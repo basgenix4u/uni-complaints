@@ -91,19 +91,19 @@ const AdminDashboard = () => {
     },
     {
       title: 'Pending',
-      value: statusCounts.pending || 0,
+      value: (statusCounts.submitted || 0) + (statusCounts.acknowledged || 0),
       icon: ClockIcon,
       color: 'warning',
     },
     {
       title: 'In Progress',
-      value: statusCounts.in_progress || 0,
+      value: (statusCounts.in_progress || 0) + (statusCounts.awaiting_student || 0),
       icon: ExclamationCircleIcon,
       color: 'info',
     },
     {
       title: 'Resolved',
-      value: statusCounts.resolved || 0,
+      value: (statusCounts.resolved || 0) + (statusCounts.closed || 0),
       icon: CheckCircleIcon,
       color: 'success',
     },
@@ -201,7 +201,7 @@ const AdminDashboard = () => {
             </div>
             <div className="flex flex-wrap justify-center gap-4 mt-4">
               {statusChart.map((item, index) => (
-                <div key={item.status} className="flex items-center gap-2">
+                <div key={item.value || item.status || item.label} className="flex items-center gap-2">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}

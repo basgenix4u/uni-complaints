@@ -97,6 +97,7 @@ const AdminAnalytics = () => {
   const priorityChart = priorityChartData?.chart_data || [];
   const trendChart = trendChartData?.chart_data || [];
   const monthlyChart = monthlyChartData?.chart_data || [];
+  const resolvedCount = (statusCounts.resolved || 0) + (statusCounts.closed || 0);
 
   const statCards = [
     {
@@ -107,7 +108,7 @@ const AdminAnalytics = () => {
     },
     {
       title: 'Resolution Rate',
-      value: `${Math.round(((statusCounts.resolved || 0) / (overview.total_complaints || 1)) * 100)}%`,
+      value: `${Math.round((resolvedCount / (overview.total_complaints || 1)) * 100)}%`,
       icon: ArrowTrendingUpIcon,
       color: 'bg-success-100 text-success-600',
     },
