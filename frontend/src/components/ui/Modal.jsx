@@ -102,7 +102,7 @@ const Modal = ({
 const ModalFooter = ({ children, className = '' }) => (
   <div
     className={cn(
-      'flex items-center justify-end gap-3 mt-6 pt-4 border-t border-neutral-100',
+      'mt-6 flex flex-col-reverse items-stretch justify-end gap-2 border-t border-line pt-4 sm:flex-row sm:items-center sm:gap-3',
       className
     )}
   >

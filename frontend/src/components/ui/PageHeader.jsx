@@ -16,8 +16,8 @@ const PageHeader = ({
       className={`mb-5 sm:mb-8 ${className}`}
     >
       {breadcrumbs && (
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+        <nav className="mb-3 flex max-w-full overflow-x-auto no-scrollbar sm:mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center whitespace-nowrap space-x-1 md:space-x-3">
             {breadcrumbs.map((item, index) => (
               <li key={index} className="inline-flex items-center">
                 {index > 0 && (
