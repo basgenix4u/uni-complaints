@@ -15,7 +15,7 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   }, [isAuthenticated, isLoading, initializeAuth]);
 
   // Show loading spinner while checking auth
-  if (isLoading) {
+  if (isLoading || (isAuthenticated && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <motion.div

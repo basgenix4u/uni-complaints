@@ -84,10 +84,10 @@ export default function Receipt({ complaint, institution }) {
       </div>
 
       <div className="flex flex-wrap gap-3 px-8 pb-8">
-        <Link to={`/complaints/${complaint.id}`} className="flex-1">
+        <Link to={`/student/complaints/${complaint.id}`} className="min-w-[12rem] flex-1">
           <Button className="w-full">Track this complaint</Button>
         </Link>
-        <Link to="/complaints" className="flex-1">
+        <Link to="/student/complaints" className="min-w-[12rem] flex-1">
           <Button variant="secondary" className="w-full">
             Back to my complaints
           </Button>

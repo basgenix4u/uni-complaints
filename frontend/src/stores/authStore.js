@@ -9,7 +9,9 @@ const useAuthStore = create(
       accessToken: null,
       refreshToken: null,
       isAuthenticated: false,
-      isLoading: false,
+      // Start in a hydration state so a persisted user cannot render a
+      // protected page before the browser token has been validated.
+      isLoading: true,
       error: null,
 
       setLoading: (isLoading) => set({ isLoading }),
@@ -81,6 +83,7 @@ const useAuthStore = create(
           accessToken: null,
           refreshToken: null,
           isAuthenticated: false,
+          isLoading: false,
           error: null,
         });
       },
@@ -128,12 +131,12 @@ const useAuthStore = create(
       // drift from the hierarchy the server enforces.
       isStaff: () => {
         const { user } = get();
-        return ['officer', 'dept_head', 'institution_admin', 'platform_admin'].includes(user?.role);
+        return ['officer', 'dept_head', 'dean', 'institution_admin', 'platform_admin'].includes(user?.role);
       },
 
       isAdmin: () => {
         const { user } = get();
-        return ['officer', 'dept_head', 'institution_admin', 'platform_admin'].includes(user?.role);
+        return ['officer', 'dept_head', 'dean', 'institution_admin', 'platform_admin'].includes(user?.role);
       },
 
       isInstitutionAdmin: () => {
@@ -147,7 +150,11 @@ const useAuthStore = create(
         const accessToken = localStorage.getItem('access_token');
         
         if (accessToken) {
-          set({ accessToken, isLoading: true });
+          set({
+            accessToken,
+            refreshToken: localStorage.getItem('refresh_token'),
+            isLoading: true,
+          });
           
           try {
             const { user } = await authService.me();
@@ -170,7 +177,16 @@ const useAuthStore = create(
             });
           }
         } else {
-          set({ isLoading: false });
+          // Clear stale persisted identity if the browser no longer has a
+          // token. Otherwise `/` can redirect to a protected dashboard with
+          // no usable session and remain stuck on a blank/loading state.
+          set({
+            user: null,
+            accessToken: null,
+            refreshToken: null,
+            isAuthenticated: false,
+            isLoading: false,
+          });
         }
       },
     }),

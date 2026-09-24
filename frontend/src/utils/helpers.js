@@ -167,7 +167,7 @@ export function debounce(func, wait = 300) {
  * @returns {boolean}
  */
 export function isAdmin(user) {
-  return ['officer', 'dept_head', 'institution_admin', 'platform_admin'].includes(user?.role);
+  return ['officer', 'dept_head', 'dean', 'institution_admin', 'platform_admin'].includes(user?.role);
 }
 
 /**

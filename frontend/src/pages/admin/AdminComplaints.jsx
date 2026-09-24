@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { ArrowDownTrayIcon, InboxIcon } from '@heroicons/react/24/outline';
 
@@ -23,13 +23,30 @@ const VIEWS = [
 
 export default function AdminComplaints() {
   const { user } = useAuthStore();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState('');
-  const [view, setView] = useState('all');
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState('');
-  const [priority, setPriority] = useState('');
-  const [search, setSearch] = useState('');
+  const requestedView = searchParams.get('view');
+  const view = VIEWS.some((entry) => entry.key === requestedView) ? requestedView : 'all';
+  const requestedPage = Number.parseInt(searchParams.get('page') || '1', 10);
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const status = searchParams.get('status') || '';
+  const priority = searchParams.get('priority') || '';
+  const search = searchParams.get('search') || '';
+
+  const updateFilter = (key, value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set(key, value);
+    else params.delete(key);
+    params.delete('page');
+    setSearchParams(params, { replace: true });
+  };
+
+  const goToPage = (nextPage) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(nextPage));
+    setSearchParams(params, { replace: true });
+  };
 
   const viewParams = VIEWS.find((entry) => entry.key === view)?.params || {};
 
@@ -44,8 +61,11 @@ export default function AdminComplaints() {
   const pagination = data?.pagination || {};
 
   const changeView = (key) => {
-    setView(key);
-    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (key === 'all') params.delete('view');
+    else params.set('view', key);
+    params.delete('page');
+    setSearchParams(params, { replace: true });
   };
 
   return (
@@ -112,8 +132,7 @@ export default function AdminComplaints() {
             placeholder="Title, ticket or description"
             value={search}
             onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
+              updateFilter('search', event.target.value);
             }}
           />
         </div>
@@ -122,8 +141,7 @@ export default function AdminComplaints() {
             label="Status"
             value={status}
             onChange={(event) => {
-              setStatus(event.target.value);
-              setPage(1);
+              updateFilter('status', event.target.value);
             }}
           >
             <option value="">Any status</option>
@@ -141,8 +159,7 @@ export default function AdminComplaints() {
             label="Priority"
             value={priority}
             onChange={(event) => {
-              setPriority(event.target.value);
-              setPage(1);
+              updateFilter('priority', event.target.value);
             }}
           >
             <option value="">Any priority</option>
@@ -245,7 +262,7 @@ export default function AdminComplaints() {
               variant="secondary"
               size="sm"
               disabled={!pagination.has_prev}
-              onClick={() => setPage((current) => current - 1)}
+              onClick={() => goToPage(page - 1)}
             >
               Previous
             </Button>
@@ -256,7 +273,7 @@ export default function AdminComplaints() {
               variant="secondary"
               size="sm"
               disabled={!pagination.has_next}
-              onClick={() => setPage((current) => current + 1)}
+              onClick={() => goToPage(page + 1)}
             >
               Next
             </Button>

@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import { SkeletonList } from '../../components/ui/Skeleton';
 import { notificationService } from '../../services/api';
 import { formatRelative } from '../../utils/format';
+import useAuthStore from '../../stores/authStore';
 
 const TONE = {
   escalation: { bg: 'var(--status-overdue-bg)', fg: 'var(--status-overdue-fg)' },
@@ -15,7 +16,9 @@ const TONE = {
 };
 
 export default function StudentNotifications() {
+  const { isAdmin } = useAuthStore();
   const queryClient = useQueryClient();
+  const complaintBasePath = isAdmin() ? '/admin' : '/student';
 
   const { data, isLoading } = useQuery({
     queryKey: ['notifications'],
@@ -136,7 +139,7 @@ export default function StudentNotifications() {
               <li key={notification.id}>
                 {notification.complaint_id ? (
                   <Link
-                    to={`/student/complaints/${notification.complaint_id}`}
+                    to={`${complaintBasePath}/complaints/${notification.complaint_id}`}
                     onClick={() => !notification.is_read && markOne.mutate(notification.id)}
                     className="block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
                   >

@@ -11,6 +11,7 @@ import { AuthLayout, DashboardLayout } from './components/layout';
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'));
 const TrackPage = lazy(() => import('./pages/public/TrackPage'));
+const PrivacyNoticePage = lazy(() => import('./pages/public/PrivacyNoticePage'));
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
@@ -39,7 +40,7 @@ const AcademicStructure = lazy(() => import('./pages/admin/AcademicStructure'));
 const PlatformInstitutions = lazy(() => import('./pages/platform/PlatformInstitutions'));
 
 // Shared
-import { CommandPalette, ProtectedRoute } from './components/shared';
+import { AppErrorBoundary, CommandPalette, ProtectedRoute } from './components/shared';
 import useAuthStore from './stores/authStore';
 
 // Create Query Client
@@ -62,18 +63,28 @@ function RouteFallback() {
 }
 
 // Home Redirect Component
+const STAFF_ROLES = ['officer', 'dept_head', 'dean', 'institution_admin', 'platform_admin'];
+
 const HomeRedirect = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
+
+  if (isLoading || (isAuthenticated && !user)) {
+    return <RouteFallback />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role === 'student') {
+  if (user.role === 'student') {
     return <Navigate to="/student/dashboard" replace />;
   }
 
-  return <Navigate to="/admin/dashboard" replace />;
+  if (STAFF_ROLES.includes(user.role)) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <Navigate to="/login" replace />;
 };
 
 function App() {
@@ -86,10 +97,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <CommandPalette />
+        <AppErrorBoundary>
+          <CommandPalette />
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/track" element={<TrackPage />} />
+            <Route path="/privacy" element={<PrivacyNoticePage />} />
             {/* Home Redirect */}
             <Route path="/" element={<HomeRedirect />} />
 
@@ -170,6 +183,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           </Suspense>
+        </AppErrorBoundary>
       </BrowserRouter>
 
       <Toaster

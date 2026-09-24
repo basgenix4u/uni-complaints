@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 
@@ -12,9 +11,25 @@ import { STATUS, categoryLabel } from '../../utils/status';
 import { formatDeadline, formatRelative } from '../../utils/format';
 
 export default function MyComplaints() {
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState('');
-  const [search, setSearch] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedPage = Number.parseInt(searchParams.get('page') || '1', 10);
+  const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const status = searchParams.get('status') || '';
+  const search = searchParams.get('search') || '';
+
+  const updateFilter = (key, value) => {
+    const params = new URLSearchParams(searchParams);
+    if (value) params.set(key, value);
+    else params.delete(key);
+    params.delete('page');
+    setSearchParams(params, { replace: true });
+  };
+
+  const goToPage = (nextPage) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', String(nextPage));
+    setSearchParams(params, { replace: true });
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['complaints', { page, status, search }],
@@ -51,8 +66,7 @@ export default function MyComplaints() {
             placeholder="Title or ticket number"
             value={search}
             onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
+              updateFilter('search', event.target.value);
             }}
           />
         </div>
@@ -61,8 +75,7 @@ export default function MyComplaints() {
             label="Status"
             value={status}
             onChange={(event) => {
-              setStatus(event.target.value);
-              setPage(1);
+              updateFilter('status', event.target.value);
             }}
           >
             <option value="">Any status</option>
@@ -137,7 +150,7 @@ export default function MyComplaints() {
               variant="secondary"
               size="sm"
               disabled={!pagination.has_prev}
-              onClick={() => setPage((current) => current - 1)}
+              onClick={() => goToPage(page - 1)}
             >
               Previous
             </Button>
@@ -148,7 +161,7 @@ export default function MyComplaints() {
               variant="secondary"
               size="sm"
               disabled={!pagination.has_next}
-              onClick={() => setPage((current) => current + 1)}
+              onClick={() => goToPage(page + 1)}
             >
               Next
             </Button>

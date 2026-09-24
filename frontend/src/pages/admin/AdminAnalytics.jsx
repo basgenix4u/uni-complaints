@@ -24,7 +24,8 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
-import { Card, Button, Select, Spinner, PageHeader } from '../../components/ui';
+import { Card, Spinner, PageHeader } from '../../components/ui';
+import Select from '../../components/ui/Select';
 import { dashboardService } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
 

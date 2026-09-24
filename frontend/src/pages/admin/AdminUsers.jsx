@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,7 +16,8 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
-import { Card, Button, Input, Select, Spinner, EmptyState, Modal, Avatar, PageHeader } from '../../components/ui';
+import { Card, Button, Input, Spinner, EmptyState, Modal, Avatar, PageHeader } from '../../components/ui';
+import Select from '../../components/ui/Select';
 import { adminService } from '../../services/api';
 import { formatDate } from '../../utils/helpers';
 import useAuthStore from '../../stores/authStore';
@@ -26,7 +27,9 @@ const roleOptions = [
   { value: 'student', label: 'Student' },
   { value: 'officer', label: 'Officer' },
   { value: 'dept_head', label: 'Department head' },
+  { value: 'dean', label: 'Dean' },
   { value: 'institution_admin', label: 'Administrator' },
+  { value: 'platform_admin', label: 'Platform owner' },
 ];
 
 const newAdminSchema = z.object({
@@ -38,7 +41,7 @@ const newAdminSchema = z.object({
     .regex(/[A-Z]/, 'Must contain uppercase letter')
     .regex(/[a-z]/, 'Must contain lowercase letter')
     .regex(/[0-9]/, 'Must contain number'),
-  role: z.enum(['officer', 'dept_head', 'institution_admin']),
+  role: z.enum(['officer', 'dept_head', 'dean', 'institution_admin']),
   department: z.string().optional(),
   phone: z.string().optional(),
 });
@@ -48,7 +51,7 @@ const AdminUsers = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
   const queryClient = useQueryClient();
-  const { isSuperAdmin } = useAuthStore();
+  const { isInstitutionAdmin } = useAuthStore();
 
   const page = parseInt(searchParams.get('page') || '1');
   const role = searchParams.get('role') || '';
@@ -58,8 +61,8 @@ const AdminUsers = () => {
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ['adminUsers', { page, role, search }],
     queryFn: () => adminService.users({ page, per_page: 10, role, search }),
-    keepPreviousData: true,
-    enabled: isSuperAdmin(), // Only run query if user is super admin
+    placeholderData: keepPreviousData,
+    enabled: isInstitutionAdmin(),
   });
 
   const users = data?.users || [];
@@ -70,7 +73,7 @@ const AdminUsers = () => {
     onSuccess: (response) => {
       const status = response?.user?.is_active ? 'activated' : 'deactivated';
       toast.success(`User ${status} successfully`);
-      queryClient.invalidateQueries(['adminUsers']);
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to update user');
@@ -82,7 +85,7 @@ const AdminUsers = () => {
     onSuccess: () => {
       toast.success('Admin account created successfully');
       setShowAddModal(false);
-      queryClient.invalidateQueries(['adminUsers']);
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to create admin');
@@ -114,6 +117,7 @@ const AdminUsers = () => {
       admin: 'badge-primary',
       institution_admin: 'badge-success',
       dept_head: 'badge-info',
+      dean: 'badge-primary',
       officer: 'badge-secondary',
     };
     const labels = {
@@ -121,18 +125,20 @@ const AdminUsers = () => {
       
       institution_admin: 'Administrator',
       dept_head: 'Department head',
+      dean: 'Dean',
+      platform_admin: 'Platform owner',
       officer: 'Officer',
     };
     return <span className={badges[role] || 'badge-secondary'}>{labels[role] || role}</span>;
   };
 
   // --- ACCESS CHECK IS NOW HERE (After hooks) ---
-  if (!isSuperAdmin()) {
+  if (!isInstitutionAdmin()) {
     return (
       <div className="text-center py-16">
         <ShieldCheckIcon className="w-16 h-16 text-neutral-300 mx-auto mb-4" />
         <h2 className="text-xl font-semibold text-neutral-900 mb-2">Access Denied</h2>
-        <p className="text-neutral-500">Only super admins can access user management.</p>
+        <p className="text-neutral-500">Only institution administrators can access user management.</p>
       </div>
     );
   }
@@ -237,7 +243,7 @@ const AdminUsers = () => {
                       {getRoleBadge(user.role)}
                     </td>
                     <td className="px-6 py-4 hidden lg:table-cell">
-                      <p className="text-sm text-neutral-600">{user.department || '-'}</p>
+                      <p className="text-sm text-neutral-600">{user.department_name || user.department || '-'}</p>
                     </td>
                     <td className="px-6 py-4 hidden xl:table-cell">
                       <p className="text-sm text-neutral-600">{formatDate(user.created_at, 'MMM dd, yyyy')}</p>
@@ -364,7 +370,8 @@ const AddAdminModal = ({ isOpen, onClose, onSubmit, isLoading }) => {
             options={[
               { value: 'officer', label: 'Officer' },
               { value: 'dept_head', label: 'Department head' },
-  { value: 'institution_admin', label: 'Administrator' },
+              { value: 'dean', label: 'Dean' },
+              { value: 'institution_admin', label: 'Administrator' },
             ]}
             value={watchRole}
             onChange={(value) => setValue('role', value)}
