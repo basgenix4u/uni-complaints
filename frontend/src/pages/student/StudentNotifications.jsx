@@ -65,10 +65,10 @@ export default function StudentNotifications() {
   });
 
   return (
-    <div className="mx-auto max-w-2xl px-1 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-2xl px-1 py-3 sm:px-4 sm:py-8">
       <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl text-ink-900">
             Notifications
           </h1>
           <p className="mt-1 text-ink-600">
@@ -83,11 +83,11 @@ export default function StudentNotifications() {
         )}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {isLoading && <SkeletonList rows={4} />}
 
         {!isLoading && notifications.length === 0 && (
-          <div className="rounded-lg border border-dashed border-line bg-surface px-6 py-16 text-center">
+          <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-10 text-center sm:px-6 sm:py-16">
             <BellIcon className="mx-auto h-10 w-10 text-ink-500" aria-hidden="true" />
             <h2 className="mt-3 font-display text-lg font-semibold text-ink-900">
               Nothing to catch up on
@@ -106,7 +106,7 @@ export default function StudentNotifications() {
             };
             const body = (
               <div
-                className={`flex gap-3 rounded-lg border p-4 text-left transition-colors duration-150 ${
+                className={`flex gap-3 rounded-lg border p-3 text-left sm:p-4 transition-colors duration-150 ${
                   notification.is_read
                     ? 'border-line bg-surface'
                     : 'border-brand-200 bg-brand-50'

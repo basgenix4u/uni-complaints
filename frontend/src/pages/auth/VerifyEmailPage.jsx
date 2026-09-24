@@ -55,8 +55,8 @@ export default function VerifyEmailPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-10">
-      <div className="rounded-2xl border border-line bg-surface p-8 text-center shadow-e2">
+    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-3 py-6 sm:px-4 sm:py-10">
+      <div className="rounded-xl border border-line bg-surface p-5 sm:rounded-2xl sm:p-8 text-center shadow-e2">
         {state === 'checking' && (
           <>
             <div

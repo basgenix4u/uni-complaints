@@ -46,9 +46,9 @@ export default function TrackPage() {
   };
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-16">
+    <main className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-16">
       <div className="text-center">
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-ink-900">
+        <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl text-ink-900">
           Track a complaint
         </h1>
         <p className="mx-auto mt-2 max-w-md text-ink-600">
@@ -56,7 +56,7 @@ export default function TrackPage() {
         </p>
       </div>
 
-      <form onSubmit={search} className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-start">
+      <form onSubmit={search} className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-start">
         <div className="flex-1">
           <Input
             label="Ticket number"
@@ -76,7 +76,7 @@ export default function TrackPage() {
       </form>
 
       {result && (
-        <section className="mt-8 animate-fade-up overflow-hidden rounded-xl border border-line bg-surface shadow-e2">
+        <section className="mt-6 animate-fade-up overflow-hidden sm:mt-8 rounded-xl border border-line bg-surface shadow-e2">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-canvas px-4 py-4 sm:px-6 sm:py-5">
             <div>
               <p className="text-caption font-bold uppercase tracking-wider text-ink-500">Ticket</p>
@@ -108,7 +108,7 @@ export default function TrackPage() {
         </section>
       )}
 
-      <p className="mt-10 text-center text-sm text-ink-500">
+      <p className="mt-8 text-center text-sm sm:mt-10 text-ink-500">
         <Link to="/login" className="font-semibold text-brand-700 hover:underline">
           Sign in
         </Link>{' '}
@@ -120,7 +120,7 @@ export default function TrackPage() {
 
 function Row({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-4 px-6 py-3">
+    <div className="flex items-start justify-between gap-3 px-4 py-2.5 sm:items-center sm:gap-4 sm:px-6 sm:py-3">
       <dt className="text-ink-500">{label}</dt>
       <dd className="text-right font-semibold text-ink-900">{value}</dd>
     </div>

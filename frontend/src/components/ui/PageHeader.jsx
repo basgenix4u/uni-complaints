@@ -13,7 +13,7 @@ const PageHeader = ({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className={`mb-5 sm:mb-8 ${className}`}
+      className={`mb-4 sm:mb-8 ${className}`}
     >
       {breadcrumbs && (
         <nav className="mb-3 flex max-w-full overflow-x-auto no-scrollbar sm:mb-4" aria-label="Breadcrumb">
@@ -53,11 +53,11 @@ const PageHeader = ({
 
       <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         <div className="min-w-0">
-          <h1 className="truncate text-2xl font-bold text-neutral-900 font-display sm:text-3xl">
+          <h1 className="truncate text-xl font-bold text-neutral-900 font-display sm:text-3xl">
             {title}
           </h1>
           {description && (
-            <p className="mt-1 text-sm text-neutral-500 sm:text-base">{description}</p>
+            <p className="mt-1 text-sm leading-snug text-neutral-500 sm:text-base">{description}</p>
           )}
         </div>
 

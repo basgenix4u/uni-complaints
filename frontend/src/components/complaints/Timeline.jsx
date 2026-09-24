@@ -67,7 +67,7 @@ export default function Timeline({ events }) {
   );
 
   return (
-    <ol className="relative space-y-6 border-l-2 border-line pl-6">
+    <ol className="relative space-y-4 border-l-2 border-line pl-5 sm:space-y-6 sm:pl-6">
       {ordered.map((event, index) => {
         const { icon: Icon, text, detail } = describe(event);
         const latest = index === ordered.length - 1;

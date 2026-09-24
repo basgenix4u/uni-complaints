@@ -63,8 +63,8 @@ export default function AcademicStructure() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+    <div className="mx-auto max-w-4xl px-1 py-3 sm:px-4 sm:py-8">
+      <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
         Academic structure
       </h1>
       <p className="mt-1 max-w-xl text-ink-600">
@@ -95,7 +95,7 @@ export default function AcademicStructure() {
         )}
       </div>
 
-      <div className="mt-6 flex gap-1 rounded-lg border border-line bg-surface p-1" role="tablist">
+      <div className="mt-4 sm:mt-6 flex gap-1 rounded-lg border border-line bg-surface p-1" role="tablist">
         {TABS.map((entry) => (
           <button
             key={entry.key}
@@ -198,9 +198,9 @@ function Structure({ faculties, isLoading, onDone, onError }) {
   if (isLoading) return <Skeleton className="mt-4 h-64 w-full" />;
 
   return (
-    <div className="mt-4 space-y-6">
+    <div className="mt-3 space-y-4 sm:mt-4 sm:space-y-6">
       <form
-        className="flex flex-wrap items-end gap-3 rounded-lg border border-line bg-surface p-5"
+        className="flex flex-wrap items-end gap-3 rounded-lg border border-line bg-surface p-3 sm:p-5"
         onSubmit={(event) => {
           event.preventDefault();
           createFaculty.mutate({ name });
@@ -221,7 +221,7 @@ function Structure({ faculties, isLoading, onDone, onError }) {
         </Button>
       </form>
 
-      <details className="rounded-lg border border-line bg-surface p-5">
+      <details className="rounded-lg border border-line bg-surface p-3 sm:p-5">
         <summary className="cursor-pointer font-semibold text-ink-900">
           Or paste the whole tree at once (CSV or XLSX file also supported via API)
         </summary>
@@ -275,7 +275,7 @@ function Structure({ faculties, isLoading, onDone, onError }) {
       </details>
 
       {faculties.length === 0 ? (
-        <div className="flex items-start gap-3 rounded-lg border border-line bg-surface p-6">
+        <div className="flex items-start gap-3 rounded-lg border border-line bg-surface p-3 sm:p-6">
           <AcademicCapIcon className="h-6 w-6 shrink-0 text-ink-500" aria-hidden="true" />
           <div>
             <p className="font-medium text-ink-900">No faculties yet.</p>
@@ -288,7 +288,7 @@ function Structure({ faculties, isLoading, onDone, onError }) {
       ) : (
         <ul className="space-y-2">
           {faculties.map((faculty) => (
-            <li key={faculty.id} className="rounded-lg border border-line bg-surface p-4">
+            <li key={faculty.id} className="rounded-lg border border-line bg-surface p-3 sm:p-4">
               <div className="flex flex-wrap items-center gap-3">
                 <span className="font-medium text-ink-900">{faculty.name}</span>
                 <span className="text-caption text-ink-500">
@@ -372,14 +372,14 @@ function Register({ sessions, summary, onDone, onError }) {
 
   return (
     <div className="mt-4 space-y-5">
-      <div className="grid gap-4 rounded-lg border border-line bg-surface p-5 sm:grid-cols-3">
+      <div className="grid gap-4 rounded-lg border border-line bg-surface p-3 sm:p-5 sm:grid-cols-3">
         <Stat label="In the register" value={summary?.total ?? 0} />
         <Stat label="Claimed by a student" value={summary?.claimed ?? 0} />
         <Stat label="Current session" value={summary?.current_session?.name ?? 'None open'} />
       </div>
 
       {summary?.matric_pattern && (
-        <div className="rounded-lg border border-line bg-surface p-4 text-sm">
+        <div className="rounded-lg border border-line bg-surface p-3 sm:p-4 text-sm">
           <p className="font-semibold text-ink-900">Matric format for this institution</p>
           <p className="mt-1 text-ink-600">
             Pattern: <code className="rounded bg-canvas px-1 py-0.5">{summary.matric_pattern}</code>
@@ -391,7 +391,7 @@ function Register({ sessions, summary, onDone, onError }) {
         </div>
       )}
 
-      <div className="space-y-4 rounded-lg border border-line bg-surface p-5">
+      <div className="space-y-4 rounded-lg border border-line bg-surface p-3 sm:p-5">
         <div>
           <label htmlFor="register-file" className="block text-sm font-semibold text-ink-700">
             The register, as a CSV or Excel (XLSX)
@@ -498,7 +498,7 @@ function Sessions({ sessions, isLoading, onDone, onError }) {
   return (
     <div className="mt-4 space-y-5">
       <form
-        className="flex flex-wrap items-end gap-3 rounded-lg border border-line bg-surface p-5"
+        className="flex flex-wrap items-end gap-3 rounded-lg border border-line bg-surface p-3 sm:p-5"
         onSubmit={(event) => {
           event.preventDefault();
           create.mutate({ name, is_current: true });
@@ -520,7 +520,7 @@ function Sessions({ sessions, isLoading, onDone, onError }) {
       </form>
 
       {sessions.length === 0 ? (
-        <p className="rounded-lg border border-line bg-surface p-5 text-sm text-ink-600">
+        <p className="rounded-lg border border-line bg-surface p-3 sm:p-5 text-sm text-ink-600">
           No sessions yet. A register is imported into a session, so open the current one first.
         </p>
       ) : (
@@ -528,7 +528,7 @@ function Sessions({ sessions, isLoading, onDone, onError }) {
           {sessions.map((session) => (
             <li
               key={session.id}
-              className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface p-4"
+              className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface p-3 sm:p-4"
             >
               <span className="font-medium text-ink-900">{session.name}</span>
               {session.is_current ? (

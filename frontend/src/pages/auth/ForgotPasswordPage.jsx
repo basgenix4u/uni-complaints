@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
           </button>
           .
         </p>
-        <Link to="/login" className="mt-8 block text-center text-sm font-semibold text-brand-700 hover:underline">
+        <Link to="/login" className="mt-6 block text-center sm:mt-8 text-sm font-semibold text-brand-700 hover:underline">
           Back to sign in
         </Link>
       </div>
@@ -67,9 +67,9 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <form onSubmit={submit} className="w-full space-y-5">
+    <form onSubmit={submit} className="w-full space-y-4 sm:space-y-5">
       <div>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl text-ink-900">
           Forgotten your password
         </h1>
         <p className="mt-1.5 text-ink-600">

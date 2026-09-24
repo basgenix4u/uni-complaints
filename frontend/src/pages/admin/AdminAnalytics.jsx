@@ -135,14 +135,14 @@ const AdminAnalytics = () => {
   }
 
   return (
-    <div className="space-y-6 lg:space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       <PageHeader
         title="Analytics & Reports"
         description="Insights and statistics about complaint management"
       />
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
         {statCards.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -150,11 +150,11 @@ const AdminAnalytics = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="p-4 text-center sm:p-6">
-              <div className={`w-14 h-14 mx-auto rounded-2xl flex items-center justify-center mb-4 ${stat.color}`}>
-                <stat.icon className="w-7 h-7" />
+            <Card className="p-3 text-center sm:p-6">
+              <div className={`mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl sm:mb-4 sm:h-14 sm:w-14 sm:rounded-2xl ${stat.color}`}>
+                <stat.icon className="h-5 w-5 sm:h-7 sm:w-7" />
               </div>
-              <p className="text-3xl font-bold text-neutral-900">{stat.value}</p>
+              <p className="text-2xl font-bold text-neutral-900 sm:text-3xl">{stat.value}</p>
               <p className="text-neutral-500">{stat.title}</p>
             </Card>
           </motion.div>
@@ -162,8 +162,8 @@ const AdminAnalytics = () => {
       </div>
 
       {/* Trend Chart */}
-      <Card className="p-4 sm:p-6">
-        <Card.Header className="flex-wrap gap-3">
+      <Card className="p-3 sm:p-6">
+        <Card.Header className="flex-wrap gap-2 sm:gap-3">
           <Card.Title>Complaints Trend</Card.Title>
           <Select
             options={timeRangeOptions}
@@ -215,10 +215,10 @@ const AdminAnalytics = () => {
       </Card>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-6">
         {/* Status Distribution */}
-        <Card className="p-4 sm:p-6">
-          <Card.Header className="flex-wrap gap-3">
+        <Card className="p-3 sm:p-6">
+          <Card.Header className="flex-wrap gap-2 sm:gap-3">
             <Card.Title>Status Distribution</Card.Title>
           </Card.Header>
           <Card.Content>
@@ -249,8 +249,8 @@ const AdminAnalytics = () => {
         </Card>
 
         {/* Priority Distribution */}
-        <Card className="p-4 sm:p-6">
-          <Card.Header className="flex-wrap gap-3">
+        <Card className="p-3 sm:p-6">
+          <Card.Header className="flex-wrap gap-2 sm:gap-3">
             <Card.Title>Priority Distribution</Card.Title>
           </Card.Header>
           <Card.Content>
@@ -281,8 +281,8 @@ const AdminAnalytics = () => {
       </div>
 
       {/* Category Chart */}
-      <Card className="p-4 sm:p-6">
-        <Card.Header className="flex-wrap gap-3">
+      <Card className="p-3 sm:p-6">
+        <Card.Header className="flex-wrap gap-2 sm:gap-3">
           <Card.Title>Complaints by Category</Card.Title>
         </Card.Header>
         <Card.Content>
@@ -312,8 +312,8 @@ const AdminAnalytics = () => {
       </Card>
 
       {/* Monthly Chart */}
-      <Card className="p-4 sm:p-6">
-        <Card.Header className="flex-wrap gap-3">
+      <Card className="p-3 sm:p-6">
+        <Card.Header className="flex-wrap gap-2 sm:gap-3">
           <Card.Title>Monthly Complaints ({monthlyChartData?.year})</Card.Title>
         </Card.Header>
         <Card.Content>

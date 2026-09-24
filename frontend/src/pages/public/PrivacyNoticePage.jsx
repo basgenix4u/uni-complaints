@@ -2,14 +2,14 @@ import { Link } from 'react-router-dom';
 
 export default function PrivacyNoticePage() {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-16">
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-16">
       <Link to="/register" className="text-sm font-semibold text-brand-700 hover:underline">
         Back to registration
       </Link>
 
-      <header className="mt-5">
+      <header className="mt-4 sm:mt-5">
         <p className="text-caption font-bold uppercase tracking-wider text-ink-500">Resolve</p>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-ink-900">
+        <h1 className="mt-1 font-display text-2xl font-semibold tracking-tight sm:text-3xl text-ink-900">
           Privacy notice
         </h1>
         <p className="mt-2 max-w-2xl text-ink-600">
@@ -18,7 +18,7 @@ export default function PrivacyNoticePage() {
         </p>
       </header>
 
-      <div className="mt-8 space-y-5">
+      <div className="mt-6 space-y-4 sm:mt-8 sm:space-y-5">
         <Section title="What we collect">
           We collect the details you provide when you register or file a complaint, such as your
           name, contact details, student information, complaint details and any files you attach.
@@ -44,7 +44,7 @@ export default function PrivacyNoticePage() {
         </Section>
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-6 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
         <Link
           to="/register"
           className="inline-flex min-h-touch items-center justify-center rounded-md bg-brand-700 px-4 font-semibold text-white hover:bg-brand-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"

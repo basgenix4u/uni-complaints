@@ -69,10 +69,10 @@ export default function AdminComplaints() {
   };
 
   return (
-    <div className="mx-auto max-w-6xl px-1 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-6xl px-1 py-3 sm:px-4 sm:py-8">
       <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
             Complaints
           </h1>
           <p className="mt-1 text-ink-600">Triage, assign and respond.</p>
@@ -106,7 +106,7 @@ export default function AdminComplaints() {
         </p>
       )}
 
-      <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Saved views">
+      <div className="mt-4 flex flex-wrap gap-2 sm:mt-6" role="tablist" aria-label="Saved views">
         {VIEWS.map((entry) => (
           <button
             key={entry.key}
@@ -125,8 +125,8 @@ export default function AdminComplaints() {
         ))}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-3">
-        <div className="min-w-[220px] flex-1">
+      <div className="mt-3 flex flex-wrap gap-2 sm:mt-4 sm:gap-3">
+        <div className="w-full flex-1 sm:min-w-[220px]">
           <Input
             label="Search"
             placeholder="Title, ticket or description"
@@ -136,7 +136,7 @@ export default function AdminComplaints() {
             }}
           />
         </div>
-        <div className="min-w-[170px]">
+        <div className="w-full sm:min-w-[170px] sm:w-auto">
           <Select
             label="Status"
             value={status}
@@ -154,7 +154,7 @@ export default function AdminComplaints() {
               ))}
           </Select>
         </div>
-        <div className="min-w-[150px]">
+        <div className="w-full sm:min-w-[150px] sm:w-auto">
           <Select
             label="Priority"
             value={priority}
@@ -172,11 +172,11 @@ export default function AdminComplaints() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {isLoading && <SkeletonList rows={6} />}
 
         {!isLoading && complaints.length === 0 && (
-          <div className="rounded-lg border border-dashed border-line bg-surface px-6 py-16 text-center">
+          <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-10 text-center sm:px-6 sm:py-16">
             <InboxIcon className="mx-auto h-10 w-10 text-ink-500" aria-hidden="true" />
             <h2 className="mt-3 font-display text-lg font-semibold text-ink-900">
               Nothing here
@@ -208,7 +208,7 @@ export default function AdminComplaints() {
               <tbody>
                 {complaints.map((complaint) => (
                   <tr key={complaint.id} className="border-b border-line last:border-0 hover:bg-canvas">
-                    <td className="px-4 py-3 align-middle">
+                    <td className="px-2 py-2 align-middle sm:px-4 sm:py-3">
                       <Link
                         to={`/admin/complaints/${complaint.id}`}
                         className="font-mono text-caption font-semibold text-brand-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
@@ -216,7 +216,7 @@ export default function AdminComplaints() {
                         {complaint.ticket_number}
                       </Link>
                     </td>
-                    <td className="max-w-xs px-4 py-3 align-middle">
+                    <td className="max-w-[11rem] px-2 py-2 align-middle sm:max-w-xs sm:px-4 sm:py-3">
                       <Link to={`/admin/complaints/${complaint.id}`} className="block">
                         <span className="block truncate font-medium text-ink-900">
                           {complaint.title}
@@ -227,22 +227,22 @@ export default function AdminComplaints() {
                         </span>
                       </Link>
                     </td>
-                    <td className="px-4 py-3 align-middle">
+                    <td className="px-2 py-2 align-middle sm:px-4 sm:py-3">
                       <StatusBadge
                         status={complaint.status}
                         overdue={complaint.is_overdue}
                         size="sm"
                       />
                     </td>
-                    <td className="hidden px-4 py-3 align-middle md:table-cell">
+                    <td className="hidden px-2 py-2 align-middle md:table-cell sm:px-4 sm:py-3">
                       <PriorityBadge priority={complaint.priority} />
                     </td>
-                    <td className="hidden px-4 py-3 align-middle text-ink-600 lg:table-cell">
+                    <td className="hidden px-2 py-2 align-middle text-ink-600 lg:table-cell sm:px-4 sm:py-3">
                       {complaint.assigned_admin?.full_name || (
                         <span className="text-ink-500">Unassigned</span>
                       )}
                     </td>
-                    <td className="hidden px-4 py-3 align-middle text-caption sm:table-cell">
+                    <td className="hidden px-2 py-2 align-middle text-caption sm:table-cell sm:px-4 sm:py-3">
                       <span className={complaint.is_overdue ? 'font-semibold text-[#9F1239]' : 'text-ink-600'}>
                         {['resolved', 'closed', 'declined'].includes(complaint.status)
                           ? '—'
@@ -257,7 +257,7 @@ export default function AdminComplaints() {
         )}
 
         {pagination.total_pages > 1 && (
-          <nav className="mt-6 flex items-center justify-between" aria-label="Pages">
+          <nav className="mt-5 flex items-center justify-between sm:mt-6" aria-label="Pages">
             <Button
               variant="secondary"
               size="sm"
@@ -288,7 +288,7 @@ function Th({ children, className = '' }) {
   return (
     <th
       scope="col"
-      className={`px-4 py-3 text-left text-caption font-bold uppercase tracking-wider text-ink-500 ${className}`}
+      className={`px-2 py-2 text-left text-caption sm:px-4 sm:py-3 font-bold uppercase tracking-wider text-ink-500 ${className}`}
     >
       {children}
     </th>

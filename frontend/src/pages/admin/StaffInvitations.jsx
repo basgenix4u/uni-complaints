@@ -121,7 +121,7 @@ export default function StaffInvitations() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-8">
+      <div className="mx-auto max-w-3xl space-y-4 px-1 py-3 sm:px-4 sm:py-8">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -129,8 +129,8 @@ export default function StaffInvitations() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+    <div className="mx-auto max-w-3xl px-1 py-3 sm:px-4 sm:py-8">
+      <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
         Invite your staff
       </h1>
       <p className="mt-1 max-w-xl text-ink-600">
@@ -168,7 +168,7 @@ export default function StaffInvitations() {
       {/* Bulk import is administrator only on the server, so a unit head
           is not shown a tab that would refuse them. */}
       <div
-        className="mt-6 flex gap-1 rounded-lg border border-line bg-surface p-1"
+        className="mt-4 sm:mt-6 flex gap-1 rounded-lg border border-line bg-surface p-1"
         role="tablist"
         hidden={!canChooseUnit}
       >
@@ -193,7 +193,7 @@ export default function StaffInvitations() {
 
       {mode === 'one' || !canChooseUnit ? (
         <form
-          className="mt-4 space-y-4 rounded-lg border border-line bg-surface p-5"
+          className="mt-4 space-y-4 rounded-lg border border-line bg-surface p-3 sm:p-5"
           onSubmit={(event) => {
             event.preventDefault();
             invite.mutate({
@@ -250,7 +250,7 @@ export default function StaffInvitations() {
           </Button>
         </form>
       ) : (
-        <div className="mt-4 space-y-4 rounded-lg border border-line bg-surface p-5">
+        <div className="mt-4 space-y-4 rounded-lg border border-line bg-surface p-3 sm:p-5">
           <Textarea
             label="Paste the list"
             rows={7}
@@ -295,12 +295,12 @@ export default function StaffInvitations() {
         </div>
       )}
 
-      <h2 className="mt-8 font-display text-lg font-semibold text-ink-900">
+      <h2 className="mt-6 sm:mt-8 font-display text-lg font-semibold text-ink-900">
         Waiting to be accepted
       </h2>
 
       {pending.length === 0 ? (
-        <p className="mt-2 rounded-lg border border-line bg-surface p-5 text-sm text-ink-600">
+        <p className="mt-2 rounded-lg border border-line bg-surface p-3 sm:p-5 text-sm text-ink-600">
           Nothing outstanding. Everyone invited has either joined or been withdrawn.
         </p>
       ) : (
@@ -308,7 +308,7 @@ export default function StaffInvitations() {
           {pending.map((invitation) => (
             <li
               key={invitation.id}
-              className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface p-4"
+              className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface p-3 sm:p-4"
             >
               <EnvelopeIcon className="h-5 w-5 shrink-0 text-ink-500" aria-hidden="true" />
               <div className="min-w-0 flex-1">

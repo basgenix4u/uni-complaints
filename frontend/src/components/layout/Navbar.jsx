@@ -53,9 +53,9 @@ const Navbar = ({ isMenuOpen = false, onMenuClick, title }) => {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-surface backdrop-blur-xl">
-      <div className="flex min-h-16 items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
+      <div className="flex min-h-14 items-center justify-between gap-1 px-2.5 sm:min-h-16 sm:gap-1.5 sm:px-6 lg:px-8">
         {/* Left section */}
-        <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-1 sm:gap-4">
           <button
             type="button"
             onClick={onMenuClick}
@@ -72,7 +72,7 @@ const Navbar = ({ isMenuOpen = false, onMenuClick, title }) => {
           </button>
 
           <div className="min-w-0 max-w-[34vw] sm:max-w-none">
-            <h1 className="truncate text-base font-semibold text-ink-900 sm:text-xl">{title}</h1>
+            <h1 className="truncate text-sm font-semibold text-ink-900 sm:text-xl">{title}</h1>
           </div>
         </div>
 

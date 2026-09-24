@@ -30,10 +30,10 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl px-1 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-4xl px-1 py-3 sm:px-4 sm:py-8">
       <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl text-ink-900">
             Welcome back, {firstName}
           </h1>
           <p className="mt-1 text-ink-600">Here is where your complaints stand.</p>
@@ -48,7 +48,7 @@ export default function StudentDashboard() {
 
       {stats.awaiting_you > 0 && (
         <p
-          className="mt-6 rounded-lg px-4 py-3 text-sm font-medium"
+          className="mt-4 rounded-lg px-3 py-2.5 text-sm font-medium sm:mt-6 sm:px-4 sm:py-3"
           style={{
             backgroundColor: 'var(--status-acknowledged-bg)',
             color: 'var(--status-acknowledged-fg)',
@@ -63,9 +63,9 @@ export default function StudentDashboard() {
         </p>
       )}
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-6 sm:grid-cols-4 sm:gap-3">
         {cards.map((card) => (
-          <div key={card.label} className="rounded-lg border border-line bg-surface p-4 shadow-e1">
+          <div key={card.label} className="rounded-lg border border-line bg-surface p-3 shadow-e1 sm:p-4">
             <p className="text-caption font-bold uppercase tracking-wider text-ink-500">
               {card.label}
             </p>
@@ -80,7 +80,7 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      <section className="mt-8">
+      <section className="mt-6 sm:mt-8">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold text-ink-900">Recent</h2>
           <Link to="/student/complaints" className="text-sm font-semibold text-brand-700 hover:underline">
@@ -91,12 +91,12 @@ export default function StudentDashboard() {
         {isLoading && <SkeletonList rows={3} />}
 
         {!isLoading && recent.length === 0 && (
-          <div className="rounded-lg border border-dashed border-line bg-surface px-6 py-12 text-center">
+          <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-8 text-center sm:px-6 sm:py-12">
             <h3 className="font-display text-lg font-semibold text-ink-900">No complaints yet</h3>
             <p className="mx-auto mt-1 max-w-sm text-sm text-ink-600">
               When you file one, you will track it here from start to finish.
             </p>
-            <Link to="/student/complaints/new" className="mt-5 inline-block">
+            <Link to="/student/complaints/new" className="mt-4 inline-block sm:mt-5">
               <Button>File your first complaint</Button>
             </Link>
           </div>
@@ -107,7 +107,7 @@ export default function StudentDashboard() {
             <li key={complaint.id}>
               <Link
                 to={`/student/complaints/${complaint.id}`}
-                className="block rounded-lg border border-line bg-surface p-4 transition-shadow duration-150 hover:shadow-e2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+                className="block rounded-lg border border-line bg-surface p-3 transition-shadow sm:p-4 duration-150 hover:shadow-e2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">

@@ -105,13 +105,13 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
   const sidebarContent = (
     <>
       {/* Logo Section */}
-      <div className="flex h-16 items-center justify-between border-b border-line px-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg shadow-primary-500/30">
-            <span className="text-white font-bold text-lg">U</span>
+      <div className="flex h-14 items-center justify-between border-b border-line px-3 sm:h-16 sm:px-4">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 shadow-lg shadow-primary-500/30 sm:h-10 sm:w-10 sm:rounded-xl">
+            <span className="text-base font-bold text-white sm:text-lg">U</span>
           </div>
           <div>
-            <h1 className="font-bold text-neutral-900 text-lg leading-none">Resolve</h1>
+            <h1 className="text-base font-bold leading-none text-neutral-900 sm:text-lg">Resolve</h1>
             <p className="text-xs text-neutral-500">Complaint resolution</p>
           </div>
         </div>
@@ -129,9 +129,9 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
       </div>
 
       {/* User Info */}
-      <div className="mx-3 mt-3 rounded-md border border-brand-200 bg-brand-50 p-3">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center text-white font-semibold text-lg shadow-lg">
+      <div className="mx-2.5 mt-2.5 rounded-md border border-brand-200 bg-brand-50 p-2.5 sm:mx-3 sm:mt-3 sm:p-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 text-base font-semibold text-white shadow-lg sm:h-12 sm:w-12 sm:rounded-xl sm:text-lg">
             {user?.full_name?.charAt(0) || 'U'}
           </div>
           <div className="flex-1 min-w-0">
@@ -142,8 +142,8 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        <p className="px-3 mb-3 text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2.5 py-3 sm:px-3 sm:py-4">
+        <p className="mb-2 px-2.5 text-xs font-semibold uppercase tracking-wider text-neutral-400 sm:mb-3 sm:px-3">
           Menu
         </p>
         
@@ -162,7 +162,7 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
               to={item.href}
               onClick={isMobile ? onClose : undefined}
               className={cn(
-                'flex min-h-touch items-center gap-3 rounded-md px-3 py-2.5 transition-all duration-200 group relative',
+                'group relative flex min-h-touch items-center gap-2.5 rounded-md px-2.5 py-2 transition-all duration-200 sm:gap-3 sm:px-3 sm:py-2.5',
                 isActive
                   ? 'bg-brand-700 text-white shadow-e1'
                   : 'text-ink-600 hover:bg-canvas hover:text-ink-900'
@@ -189,10 +189,10 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
       </nav>
 
       {/* Logout Button */}
-      <div className="border-t border-line p-3">
+      <div className="border-t border-line p-2.5 sm:p-3">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-neutral-600 hover:bg-danger-50 hover:text-danger-600 transition-all duration-200 group"
+          className="group flex min-h-touch w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-neutral-600 transition-all duration-200 hover:bg-danger-50 hover:text-danger-600 sm:gap-3 sm:px-4 sm:py-3"
         >
           <ArrowRightOnRectangleIcon className="w-5 h-5 text-neutral-400 group-hover:text-danger-500" />
           <span className="font-medium">Logout</span>
@@ -226,7 +226,7 @@ const Sidebar = ({ isOpen, onClose, isMobile = false }) => {
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation"
-              className="fixed left-0 top-0 z-50 flex h-full w-[min(18rem,calc(100vw-1rem))] flex-col bg-surface shadow-e4 lg:hidden"
+              className="fixed left-0 top-0 z-50 flex h-full w-[min(17rem,calc(100vw-1rem))] sm:w-[min(18rem,calc(100vw-1rem))] flex-col bg-surface shadow-e4 lg:hidden"
             >
               {sidebarContent}
             </motion.aside>

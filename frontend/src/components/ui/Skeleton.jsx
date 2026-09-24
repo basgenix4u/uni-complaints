@@ -24,9 +24,9 @@ export default function Skeleton({ className, ...props }) {
 
 export function SkeletonList({ rows = 5 }) {
   return (
-    <div className="space-y-3" role="status" aria-label="Loading">
+    <div className="space-y-2 sm:space-y-3" role="status" aria-label="Loading">
       {Array.from({ length: rows }).map((_, index) => (
-        <div key={index} className="rounded-lg border border-line bg-surface p-4">
+        <div key={index} className="rounded-lg border border-line bg-surface p-3 sm:p-4">
           <div className="flex items-center justify-between gap-4">
             <Skeleton className="h-4 w-2/5" />
             <Skeleton className="h-6 w-24 rounded-full" />

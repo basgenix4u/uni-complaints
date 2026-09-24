@@ -34,10 +34,10 @@ const Card = React.forwardRef(
       <Comp
         ref={ref}
         className={cn(
-          'bg-white rounded-2xl shadow-soft border border-neutral-100 overflow-hidden',
+          'bg-white rounded-xl shadow-soft border border-neutral-100 overflow-hidden sm:rounded-2xl',
           hover && 'transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 hover:border-primary-100',
           interactive && 'cursor-pointer active:scale-[0.98]',
-          padding && 'p-4 sm:p-6',
+          padding && 'p-3 sm:p-6',
           className
         )}
         {...animationProps}
@@ -53,7 +53,7 @@ Card.displayName = 'Card';
 
 const CardHeader = ({ children, className = '', ...props }) => (
   <div
-    className={cn('flex items-center justify-between mb-4', className)}
+    className={cn('flex items-center justify-between mb-3 sm:mb-4', className)}
     {...props}
   >
     {children}
@@ -83,7 +83,7 @@ const CardContent = ({ children, className = '', ...props }) => (
 
 const CardFooter = ({ children, className = '', ...props }) => (
   <div
-    className={cn('mt-6 flex flex-col-reverse items-stretch justify-end gap-2 border-t border-line pt-4 sm:flex-row sm:items-center sm:gap-3', className)}
+    className={cn('mt-4 flex flex-col-reverse items-stretch justify-end gap-2 border-t border-line pt-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-3 sm:pt-4', className)}
     {...props}
   >
     {children}

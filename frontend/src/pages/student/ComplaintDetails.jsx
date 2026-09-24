@@ -59,7 +59,7 @@ export default function ComplaintDetails() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-1 py-5 sm:px-4 sm:py-8">
+      <div className="mx-auto max-w-3xl px-1 py-3 sm:px-4 sm:py-8">
         <SkeletonList rows={4} />
       </div>
     );
@@ -67,7 +67,7 @@ export default function ComplaintDetails() {
 
   if (!complaint) {
     return (
-      <div className="mx-auto max-w-3xl px-1 py-12 text-center sm:px-4 sm:py-16">
+      <div className="mx-auto max-w-3xl px-1 py-8 text-center sm:px-4 sm:py-16">
         <h1 className="font-display text-xl font-semibold text-ink-900">
           We could not find that complaint.
         </h1>
@@ -81,7 +81,7 @@ export default function ComplaintDetails() {
   const closed = ['resolved', 'closed', 'declined'].includes(complaint.status);
 
   return (
-    <div className="mx-auto max-w-3xl px-1 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-3xl px-1 py-3 sm:px-4 sm:py-8">
       <Link
         to="/student/complaints"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-700"
@@ -119,7 +119,7 @@ export default function ComplaintDetails() {
           </div>
         </div>
 
-        <div className="mt-5 border-t border-line pt-4">
+        <div className="mt-4 border-t border-line pt-3 sm:mt-5 sm:pt-4">
           <ProgressRail status={complaint.status} />
         </div>
 
@@ -171,7 +171,7 @@ export default function ComplaintDetails() {
         />
       )}
 
-      <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <section className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-5 sm:p-6">
         <h2 className="text-sm font-bold text-ink-900">What you reported</h2>
         <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-700">
           {complaint.description}
@@ -182,13 +182,13 @@ export default function ComplaintDetails() {
           anything happened?" is the question a student returns to this
           page to answer. */}
       {complaint.events?.length > 0 && (
-        <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
-          <h2 className="mb-5 text-sm font-bold text-ink-900">What has happened so far</h2>
+        <section className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-5 sm:p-6">
+          <h2 className="mb-4 text-sm font-bold text-ink-900 sm:mb-5">What has happened so far</h2>
           <Timeline events={complaint.events} />
         </section>
       )}
 
-      <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <section className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-5 sm:p-6">
         <AttachmentList
           complaintId={id}
           attachments={complaint.attachments || []}
@@ -197,7 +197,7 @@ export default function ComplaintDetails() {
         />
       </section>
 
-      <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <section className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-5 sm:p-6">
         <h2 className="mb-4 text-sm font-bold text-ink-900">
           Messages {complaint.responses?.length > 0 && `(${complaint.responses.length})`}
         </h2>
@@ -208,7 +208,7 @@ export default function ComplaintDetails() {
           </p>
         )}
 
-        <ol className="space-y-4">
+        <ol className="space-y-3 sm:space-y-4">
           {complaint.responses?.map((response) => {
             const fromStaff = response.author?.role && response.author.role !== 'student';
             return (
@@ -243,7 +243,7 @@ export default function ComplaintDetails() {
         </ol>
 
         {complaint.status !== 'closed' && (
-          <div className="mt-5 border-t border-line pt-5">
+          <div className="mt-4 border-t border-line pt-4 sm:mt-5 sm:pt-5">
             <Textarea
               label="Add a message"
               rows={3}
@@ -273,7 +273,7 @@ function Outcome({ tone, heading, body, footer, rating, onRate }) {
   const config = getStatus(tone);
   return (
     <section
-      className="mt-5 rounded-lg p-6"
+      className="mt-4 rounded-lg p-4 sm:mt-5 sm:p-6"
       style={{ backgroundColor: config.bg, color: config.fg }}
     >
       <h2 className="font-display text-lg font-semibold">{heading}</h2>
@@ -281,7 +281,7 @@ function Outcome({ tone, heading, body, footer, rating, onRate }) {
       {footer && <p className="mt-3 text-caption">{footer}</p>}
 
       {onRate && (
-        <div className="mt-4 border-t pt-4" style={{ borderColor: 'currentColor', opacity: 0.95 }}>
+        <div className="mt-3 border-t pt-3 sm:mt-4 sm:pt-4" style={{ borderColor: 'currentColor', opacity: 0.95 }}>
           {rating ? (
             <p className="text-sm font-semibold">Thank you for rating this {rating} out of 5.</p>
           ) : (

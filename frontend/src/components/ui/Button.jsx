@@ -14,8 +14,8 @@ const VARIANTS = {
 
 const SIZES = {
   // 44px is the minimum comfortable touch target on a phone.
-  md: 'h-11 px-5 text-base',
-  sm: 'h-9 px-3.5 text-sm',
+  md: 'h-11 px-4 text-sm sm:px-5 sm:text-base',
+  sm: 'h-11 px-3.5 text-sm sm:h-9',
   lg: 'h-12 px-6 text-base',
 };
 

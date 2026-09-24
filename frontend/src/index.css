@@ -557,3 +557,101 @@
   opacity: 0;
   transition: opacity 200ms;
 }
+/* ===== PHONE-FIRST APP DENSITY =====
+   The authenticated shell is intentionally denser below 640px. These rules
+   only apply to the phone breakpoint; tablet and desktop keep the established
+   spacing scale and information hierarchy. */
+@media (max-width: 639px) {
+  .mobile-app main {
+    padding-top: 0.75rem;
+  }
+
+  .mobile-app .verification-banner {
+    gap: 0.5rem;
+  }
+
+  .mobile-app .mobile-route > div:first-child {
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  .mobile-app .mobile-route > div.mx-auto {
+    padding-inline: 0.5rem !important;
+  }
+
+  /* Route sections use the compact surface rhythm, but tables and controls
+     keep their own padding so labels and touch targets remain comfortable. */
+  .mobile-app .rounded-lg.border.border-line.bg-surface.p-4,
+  .mobile-app .rounded-lg.border.border-line.bg-surface.p-5,
+  .mobile-app .rounded-lg.border.border-line.bg-surface.p-6,
+  .mobile-app .rounded-xl.border.border-line.bg-surface.p-4,
+  .mobile-app .rounded-xl.border.border-line.bg-surface.p-5,
+  .mobile-app .rounded-xl.border.border-line.bg-surface.p-6 {
+    padding: 0.75rem !important;
+  }
+
+  .mobile-app .rounded-xl.shadow-soft.p-4,
+  .mobile-app .rounded-xl.shadow-soft.p-6 {
+    padding: 0.75rem !important;
+  }
+
+  .mobile-app .space-y-8 > :not([hidden]) ~ :not([hidden]),
+  .mobile-app .space-y-6 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem;
+  }
+
+  .mobile-app .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.875rem;
+  }
+
+  .mobile-app .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.75rem;
+  }
+
+  .mobile-app .gap-6 {
+    gap: 1rem;
+  }
+
+  .mobile-app .gap-5 {
+    gap: 0.875rem;
+  }
+
+  /* Charts should support the first-screen summary instead of pushing all
+     actionable content below a large blank plot area. */
+  .mobile-app .h-64 {
+    height: 14rem !important;
+  }
+
+  .mobile-app .h-72 {
+    height: 15rem !important;
+  }
+
+  .mobile-app .mobile-route > div:first-child > .mt-8 {
+    margin-top: 1.25rem !important;
+  }
+
+  .mobile-app .mobile-route > div:first-child > .mt-6 {
+    margin-top: 1rem !important;
+  }
+
+  .mobile-app .mobile-route > div:first-child > .mb-8 {
+    margin-bottom: 1.25rem !important;
+  }
+
+  .mobile-app .overflow-x-auto {
+    max-width: 100%;
+    overscroll-behavior-inline: contain;
+  }
+
+  .mobile-auth-shell > div:last-child {
+    padding-top: 1.5rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .mobile-auth-shell .mb-8 {
+    margin-bottom: 1.5rem;
+  }
+
+  .mobile-auth-shell .space-y-5 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.875rem;
+  }
+}

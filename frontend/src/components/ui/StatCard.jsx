@@ -40,7 +40,7 @@ const StatCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.25, 0.1, 0.25, 1] }}
       className={cn(
-        'bg-white rounded-xl shadow-e1 border border-line p-4 sm:p-5 hover:shadow-e2 transition-shadow',
+        'bg-white rounded-lg shadow-e1 border border-line p-3 sm:rounded-xl sm:p-5 hover:shadow-e2 transition-shadow',
         className
       )}
     >
@@ -51,13 +51,13 @@ const StatCard = ({
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: delay + 0.2, type: 'spring', stiffness: 200 }}
-            className="text-2xl font-bold text-neutral-900 sm:text-3xl"
+            className="text-2xl font-bold leading-tight text-neutral-900 sm:text-3xl"
           >
             {typeof value === 'number' ? formatNumber(value) : value}
           </motion.p>
 
           {change !== undefined && (
-            <div className="flex items-center gap-1 mt-2">
+            <div className="mt-1.5 flex items-center gap-1 sm:mt-2">
               <span
                 className={cn(
                   'inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-xs font-medium',

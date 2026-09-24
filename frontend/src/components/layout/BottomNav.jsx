@@ -40,7 +40,7 @@ export default function BottomNav() {
               to={href}
               end={end}
               className={({ isActive }) =>
-                `flex min-h-14 flex-col items-center justify-center gap-0.5 text-caption font-medium ${
+                `flex min-h-12 flex-col items-center justify-center gap-0 text-[11px] font-medium leading-tight sm:min-h-14 sm:gap-0.5 sm:text-caption ${
                   isActive ? 'text-brand-700' : 'text-ink-500'
                 }`
               }
@@ -48,9 +48,9 @@ export default function BottomNav() {
               {({ isActive }) => (
                 <>
                   {isActive ? (
-                    <ActiveIcon className="h-6 w-6" aria-hidden="true" />
+                    <ActiveIcon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
                   ) : (
-                    <Icon className="h-6 w-6" aria-hidden="true" />
+                    <Icon className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden="true" />
                   )}
                   {name}
                 </>

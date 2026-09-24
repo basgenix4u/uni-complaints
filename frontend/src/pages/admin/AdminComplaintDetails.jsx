@@ -107,7 +107,7 @@ export default function AdminComplaintDetails() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-8">
+      <div className="mx-auto max-w-5xl px-1 py-3 sm:px-4 sm:py-8">
         <SkeletonList rows={4} />
       </div>
     );
@@ -115,7 +115,7 @@ export default function AdminComplaintDetails() {
 
   if (!complaint) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-16 text-center">
+      <div className="mx-auto max-w-5xl px-1 py-8 sm:px-4 sm:py-16 text-center">
         <h1 className="font-display text-xl font-semibold text-ink-900">
           We could not find that complaint.
         </h1>
@@ -131,7 +131,7 @@ export default function AdminComplaintDetails() {
   const canAssign = ['dept_head', 'dean', 'institution_admin', 'platform_admin'].includes(user?.role);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-5xl px-1 py-3 sm:px-4 sm:py-8">
       <Link
         to="/admin/complaints"
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-600 hover:text-brand-700"
@@ -150,9 +150,9 @@ export default function AdminComplaintDetails() {
         </p>
       )}
 
-      <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-5">
-          <header className="rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <div className="mt-3 grid gap-4 sm:mt-4 sm:gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-4 sm:space-y-5">
+          <header className="rounded-lg border border-line bg-surface p-4 shadow-e1 sm:p-6">
             <p className="font-mono text-caption font-semibold text-ink-500">
               {complaint.ticket_number}
             </p>
@@ -168,19 +168,19 @@ export default function AdminComplaintDetails() {
               <PriorityBadge priority={complaint.priority} />
             </div>
 
-            <div className="mt-5 border-t border-line pt-4">
+            <div className="mt-4 border-t border-line pt-3 sm:mt-5 sm:pt-4">
               <ProgressRail status={complaint.status} />
             </div>
           </header>
 
-          <section className="rounded-lg border border-line bg-surface p-6 shadow-e1">
+          <section className="rounded-lg border border-line bg-surface p-4 shadow-e1 sm:p-6">
             <h2 className="text-sm font-bold text-ink-900">What was reported</h2>
             <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink-700">
               {complaint.description}
             </p>
           </section>
 
-          <section className="rounded-lg border border-line bg-surface p-6 shadow-e1">
+          <section className="rounded-lg border border-line bg-surface p-4 shadow-e1 sm:p-6">
             <AttachmentList
               complaintId={id}
               attachments={complaint.attachments || []}
@@ -190,10 +190,10 @@ export default function AdminComplaintDetails() {
             />
           </section>
 
-          <section className="rounded-lg border border-line bg-surface p-6 shadow-e1">
+          <section className="rounded-lg border border-line bg-surface p-4 shadow-e1 sm:p-6">
             <h2 className="mb-4 text-sm font-bold text-ink-900">Thread</h2>
 
-            <ol className="space-y-4">
+            <ol className="space-y-3 sm:space-y-4">
               {complaint.responses?.map((response) => {
                 const fromStaff = response.author?.role && response.author.role !== 'student';
                 return (
@@ -243,7 +243,7 @@ export default function AdminComplaintDetails() {
             </ol>
 
             {complaint.status !== 'closed' && (
-              <div className="mt-5 border-t border-line pt-5">
+              <div className="mt-4 border-t border-line pt-4 sm:mt-5 sm:pt-5">
                 <Textarea
                   label={isInternal ? 'Private note' : 'Reply to the student'}
                   rows={3}
@@ -292,13 +292,13 @@ export default function AdminComplaintDetails() {
           </section>
         </div>
 
-        <aside className="space-y-5">
-          <section className="rounded-lg border border-line bg-surface p-5 shadow-e1">
+        <aside className="space-y-4 sm:space-y-5">
+          <section className="rounded-lg border border-line bg-surface p-3.5 shadow-e1 sm:p-5">
             <h2 className="text-sm font-bold text-ink-900">Move this on</h2>
             {options.length === 0 ? (
               <p className="mt-2 text-sm text-ink-500">This complaint is closed.</p>
             ) : (
-              <div className="mt-3 space-y-3">
+              <div className="mt-2.5 space-y-2.5 sm:mt-3 sm:space-y-3">
                 <Select
                   label="Next step"
                   value={statusTarget}
@@ -335,9 +335,9 @@ export default function AdminComplaintDetails() {
             )}
           </section>
 
-          <section className="rounded-lg border border-line bg-surface p-5 shadow-e1">
+          <section className="rounded-lg border border-line bg-surface p-3.5 shadow-e1 sm:p-5">
             <h2 className="text-sm font-bold text-ink-900">Ownership</h2>
-            <div className="mt-3 space-y-3">
+            <div className="mt-2.5 space-y-2.5 sm:mt-3 sm:space-y-3">
               {canAssign ? (
                 <Select
                   label="Who owns this"
@@ -372,7 +372,7 @@ export default function AdminComplaintDetails() {
             </div>
           </section>
 
-          <section className="rounded-lg border border-line bg-surface p-5 shadow-e1">
+          <section className="rounded-lg border border-line bg-surface p-3.5 shadow-e1 sm:p-5">
             <h2 className="text-sm font-bold text-ink-900">Detail</h2>
             <dl className="mt-3 space-y-2.5 text-sm">
               <Row label="Response due" value={formatDeadline(complaint.resolve_due_at)} />
@@ -390,9 +390,9 @@ export default function AdminComplaintDetails() {
           </section>
 
           {complaint.events?.length > 0 && (
-            <section className="rounded-lg border border-line bg-surface p-5 shadow-e1">
+            <section className="rounded-lg border border-line bg-surface p-3.5 shadow-e1 sm:p-5">
               <h2 className="text-sm font-bold text-ink-900">History</h2>
-              <ol className="mt-3 space-y-3">
+              <ol className="mt-2.5 space-y-2.5 sm:mt-3 sm:space-y-3">
                 {complaint.events.map((event) => (
                   <li key={event.id} className="border-l-2 border-line pl-3 text-caption">
                     <p className="font-semibold text-ink-700">

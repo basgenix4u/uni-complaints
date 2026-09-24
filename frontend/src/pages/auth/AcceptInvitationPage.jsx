@@ -74,9 +74,9 @@ export default function AcceptInvitationPage() {
   };
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-4 py-10">
+    <div className="mx-auto flex min-h-[70vh] max-w-md flex-col justify-center px-3 py-6 sm:px-4 sm:py-10">
       {state === 'loading' && (
-        <div className="rounded-2xl border border-line bg-surface p-8 text-center shadow-e2">
+        <div className="rounded-xl border border-line bg-surface p-5 sm:rounded-2xl sm:p-8 text-center shadow-e2">
           <div
             className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-brand-700 border-t-transparent"
             role="status"
@@ -86,7 +86,7 @@ export default function AcceptInvitationPage() {
       )}
 
       {state === 'invalid' && (
-        <div className="rounded-2xl border border-line bg-surface p-8 text-center shadow-e2">
+        <div className="rounded-xl border border-line bg-surface p-5 sm:rounded-2xl sm:p-8 text-center shadow-e2">
           <ExclamationTriangleIcon className="mx-auto h-12 w-12 text-ink-500" aria-hidden="true" />
           <h1 className="mt-3 font-display text-xl font-semibold text-ink-900">
             That invitation cannot be used.
@@ -107,7 +107,7 @@ export default function AcceptInvitationPage() {
       )}
 
       {state === 'done' && (
-        <div className="rounded-2xl border border-line bg-surface p-8 text-center shadow-e2">
+        <div className="rounded-xl border border-line bg-surface p-5 sm:rounded-2xl sm:p-8 text-center shadow-e2">
           <CheckCircleIcon className="mx-auto h-12 w-12 text-brand-700" aria-hidden="true" />
           <h1 className="mt-3 font-display text-xl font-semibold text-ink-900">
             Your account is ready.
@@ -122,7 +122,7 @@ export default function AcceptInvitationPage() {
       )}
 
       {state === 'ready' && invitation && (
-        <div className="rounded-2xl border border-line bg-surface p-8 shadow-e2">
+        <div className="rounded-xl border border-line bg-surface p-5 sm:rounded-2xl sm:p-8 shadow-e2">
           <h1 className="font-display text-2xl font-semibold text-ink-900">
             Join {invitation.institution}
           </h1>

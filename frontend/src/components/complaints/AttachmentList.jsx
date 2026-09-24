@@ -91,7 +91,7 @@ export default function AttachmentList({
         {attachments.map((file) => (
             <li
               key={file.id}
-              className="flex items-center gap-3 rounded-md border border-line bg-surface px-3.5 py-2.5"
+              className="flex flex-wrap items-center gap-2.5 rounded-md border border-line bg-surface px-3 py-2 sm:flex-nowrap sm:gap-3 sm:px-3.5 sm:py-2.5"
             >
               {file.is_image ? (
                 <AttachmentPreview

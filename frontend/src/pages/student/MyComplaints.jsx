@@ -43,10 +43,10 @@ export default function MyComplaints() {
   const pagination = data?.pagination || {};
 
   return (
-    <div className="mx-auto max-w-4xl px-1 py-5 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-4xl px-1 py-3 sm:px-4 sm:py-8">
       <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl text-ink-900">
             My complaints
           </h1>
           <p className="mt-1 text-ink-600">Everything you have filed, and where it has reached.</p>
@@ -59,8 +59,8 @@ export default function MyComplaints() {
         </Link>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        <div className="min-w-[220px] flex-1">
+      <div className="mt-4 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
+        <div className="w-full flex-1 sm:min-w-[220px]">
           <Input
             label="Search"
             placeholder="Title or ticket number"
@@ -70,7 +70,7 @@ export default function MyComplaints() {
             }}
           />
         </div>
-        <div className="min-w-[180px]">
+        <div className="w-full sm:min-w-[180px] sm:w-auto">
           <Select
             label="Status"
             value={status}
@@ -90,11 +90,11 @@ export default function MyComplaints() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         {isLoading && <SkeletonList rows={5} />}
 
         {!isLoading && complaints.length === 0 && (
-          <div className="rounded-lg border border-dashed border-line bg-surface px-6 py-16 text-center">
+          <div className="rounded-lg border border-dashed border-line bg-surface px-4 py-10 text-center sm:px-6 sm:py-16">
             <MagnifyingGlassIcon className="mx-auto h-10 w-10 text-ink-500" aria-hidden="true" />
             <h2 className="mt-3 font-display text-lg font-semibold text-ink-900">
               {search || status ? 'Nothing matches that' : 'No complaints yet'}
@@ -117,7 +117,7 @@ export default function MyComplaints() {
             <li key={complaint.id}>
               <Link
                 to={`/student/complaints/${complaint.id}`}
-                className="block rounded-lg border border-line bg-surface p-4 transition-shadow duration-150 hover:shadow-e2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
+                className="block rounded-lg border border-line bg-surface p-3 transition-shadow sm:p-4 duration-150 hover:shadow-e2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-700"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -145,7 +145,7 @@ export default function MyComplaints() {
         </ul>
 
         {pagination.total_pages > 1 && (
-          <nav className="mt-6 flex items-center justify-between" aria-label="Pages">
+          <nav className="mt-5 flex items-center justify-between sm:mt-6" aria-label="Pages">
             <Button
               variant="secondary"
               size="sm"

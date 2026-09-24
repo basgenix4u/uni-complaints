@@ -29,17 +29,17 @@ export default function Receipt({ complaint, institution }) {
   const deadline = formatDeadline(complaint.resolve_due_at);
 
   return (
-    <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-line bg-surface shadow-e4">
-      <div className="bg-gradient-to-b from-brand-50 to-transparent px-8 pb-7 pt-10 text-center">
-        <span className="mx-auto mb-4 flex h-16 w-16 animate-pop items-center justify-center rounded-full bg-brand-700 shadow-e3">
+    <div className="mx-auto max-w-xl overflow-hidden rounded-xl border border-line bg-surface shadow-e4 sm:rounded-2xl">
+      <div className="bg-gradient-to-b from-brand-50 to-transparent px-4 pb-5 pt-7 sm:px-8 sm:pb-7 sm:pt-10 text-center">
+        <span className="mx-auto mb-4 flex h-14 w-14 sm:h-16 sm:w-16 animate-pop items-center justify-center rounded-full bg-brand-700 shadow-e3">
           <CheckIcon className="h-8 w-8 stroke-[3] text-white" aria-hidden="true" />
         </span>
         <h1 className="font-display text-2xl font-semibold text-ink-900">Your complaint is logged.</h1>
         <p className="mt-1.5 text-ink-600">Keep this ticket. You can check it without signing in.</p>
       </div>
 
-      <div className="mx-8 overflow-hidden rounded-lg border border-line">
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-canvas px-5 py-4">
+      <div className="mx-3 overflow-hidden rounded-lg border border-line sm:mx-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-canvas px-3 py-3 sm:px-5 sm:py-4">
           <div>
             <p className="text-caption font-bold uppercase tracking-wider text-ink-500">Ticket</p>
             <p className="font-mono text-xl font-semibold text-ink-900">{complaint.ticket_number}</p>
@@ -62,7 +62,7 @@ export default function Receipt({ complaint, institution }) {
         </dl>
       </div>
 
-      <div className="px-8 pb-6 pt-7">
+      <div className="px-4 pb-5 pt-5 sm:px-8 sm:pb-6 sm:pt-7">
         <h2 className="mb-3.5 text-sm font-bold text-ink-900">What happens next</h2>
         <ol className="space-y-3">
           <Step n={1}>
@@ -83,11 +83,11 @@ export default function Receipt({ complaint, institution }) {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-3 px-8 pb-8">
-        <Link to={`/student/complaints/${complaint.id}`} className="min-w-[12rem] flex-1">
+      <div className="flex flex-wrap gap-2 px-4 pb-5 sm:gap-3 sm:px-8 sm:pb-8">
+        <Link to={`/student/complaints/${complaint.id}`} className="w-full flex-1 sm:min-w-[12rem]">
           <Button className="w-full">Track this complaint</Button>
         </Link>
-        <Link to="/student/complaints" className="min-w-[12rem] flex-1">
+        <Link to="/student/complaints" className="w-full flex-1 sm:min-w-[12rem]">
           <Button variant="secondary" className="w-full">
             Back to my complaints
           </Button>
@@ -99,7 +99,7 @@ export default function Receipt({ complaint, institution }) {
 
 function Row({ label, value, capitalise = false }) {
   return (
-    <div className="flex items-center justify-between gap-4 px-5 py-3">
+    <div className="flex items-start justify-between gap-3 px-3 py-2.5 sm:items-center sm:gap-4 sm:px-5 sm:py-3">
       <dt className="text-ink-500">{label}</dt>
       <dd className={`text-right font-semibold text-ink-900 ${capitalise ? 'capitalize' : ''}`}>
         {value}

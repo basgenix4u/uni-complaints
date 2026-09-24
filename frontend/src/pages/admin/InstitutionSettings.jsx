@@ -63,7 +63,7 @@ export default function InstitutionSettings() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-8">
+      <div className="mx-auto max-w-3xl space-y-4 px-1 py-3 sm:px-4 sm:py-8">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -78,11 +78,11 @@ export default function InstitutionSettings() {
     const orphaned = user?.role === 'platform_admin' && !user?.institution_id;
 
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+      <div className="mx-auto max-w-3xl px-1 py-3 sm:px-4 sm:py-8">
+        <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
           Settings
         </h1>
-        <div className="mt-6 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <div className="mt-4 sm:mt-6 rounded-lg border border-line bg-surface p-3 sm:p-6 shadow-e1">
           <BuildingOffice2Icon className="h-8 w-8 text-ink-400" aria-hidden="true" />
           <p className="mt-3 font-semibold text-ink-900">
             {orphaned
@@ -105,13 +105,13 @@ export default function InstitutionSettings() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">Settings</h1>
+    <div className="mx-auto max-w-3xl px-1 py-3 sm:px-4 sm:py-8">
+      <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">Settings</h1>
       <p className="mt-1 text-ink-600">
         How {form.name} appears, and how quickly complaints must be answered.
       </p>
 
-      <div className="mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Settings sections">
+      <div className="mt-4 sm:mt-6 flex flex-wrap gap-2" role="tablist" aria-label="Settings sections">
         {TABS.map((entry) => (
           <button
             key={entry.key}
@@ -151,7 +151,7 @@ export default function InstitutionSettings() {
       )}
 
       {tab === 'profile' && (
-        <section className="mt-5 space-y-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <section className="mt-5 space-y-5 rounded-lg border border-line bg-surface p-3 sm:p-6 shadow-e1">
           <Input
             label="Name"
             required
@@ -211,7 +211,7 @@ export default function InstitutionSettings() {
       )}
 
       {tab === 'service' && (
-        <section className="mt-5 space-y-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <section className="mt-5 space-y-5 rounded-lg border border-line bg-surface p-3 sm:p-6 shadow-e1">
           <p className="flex gap-2.5 rounded-md border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
             <ClockIcon className="h-5 w-5 flex-none" aria-hidden="true" />
             <span>
@@ -312,7 +312,7 @@ function DepartmentSettings({ departments }) {
   });
 
   return (
-    <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+    <section className="mt-5 rounded-lg border border-line bg-surface p-3 sm:p-6 shadow-e1">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-sm font-bold text-ink-900">Departments</h2>
@@ -415,7 +415,7 @@ function DepartmentSettings({ departments }) {
           </li>
         ))}
         {departments.length === 0 && (
-          <li className="rounded-md border border-dashed border-line px-4 py-8 text-center text-sm text-ink-500">
+          <li className="rounded-md border border-dashed border-line px-1 py-3 sm:px-4 sm:py-8 text-center text-sm text-ink-500">
             No departments yet. Add one so complaints can be routed.
           </li>
         )}

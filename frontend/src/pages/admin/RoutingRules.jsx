@@ -70,7 +70,7 @@ export default function RoutingRules() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-4xl space-y-4 px-4 py-8">
+      <div className="mx-auto max-w-4xl space-y-4 px-1 py-3 sm:px-4 sm:py-8">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-64 w-full" />
       </div>
@@ -78,10 +78,10 @@ export default function RoutingRules() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
+    <div className="mx-auto max-w-4xl px-1 py-3 sm:px-4 sm:py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
             Who answers what
           </h1>
           <p className="mt-1 max-w-xl text-ink-600">
@@ -114,7 +114,7 @@ export default function RoutingRules() {
       </div>
 
       {units.length === 0 && (
-        <p className="mt-6 flex items-start gap-2 rounded-md border border-line bg-surface p-4 text-sm text-ink-600">
+        <p className="mt-4 sm:mt-6 flex items-start gap-2 rounded-md border border-line bg-surface p-4 text-sm text-ink-600">
           <ExclamationTriangleIcon className="h-5 w-5 shrink-0 text-ink-500" aria-hidden="true" />
           There are no units yet. Add them under Departments, or use “Fill in the usual” to start
           from the ones most Nigerian universities have.
@@ -122,14 +122,14 @@ export default function RoutingRules() {
       )}
 
       {unrouted.length > 0 && units.length > 0 && (
-        <p className="mt-6 rounded-md border border-line bg-surface p-4 text-sm text-ink-600">
+        <p className="mt-4 sm:mt-6 rounded-md border border-line bg-surface p-4 text-sm text-ink-600">
           {unrouted.length} categor{unrouted.length === 1 ? 'y has' : 'ies have'} no rule.
           Complaints in {unrouted.length === 1 ? 'it' : 'them'} still arrive, but nobody is assigned
           to answer.
         </p>
       )}
 
-      <ul className="mt-6 space-y-2">
+      <ul className="mt-4 sm:mt-6 space-y-2">
         {ALL_CATEGORIES.map((item) => {
           const rule = byCategory[item.value];
           const isEditing = editing?.category === item.value;

@@ -112,11 +112,11 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <div className="mb-8 text-center">
+      <div className="mb-6 text-center sm:mb-8">
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-2 font-display text-3xl font-bold text-ink-900"
+          className="mb-2 font-display text-2xl font-bold text-ink-900 sm:text-3xl"
         >
           Create an account
         </motion.h1>
@@ -235,7 +235,7 @@ export default function RegisterPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}
-        className="mt-6 text-center text-ink-600"
+        className="mt-5 text-center sm:mt-6 text-ink-600"
       >
         Already have an account?{' '}
         <Link to="/login" className="font-semibold text-brand-700 hover:underline">
@@ -281,7 +281,7 @@ function ConfirmationStep({ email, onWrongEmail }) {
   return (
     <div className="text-center">
       <EnvelopeIcon className="mx-auto h-12 w-12 text-brand-700" aria-hidden="true" />
-      <h1 className="mt-3 font-display text-2xl font-bold text-ink-900">Check your email.</h1>
+      <h1 className="mt-3 font-display text-xl font-bold text-ink-900 sm:text-2xl">Check your email.</h1>
       <p className="mx-auto mt-2 max-w-sm text-ink-600">
         We sent a confirmation link to <strong>{email}</strong>. Open it to finish setting up your
         account. It may take a minute, and it is worth checking the spam folder.

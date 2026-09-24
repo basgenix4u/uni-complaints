@@ -176,10 +176,10 @@ export default function PlatformInstitutions() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8">
+    <div className="mx-auto max-w-5xl px-1 py-3 sm:px-4 sm:py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
             Institutions
           </h1>
           <p className="mt-1 text-ink-600">Every organisation using this deployment.</p>
@@ -192,7 +192,7 @@ export default function PlatformInstitutions() {
         )}
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mt-4 grid grid-cols-2 gap-2 sm:mt-6 sm:grid-cols-4 sm:gap-3">
         <Stat label="Institutions" value={stats.institutions} />
         <Stat label="Active" value={stats.active_institutions} />
         <Stat label="Users" value={stats.users} />
@@ -201,7 +201,7 @@ export default function PlatformInstitutions() {
 
       {created && (
         <section
-          className="mt-6 rounded-lg p-6"
+          className="mt-4 rounded-lg p-4 sm:mt-6 sm:p-6"
           style={{ backgroundColor: 'var(--status-resolved-bg)', color: 'var(--status-resolved-fg)' }}
         >
           <h2 className="font-display text-lg font-semibold">
@@ -229,7 +229,7 @@ export default function PlatformInstitutions() {
 
 
       {adding && (
-        <section className="mt-6 space-y-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <section className="mt-4 space-y-4 rounded-lg border border-line bg-surface p-3 sm:mt-6 sm:space-y-5 sm:p-6 shadow-e1">
           {!picked && (
             <>
               <div>
@@ -396,7 +396,7 @@ export default function PlatformInstitutions() {
       )}
 
       {creating && (
-        <section className="mt-6 space-y-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <section className="mt-4 space-y-4 rounded-lg border border-line bg-surface p-3 sm:mt-6 sm:space-y-5 sm:p-6 shadow-e1">
           <h2 className="text-sm font-bold text-ink-900">New institution</h2>
 
           {errors.form && (
@@ -513,7 +513,7 @@ export default function PlatformInstitutions() {
         </section>
       )}
 
-      <div className="mt-6 flex flex-wrap items-end gap-3">
+      <div className="mt-4 flex flex-wrap items-end gap-2 sm:mt-6 sm:gap-3">
         <div
           className="inline-flex rounded-md border border-line bg-surface p-0.5"
           role="tablist"
@@ -541,7 +541,7 @@ export default function PlatformInstitutions() {
           ))}
         </div>
 
-        <div className="min-w-[14rem] flex-1">
+        <div className="w-full flex-1 sm:min-w-[14rem]">
           <Input
             label="Filter"
             value={filter}
@@ -552,7 +552,7 @@ export default function PlatformInstitutions() {
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3 sm:mt-4">
         {isLoading && <Skeleton className="h-48 w-full" />}
 
         {!isLoading && institutions.length > 0 && (
@@ -562,7 +562,7 @@ export default function PlatformInstitutions() {
               <thead>
                 <tr className="border-b border-line">
                   <Th>Institution</Th>
-                  <Th>Prefix</Th>
+                  <Th className="hidden sm:table-cell">Prefix</Th>
                   <Th className="hidden sm:table-cell">Users</Th>
                   <Th className="hidden md:table-cell">Added</Th>
                   <Th>Status</Th>
@@ -572,11 +572,11 @@ export default function PlatformInstitutions() {
               <tbody>
                 {institutions.map((institution) => (
                   <tr key={institution.id} className="border-b border-line last:border-0">
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2 sm:px-4 sm:py-3">
                       <p className="font-medium text-ink-900">{institution.name}</p>
                       <p className="font-mono text-caption text-ink-500">{institution.slug}</p>
                     </td>
-                    <td className="px-4 py-3 font-mono text-caption text-ink-600">
+                    <td className="hidden px-2 py-2 font-mono text-caption text-ink-600 sm:table-cell sm:px-4 sm:py-3">
                       {institution.code}
                     </td>
                     <td className="hidden px-4 py-3 text-ink-600 sm:table-cell">
@@ -585,7 +585,7 @@ export default function PlatformInstitutions() {
                     <td className="hidden px-4 py-3 text-caption text-ink-500 md:table-cell">
                       {formatDate(institution.created_at)}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-2 py-2 sm:px-4 sm:py-3">
                       <span
                         className="rounded-full px-2.5 py-0.5 text-caption font-semibold"
                         style={
@@ -608,7 +608,7 @@ export default function PlatformInstitutions() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
                       {institution.is_onboarded ? (
                         <Button
                           variant="ghost"
@@ -663,7 +663,7 @@ export default function PlatformInstitutions() {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-lg border border-line bg-surface p-4 shadow-e1">
+    <div className="rounded-lg border border-line bg-surface p-3 shadow-e1 sm:p-4">
       <p className="text-caption font-bold uppercase tracking-wider text-ink-500">{label}</p>
       <p className="mt-1 font-display text-2xl font-semibold text-ink-900">{value ?? 0}</p>
     </div>
@@ -683,7 +683,7 @@ function Th({ children, className = '' }) {
   return (
     <th
       scope="col"
-      className={`px-4 py-3 text-left text-caption font-bold uppercase tracking-wider text-ink-500 ${className}`}
+      className={`px-2 py-2 sm:px-4 sm:py-3 text-left text-caption font-bold uppercase tracking-wider text-ink-500 ${className}`}
     >
       {children}
     </th>

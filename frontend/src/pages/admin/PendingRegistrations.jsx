@@ -59,7 +59,7 @@ export default function PendingRegistrations() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-8">
+      <div className="mx-auto max-w-3xl space-y-4 px-1 py-3 sm:px-4 sm:py-8">
         <Skeleton className="h-8 w-56" />
         <Skeleton className="h-48 w-full" />
       </div>
@@ -67,8 +67,8 @@ export default function PendingRegistrations() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+    <div className="mx-auto max-w-3xl px-1 py-3 sm:px-4 sm:py-8">
+      <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
         Registrations to check
       </h1>
       <p className="mt-1 max-w-xl text-ink-600">
@@ -101,7 +101,7 @@ export default function PendingRegistrations() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="mt-6 flex items-start gap-3 rounded-lg border border-line bg-surface p-6">
+        <div className="mt-4 sm:mt-6 flex items-start gap-3 rounded-lg border border-line bg-surface p-3 sm:p-6">
           <CheckCircleIcon className="h-6 w-6 shrink-0 text-brand-700" aria-hidden="true" />
           <div>
             <p className="font-medium text-ink-900">Nothing waiting.</p>
@@ -111,9 +111,9 @@ export default function PendingRegistrations() {
           </div>
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="mt-4 sm:mt-6 space-y-3">
           {rows.map((person) => (
-            <li key={person.id} className="rounded-lg border border-line bg-surface p-4">
+            <li key={person.id} className="rounded-lg border border-line bg-surface p-3 sm:p-4">
               <div className="flex flex-wrap items-start gap-3">
                 <UserPlusIcon className="mt-0.5 h-5 w-5 shrink-0 text-ink-500" aria-hidden="true" />
                 <div className="min-w-0 flex-1">

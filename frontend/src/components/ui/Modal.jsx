@@ -45,7 +45,7 @@ const Modal = ({
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
+          <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -57,16 +57,16 @@ const Modal = ({
             >
               <Dialog.Panel
                 className={cn(
-                  'flex max-h-[calc(100dvh-2rem)] w-full transform flex-col overflow-hidden rounded-xl bg-surface shadow-e4 transition-all sm:rounded-2xl',
+                  'flex max-h-[calc(100dvh-1rem)] w-full transform flex-col overflow-hidden rounded-xl bg-surface shadow-e4 transition-all sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl',
                   sizeClasses[size],
                   className
                 )}
               >
                 {(title || showCloseButton) && (
-                  <div className="flex flex-none items-start justify-between gap-4 border-b border-line p-4 sm:p-6">
+                  <div className="flex flex-none items-start justify-between gap-3 border-b border-line p-3 sm:gap-4 sm:p-6">
                     <div>
                       {title && (
-                        <Dialog.Title className="text-xl font-semibold text-neutral-900">
+                        <Dialog.Title className="text-lg font-semibold text-neutral-900 sm:text-xl">
                           {title}
                         </Dialog.Title>
                       )}
@@ -89,7 +89,7 @@ const Modal = ({
                   </div>
                 )}
 
-                <div className="min-h-0 overflow-y-auto p-4 sm:p-6">{children}</div>
+                <div className="min-h-0 overflow-y-auto p-3 sm:p-6">{children}</div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
@@ -102,7 +102,7 @@ const Modal = ({
 const ModalFooter = ({ children, className = '' }) => (
   <div
     className={cn(
-      'mt-6 flex flex-col-reverse items-stretch justify-end gap-2 border-t border-line pt-4 sm:flex-row sm:items-center sm:gap-3',
+      'mt-4 flex flex-col-reverse items-stretch justify-end gap-2 border-t border-line pt-3 sm:mt-6 sm:flex-row sm:items-center sm:gap-3 sm:pt-4',
       className
     )}
   >

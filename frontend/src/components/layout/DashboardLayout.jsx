@@ -93,7 +93,7 @@ const DashboardLayout = () => {
   }, []);
 
   return (
-    <div className="min-h-screen min-w-0 overflow-x-clip bg-canvas">
+    <div className="mobile-app min-h-screen min-w-0 overflow-x-clip bg-canvas">
       {/* Desktop Sidebar */}
       <Sidebar isOpen={true} onClose={() => {}} isMobile={false} />
 
@@ -117,12 +117,12 @@ const DashboardLayout = () => {
 
         {/* Page Content. Bottom padding on phones clears the tab bar. */}
         <main
-          className={`mx-auto min-w-0 max-w-[1680px] px-3 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 ${
-            isStudent ? 'pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-8' : ''
+          className={`mx-auto min-w-0 max-w-[1680px] px-3 py-3 sm:px-6 sm:py-6 lg:px-8 lg:py-8 ${
+            isStudent ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))] lg:pb-8' : ''
           }`}
         >
           <motion.div
-            className="min-w-0"
+            className="mobile-route min-w-0"
             key={location.pathname}
             initial="initial"
             animate="animate"

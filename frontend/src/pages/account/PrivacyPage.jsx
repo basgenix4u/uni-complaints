@@ -48,8 +48,8 @@ export default function PrivacyPage() {
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+    <div className="mx-auto max-w-2xl px-1 py-3 sm:px-4 sm:py-8">
+      <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl text-ink-900">
         Your data
       </h1>
       <p className="mt-1 text-ink-600">
@@ -59,7 +59,7 @@ export default function PrivacyPage() {
       {notice && (
         <p
           role="status"
-          className="mt-5 rounded-md px-4 py-3 text-sm font-medium"
+          className="mt-4 rounded-md sm:mt-5 px-4 py-3 text-sm font-medium"
           style={{ backgroundColor: 'var(--status-resolved-bg)', color: 'var(--status-resolved-fg)' }}
         >
           {notice}
@@ -69,14 +69,14 @@ export default function PrivacyPage() {
       {error && (
         <p
           role="alert"
-          className="mt-5 rounded-md px-4 py-3 text-sm font-medium"
+          className="mt-4 rounded-md sm:mt-5 px-4 py-3 text-sm font-medium"
           style={{ backgroundColor: 'var(--status-declined-bg)', color: 'var(--status-declined-fg)' }}
         >
           {error}
         </p>
       )}
 
-      <section className="mt-6 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <section className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-6 sm:p-6">
         <h2 className="text-sm font-bold text-ink-900">Take a copy</h2>
         <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
           Download everything held about you: your account, every complaint you filed, the
@@ -89,7 +89,7 @@ export default function PrivacyPage() {
         </Button>
       </section>
 
-      <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+      <section className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-5 sm:p-6">
         <h2 className="text-sm font-bold text-ink-900">What we keep, and for how long</h2>
         <dl className="mt-3 space-y-2.5 text-sm">
           <Row
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
 
       {isStudent && (
         <section
-          className="mt-5 rounded-lg border p-6"
+          className="mt-4 rounded-lg border p-4 sm:mt-5 sm:p-6"
           style={{ borderColor: '#FECACA', backgroundColor: 'var(--status-declined-bg)' }}
         >
           <h2
@@ -139,7 +139,7 @@ export default function PrivacyPage() {
               Erase my data
             </Button>
           ) : (
-            <div className="mt-4 space-y-4 rounded-md border border-line bg-surface p-4">
+            <div className="mt-4 space-y-3 rounded-md border border-line bg-surface p-3 sm:space-y-4 sm:p-4">
               <Input
                 label="Your password"
                 type="password"
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
       )}
 
       {!isStudent && (
-        <section className="mt-5 rounded-lg border border-line bg-surface p-6 shadow-e1">
+        <section className="mt-4 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-5 sm:p-6">
           <h2 className="text-sm font-bold text-ink-900">Erasing a staff account</h2>
           <p className="mt-1.5 text-sm leading-relaxed text-ink-600">
             Staff accounts are erased by an administrator, so that open complaints can be handed

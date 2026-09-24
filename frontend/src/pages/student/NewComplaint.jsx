@@ -76,7 +76,7 @@ export default function NewComplaint() {
 
   if (receipt) {
     return (
-      <div className="px-4 py-10">
+      <div className="px-3 py-6 sm:px-4 sm:py-10">
         <Receipt complaint={receipt} institution={user?.institution} />
       </div>
     );
@@ -100,8 +100,8 @@ export default function NewComplaint() {
   const next = () => validateStep() && setStep((current) => current + 1);
 
   return (
-    <div className="mx-auto max-w-2xl px-1 py-5 sm:px-4 sm:py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+    <div className="mx-auto max-w-2xl px-1 py-3 sm:px-4 sm:py-8">
+      <h1 className="font-display text-xl font-semibold tracking-tight sm:text-2xl text-ink-900">
         File a complaint
       </h1>
       <p className="mt-1 text-ink-600">
@@ -111,7 +111,7 @@ export default function NewComplaint() {
       {!online && (
         <p
           role="status"
-          className="mt-4 rounded-md px-4 py-3 text-sm font-medium"
+          className="mt-3 rounded-md px-3 py-2.5 text-sm font-medium sm:mt-4 sm:px-4 sm:py-3"
           style={{
             backgroundColor: 'var(--status-progress-bg)',
             color: 'var(--status-progress-fg)',
@@ -125,7 +125,7 @@ export default function NewComplaint() {
       {restored && (
         <div
           role="status"
-          className="mt-4 flex items-start justify-between gap-3 rounded-md border border-line bg-canvas px-4 py-3 text-sm"
+          className="mt-3 flex items-start justify-between gap-2 rounded-md border border-line bg-canvas px-3 py-2.5 text-sm sm:mt-4 sm:gap-3 sm:px-4 sm:py-3"
         >
           <span className="text-ink-700">
             We kept what you wrote last time. Carry on where you stopped, or start over.
@@ -150,7 +150,7 @@ export default function NewComplaint() {
         </div>
       )}
 
-      <ol className="mt-6 flex gap-2" aria-label="Progress">
+      <ol className="mt-4 flex gap-2 sm:mt-6" aria-label="Progress">
         {STEPS.map((label, index) => (
           <li key={label} className="flex-1" aria-current={index === step ? 'step' : undefined}>
             <div
@@ -168,9 +168,9 @@ export default function NewComplaint() {
         ))}
       </ol>
 
-      <div className="mt-6 rounded-lg border border-line bg-surface p-4 shadow-e1 sm:mt-7 sm:p-6">
+      <div className="mt-4 rounded-lg border border-line bg-surface p-3 shadow-e1 sm:mt-7 sm:p-6">
         {step === 0 && (
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <Input
               label="Find a category"
               placeholder="Try 'transcript' or 'hostel'"
@@ -185,7 +185,7 @@ export default function NewComplaint() {
               </p>
             )}
 
-            <div className="space-y-5">
+            <div className="space-y-4 sm:space-y-5">
               {groups.map((group) => (
                 <fieldset key={group.name}>
                   <legend className="mb-2 text-sm font-bold text-ink-900">
@@ -223,7 +223,7 @@ export default function NewComplaint() {
         )}
 
         {step === 1 && (
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             <Input
               label="Title"
               required
@@ -300,7 +300,7 @@ export default function NewComplaint() {
               <p className="mb-1.5 text-caption font-bold uppercase tracking-wider text-ink-500">
                 What happened
               </p>
-              <p className="whitespace-pre-wrap rounded-md border border-line bg-canvas p-4 text-sm leading-relaxed text-ink-700">
+              <p className="whitespace-pre-wrap rounded-md border border-line bg-canvas p-3 text-sm leading-relaxed text-ink-700 sm:p-4">
                 {form.description}
               </p>
             </div>
@@ -316,7 +316,7 @@ export default function NewComplaint() {
           </div>
         )}
 
-        <div className="mt-7 flex items-center justify-between gap-3">
+        <div className="mt-5 flex items-center justify-between gap-2 sm:mt-7 sm:gap-3">
           <Button
             type="button"
             variant="ghost"

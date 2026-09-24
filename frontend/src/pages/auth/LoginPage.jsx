@@ -80,11 +80,11 @@ const LoginPage = () => {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <motion.h1
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="font-display text-3xl font-bold tracking-tight text-ink-900"
+          className="font-display text-2xl font-bold tracking-tight sm:text-3xl text-ink-900"
         >
           Welcome back
         </motion.h1>
@@ -104,7 +104,7 @@ const LoginPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-5"
+        className="space-y-4 sm:space-y-5"
       >
         {/* Email. autocomplete and inputmode so password managers fill
             it and phone keyboards show the @ key. */}
@@ -186,7 +186,7 @@ const LoginPage = () => {
       </motion.form>
 
       {/* Divider */}
-      <div className="relative my-8">
+      <div className="relative my-6 sm:my-8">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-line" />
         </div>
@@ -200,7 +200,7 @@ const LoginPage = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 text-center text-ink-600"
+        className="mt-6 text-center sm:mt-8 text-ink-600"
       >
         Don't have an account?{' '}
         <Link

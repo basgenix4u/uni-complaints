@@ -110,7 +110,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <div className="space-y-6 lg:space-y-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Welcome Section */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
         className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
       >
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-neutral-900 sm:text-3xl">
+          <h1 className="text-xl font-bold text-neutral-900 sm:text-3xl">
             Welcome back, {user?.full_name?.split(' ')[0]}! 👋
           </h1>
           <p className="text-neutral-500 mt-1">
@@ -143,13 +143,13 @@ const AdminDashboard = () => {
 
       {/* Stats Grid */}
       {overviewLoading ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="h-32 rounded-2xl bg-neutral-100 animate-pulse" />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4 lg:gap-6">
           {statCards.map((stat, index) => (
             <StatCard
               key={stat.title}
@@ -164,7 +164,7 @@ const AdminDashboard = () => {
       )}
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2 lg:gap-6">
         {/* Status Distribution */}
         <Card>
           <Card.Header>
@@ -199,7 +199,7 @@ const AdminDashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap justify-center gap-4 mt-4">
+            <div className="mt-3 flex flex-wrap justify-center gap-2 sm:mt-4 sm:gap-4">
               {statusChart.map((item, index) => (
                 <div key={item.value || item.status || item.label} className="flex items-center gap-2">
                   <div
@@ -301,15 +301,15 @@ const AdminDashboard = () => {
         </Card.Header>
         <Card.Content>
           {overviewLoading ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="h-20 rounded-xl bg-neutral-100 animate-pulse" />
               ))}
             </div>
           ) : recentComplaints.length === 0 ? (
-            <p className="text-center text-neutral-500 py-8">No complaints yet</p>
+            <p className="py-5 text-center text-neutral-500 sm:py-8">No complaints yet</p>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {recentComplaints.slice(0, 5).map((complaint, index) => (
                 <motion.div
                   key={complaint.id}
@@ -351,28 +351,28 @@ const AdminDashboard = () => {
       </Card>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:gap-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 lg:gap-6">
         <Card className="text-center">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-primary-100 flex items-center justify-center mb-4">
-            <UsersIcon className="w-7 h-7 text-primary-600" />
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 sm:mb-4 sm:h-14 sm:w-14 sm:rounded-2xl">
+            <UsersIcon className="h-5 w-5 text-primary-600" />
           </div>
-          <p className="text-3xl font-bold text-neutral-900">{overview.total_students || 0}</p>
+          <p className="text-2xl font-bold text-neutral-900 sm:text-3xl">{overview.total_students || 0}</p>
           <p className="text-neutral-500">Total Students</p>
         </Card>
 
         <Card className="text-center">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-warning-100 flex items-center justify-center mb-4">
-            <ExclamationCircleIcon className="w-7 h-7 text-warning-600" />
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-warning-100 sm:mb-4 sm:h-14 sm:w-14 sm:rounded-2xl">
+            <ExclamationCircleIcon className="h-5 w-5 text-warning-600" />
           </div>
-          <p className="text-3xl font-bold text-neutral-900">{overview.unassigned_count || 0}</p>
+          <p className="text-2xl font-bold text-neutral-900 sm:text-3xl">{overview.unassigned_count || 0}</p>
           <p className="text-neutral-500">Unassigned</p>
         </Card>
 
         <Card className="text-center">
-          <div className="w-14 h-14 mx-auto rounded-2xl bg-success-100 flex items-center justify-center mb-4">
-            <ArrowTrendingUpIcon className="w-7 h-7 text-success-600" />
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-success-100 sm:mb-4 sm:h-14 sm:w-14 sm:rounded-2xl">
+            <ArrowTrendingUpIcon className="h-5 w-5 text-success-600" />
           </div>
-          <p className="text-3xl font-bold text-neutral-900">{overview.avg_resolution_time_hours || 0}h</p>
+          <p className="text-2xl font-bold text-neutral-900 sm:text-3xl">{overview.avg_resolution_time_hours || 0}h</p>
           <p className="text-neutral-500">Avg. Resolution Time</p>
         </Card>
       </div>

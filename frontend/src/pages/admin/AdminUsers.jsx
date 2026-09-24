@@ -144,7 +144,7 @@ const AdminUsers = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="User Management"
         description="Manage students and administrators"
@@ -160,8 +160,8 @@ const AdminUsers = () => {
 
       <Card padding={false}>
         {/* Filters */}
-        <div className="p-4 border-b border-neutral-100">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <div className="border-b border-neutral-100 p-3 sm:p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <form onSubmit={handleSearch} className="flex-1">
               <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
@@ -179,13 +179,13 @@ const AdminUsers = () => {
               value={role}
               onChange={(value) => updateParams({ role: value })}
               placeholder="Filter by role"
-              className="w-40"
+              className="w-full sm:w-40"
             />
           </div>
         </div>
 
         {/* Results */}
-        <div className="px-4 py-3 bg-neutral-50 border-b border-neutral-100 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50 px-3 py-2.5 sm:px-4 sm:py-3">
           <p className="text-sm text-neutral-600">
             {pagination.total_items || 0} user{pagination.total_items !== 1 ? 's' : ''}
           </p>
@@ -195,7 +195,7 @@ const AdminUsers = () => {
         {/* Table */}
         <div className="overflow-x-auto">
           {isLoading ? (
-            <div className="p-8 space-y-4">
+            <div className="space-y-3 p-4 sm:space-y-4 sm:p-8">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="h-16 rounded-xl bg-neutral-100 animate-pulse" />
               ))}
@@ -281,7 +281,7 @@ const AdminUsers = () => {
 
         {/* Pagination */}
         {pagination.total_pages > 1 && (
-          <div className="p-4 border-t border-neutral-100 flex items-center justify-between">
+          <div className="flex items-center justify-between border-t border-neutral-100 p-3 sm:p-4">
             <p className="text-sm text-neutral-500">
               Page {pagination.page} of {pagination.total_pages}
             </p>

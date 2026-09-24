@@ -36,8 +36,8 @@ export default function IgnoredComplaints() {
   const complaints = data?.complaints ?? [];
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-ink-900">
+    <div className="mx-auto max-w-4xl px-1 py-3 sm:px-4 sm:py-8">
+      <h1 className="font-display text-xl font-semibold tracking-tight text-ink-900 sm:text-2xl">
         Still waiting
       </h1>
       <p className="mt-1 max-w-xl text-ink-600">
@@ -45,7 +45,7 @@ export default function IgnoredComplaints() {
         answer. Each row is a student who has been left without one.
       </p>
 
-      <div className="mt-6 max-w-xs">
+      <div className="mt-4 sm:mt-6 max-w-xs">
         <Select
           label="Unanswered for"
           value={window}
@@ -59,10 +59,10 @@ export default function IgnoredComplaints() {
         </Select>
       </div>
 
-      {isLoading && <Skeleton className="mt-6 h-48 w-full" />}
+      {isLoading && <Skeleton className="mt-4 sm:mt-6 h-48 w-full" />}
 
       {!isLoading && complaints.length === 0 && (
-        <div className="mt-6 flex items-start gap-3 rounded-lg border border-line bg-surface p-6">
+        <div className="mt-4 sm:mt-6 flex items-start gap-3 rounded-lg border border-line bg-surface p-3 sm:p-6">
           <CheckCircleIcon className="h-6 w-6 shrink-0 text-brand-700" aria-hidden="true" />
           <div>
             <p className="font-medium text-ink-900">Nothing has been left this long.</p>
@@ -75,7 +75,7 @@ export default function IgnoredComplaints() {
 
       {!isLoading && complaints.length > 0 && (
         <>
-          <p className="mt-6 text-sm font-medium text-ink-700">
+          <p className="mt-4 sm:mt-6 text-sm font-medium text-ink-700">
             {complaints.length} complaint{complaints.length === 1 ? '' : 's'} waiting.
           </p>
           <ul className="mt-3 space-y-2">

@@ -15,22 +15,22 @@ const EmptyState = ({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex flex-col items-center justify-center py-16 text-center ${className}`}
+      className={`flex flex-col items-center justify-center py-10 text-center sm:py-16 ${className}`}
     >
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-        className="w-20 h-20 rounded-full bg-neutral-100 flex items-center justify-center mb-4"
+        className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-neutral-100 sm:mb-4 sm:h-20 sm:w-20"
       >
-        <IconComponent className="w-10 h-10 text-neutral-400" />
+        <IconComponent className="h-8 w-8 text-neutral-400 sm:h-10 sm:w-10" />
       </motion.div>
 
       <motion.h3
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="text-xl font-semibold text-neutral-900 mb-2"
+        className="mb-2 text-lg font-semibold text-neutral-900 sm:text-xl"
       >
         {title}
       </motion.h3>
@@ -39,7 +39,7 @@ const EmptyState = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="text-neutral-500 max-w-sm mb-6"
+        className="mb-5 max-w-sm text-sm text-neutral-500 sm:mb-6 sm:text-base"
       >
         {description}
       </motion.p>

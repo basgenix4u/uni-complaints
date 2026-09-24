@@ -56,7 +56,7 @@ export default function AuthLayout() {
     : { initial: { opacity: 0, y: 16 }, animate: { opacity: 1, y: 0 } };
 
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div className="mobile-auth-shell flex min-h-screen bg-surface">
       {/* Left: the photograph, with the promise over it. Hidden below
           lg, where it would push the form off the first screen. */}
       <div className="relative hidden w-1/2 shrink-0 overflow-hidden lg:block">

@@ -89,7 +89,7 @@ export default function InstitutionPicker({ value, onChange }) {
 
   if (value) {
     return (
-      <div className="flex items-start gap-3 rounded-lg border border-brand-200 bg-brand-50 p-4">
+      <div className="flex items-start gap-3 rounded-lg border border-brand-200 bg-brand-50 p-3 sm:p-4">
         <CheckCircleIcon className="h-5 w-5 shrink-0 text-brand-700" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-ink-900">{value.name}</p>
@@ -104,7 +104,7 @@ export default function InstitutionPicker({ value, onChange }) {
 
   if (asked) {
     return (
-      <div className="rounded-lg border border-line bg-surface p-5 text-center">
+      <div className="rounded-lg border border-line bg-surface p-4 text-center sm:p-5">
         <ClockIcon className="mx-auto h-8 w-8 text-brand-700" aria-hidden="true" />
         <p className="mt-2 font-semibold text-ink-900">Thank you. We have noted it.</p>
         <p className="mt-1 text-sm text-ink-600">
@@ -153,7 +153,7 @@ export default function InstitutionPicker({ value, onChange }) {
     // and try to create an account instead.
     return (
       <div
-        className="space-y-3 rounded-lg border border-line bg-surface p-5"
+        className="space-y-3 rounded-lg border border-line bg-surface p-4 sm:p-5"
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
             event.preventDefault();
@@ -237,7 +237,7 @@ export default function InstitutionPicker({ value, onChange }) {
         )}
 
         {institutions.length > 0 && (
-          <ul id="institution-results" className="max-h-72 space-y-2 overflow-y-auto">
+          <ul id="institution-results" className="max-h-56 space-y-2 overflow-y-auto sm:max-h-72">
             {institutions.map((institution, index) => (
               <li key={institution.id}>
                 <button

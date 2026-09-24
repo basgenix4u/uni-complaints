@@ -104,11 +104,11 @@ const AdminSettings = () => {
       />
 
       {/* Profile Header */}
-      <Card className="mb-6">
-        <div className="flex flex-col sm:flex-row items-center gap-6">
+      <Card className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
           <Avatar name={user?.full_name} size="2xl" />
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl font-bold text-neutral-900">{user?.full_name}</h2>
+            <h2 className="text-xl font-bold text-neutral-900 sm:text-2xl">{user?.full_name}</h2>
             <p className="text-neutral-500">{user?.email}</p>
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-2">
               <span className="badge-primary">{getRoleLabel(user?.role)}</span>
@@ -121,7 +121,7 @@ const AdminSettings = () => {
       </Card>
 
       {/* Tabs */}
-      <div className="flex gap-2 mb-6 border-b border-neutral-200 pb-px overflow-x-auto">
+      <div className="mb-4 flex gap-2 overflow-x-auto border-b sm:mb-6 border-neutral-200 pb-px">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -145,9 +145,9 @@ const AdminSettings = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <Card>
-            <h3 className="text-lg font-semibold text-neutral-900 mb-6">Profile Information</h3>
+            <h3 className="mb-4 text-lg font-semibold text-neutral-900 sm:mb-6">Profile Information</h3>
             
-            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+            <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4 sm:space-y-6">
               <Input
                 label="Full Name"
                 leftIcon={<UserIcon className="w-5 h-5" />}
@@ -176,7 +176,7 @@ const AdminSettings = () => {
                 {...profileForm.register('department')}
               />
 
-              <div className="flex justify-end pt-4 border-t border-neutral-100">
+              <div className="flex justify-end pt-3 border-t sm:pt-4 border-neutral-100">
                 <Button
                   type="submit"
                   loading={isLoading}
@@ -196,9 +196,9 @@ const AdminSettings = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <Card>
-            <h3 className="text-lg font-semibold text-neutral-900 mb-6">Change Password</h3>
+            <h3 className="mb-4 text-lg font-semibold text-neutral-900 sm:mb-6">Change Password</h3>
             
-            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
+            <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4 sm:space-y-6">
               <Input
                 label="Current Password"
                 type="password"
@@ -224,7 +224,7 @@ const AdminSettings = () => {
                 {...passwordForm.register('confirm_password')}
               />
 
-              <div className="flex justify-end pt-4 border-t border-neutral-100">
+              <div className="flex justify-end pt-3 border-t sm:pt-4 border-neutral-100">
                 <Button
                   type="submit"
                   loading={isLoading}
@@ -244,9 +244,9 @@ const AdminSettings = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <Card>
-            <h3 className="text-lg font-semibold text-neutral-900 mb-6">Notification Preferences</h3>
+            <h3 className="mb-4 text-lg font-semibold text-neutral-900 sm:mb-6">Notification Preferences</h3>
             
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {[
                 { id: 'new_complaints', label: 'New Complaints', description: 'Get notified when new complaints are submitted' },
                 { id: 'assigned', label: 'Assignment Notifications', description: 'Get notified when complaints are assigned to you' },
